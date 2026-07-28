@@ -1,28 +1,108 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { execSync } from 'child_process';
 import * as path from 'path';
+import * as fs from 'fs';
 
 const CLI = path.join(__dirname, '..', '..', 'dist', 'cli.js');
 
-function run(args: string[]): string {
-  return execSync(`node ${CLI} ${args.join(' ')}`, { encoding: 'utf8', timeout: 60000 });
+function run(args: string[], env?: Record<string, string>): string {
+  return execSync(`node ${CLI} ${args.join(' ')}`, {
+    encoding: 'utf8',
+    timeout: 60000,
+    env: { ...process.env, ...env },
+  });
 }
 
-describe('lifecycle (requires Chrome installed)', () => {
+const BROWSERS = ['chrome', 'edge', 'firefox'];
+
+describe.each(BROWSERS)('lifecycle with %s', (browser) => {
+  const skip = !process.env.SELENIUM_CLI_E2E || !process.env[`SELENIUM_CLI_TEST_${browser.toUpperCase()}`];
+
+  beforeEach(() => {
+    if (skip) return;
+    try { run(['close'], { SELENIUM_CLI_SESSION: `test-${browser}` }); } catch {}
+  });
+
   afterEach(() => {
-    try { run(['close']); } catch {}
+    if (skip) return;
+    try { run(['close'], { SELENIUM_CLI_SESSION: `test-${browser}` }); } catch {}
   });
 
-  it.skipIf(!process.env.SELENIUM_CLI_E2E)('opens, navigates, gets title, closes', () => {
-    run(['open', 'https://example.com']);
-    const title = run(['--raw', 'title']).trim();
+  (skip ? it.skip : it)('opens browser and closes', () => {
+    run(['open', `--browser=${browser}`], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    const title = run(['--raw', 'title'], { SELENIUM_CLI_SESSION: `test-${browser}` }).trim();
+    expect(title).toBeDefined();
+  });
+
+  (skip ? it.skip : it)('navigates to URL', () => {
+    run(['open', 'https://example.com', `--browser=${browser}`], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    const title = run(['--raw', 'title'], { SELENIUM_CLI_SESSION: `test-${browser}` }).trim();
     expect(title).toBe('Example Domain');
+    const url = run(['--raw', 'url'], { SELENIUM_CLI_SESSION: `test-${browser}` }).trim();
+    expect(url).toContain('example.com');
   });
 
-  it.skipIf(!process.env.SELENIUM_CLI_E2E)('takes a snapshot with refs', () => {
-    run(['open', 'https://example.com']);
-    const snapshot = run(['--raw', 'snapshot']);
+  (skip ? it.skip : it)('takes snapshot with refs', () => {
+    run(['open', 'https://example.com', `--browser=${browser}`], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    const snapshot = run(['--raw', 'snapshot'], { SELENIUM_CLI_SESSION: `test-${browser}` });
     expect(snapshot).toContain('link');
     expect(snapshot).toMatch(/ref=e\d+/);
+  });
+
+  (skip ? it.skip : it)('navigates back/forward/reload', () => {
+    run(['open', 'https://example.com', `--browser=${browser}`], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    run(['goto', 'https://www.iana.org/domains/reserved'], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    const title1 = run(['--raw', 'title'], { SELENIUM_CLI_SESSION: `test-${browser}` }).trim();
+    run(['go-back'], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    const title2 = run(['--raw', 'title'], { SELENIUM_CLI_SESSION: `test-${browser}` }).trim();
+    expect(title2).toBe('Example Domain');
+    run(['go-forward'], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    run(['reload'], { SELENIUM_CLI_SESSION: `test-${browser}` });
+  });
+
+  (skip ? it.skip : it)('clicks element by ref', () => {
+    run(['open', 'https://demo.playwright.dev/todomvc/', `--browser=${browser}`], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    const snapshot = run(['--raw', 'snapshot'], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    const refMatch = snapshot.match(/ref=(e\d+)/);
+    expect(refMatch).not.toBeNull();
+    const ref = refMatch![1];
+    run(['fill', ref, 'Buy groceries'], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    run(['press', 'Enter'], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    const after = run(['--raw', 'snapshot'], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    expect(after).toContain('Buy groceries');
+  });
+
+  (skip ? it.skip : it)('takes screenshot', () => {
+    run(['open', 'https://example.com', `--browser=${browser}`], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    const result = run(['screenshot', '--filename=test.png'], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    expect(result).toContain('test.png');
+    const file = path.join(process.cwd(), '.selenium-cli', 'test.png');
+    expect(fs.existsSync(file)).toBe(true);
+    fs.unlinkSync(file);
+  });
+
+  (skip ? it.skip : it)('evaluates JavaScript', () => {
+    run(['open', 'https://example.com', `--browser=${browser}`], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    const result = run(['--raw', 'eval', 'document.title'], { SELENIUM_CLI_SESSION: `test-${browser}` }).trim();
+    expect(result).toBe('Example Domain');
+  });
+
+  (skip ? it.skip : it)('finds text in snapshot', () => {
+    run(['open', 'https://example.com', `--browser=${browser}`], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    const result = run(['--raw', 'find', 'More information'], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    expect(result).toContain('More information');
+  });
+
+  (skip ? it.skip : it)('lists sessions', () => {
+    run(['open', 'https://example.com', `--browser=${browser}`], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    const result = run(['list']);
+    expect(result).toContain(`test-${browser}`);
+  });
+
+  (skip ? it.skip : it)('json output mode', () => {
+    run(['open', 'https://example.com', `--browser=${browser}`], { SELENIUM_CLI_SESSION: `test-${browser}` });
+    const result = run(['--json', 'title']);
+    const parsed = JSON.parse(result);
+    expect(parsed.result).toBe('Example Domain');
   });
 });

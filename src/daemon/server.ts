@@ -13,6 +13,11 @@ const headed = args.includes('--headed');
 const cdpEndpoint = args.find(a => a.startsWith('--cdp='))?.slice('--cdp='.length);
 const version = require('../../package.json').version;
 
+const ALLOWED_BROWSERS = new Set(['chrome', 'edge', 'firefox']);
+if (!ALLOWED_BROWSERS.has(browserName)) {
+  throw new Error(`Unsupported browser: ${browserName}. Supported: chrome, edge, firefox`);
+}
+
 let driver: any = null;
 let lastActivity = Date.now();
 const crypto = require('crypto');
@@ -55,11 +60,25 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
     if (!driver) {
       const { Builder } = require('selenium-webdriver');
       const builder = new Builder().forBrowser(browserName);
+
       if (browserName === 'chrome') {
-        const chromeOpts: any = { args: ['--no-sandbox', '--disable-dev-shm-usage'] };
-        if (!headed && !cdpEndpoint) chromeOpts.args.unshift('--headless=new');
+        const chromeArgs: string[] = [];
+        if (!headed && !cdpEndpoint) chromeArgs.push('--headless=new', '--no-sandbox', '--disable-dev-shm-usage');
+        const chromeOpts: any = { args: chromeArgs };
         if (cdpEndpoint) chromeOpts.debuggerAddress = cdpEndpoint;
         builder.getCapabilities().set('goog:chromeOptions', chromeOpts);
+      } else if (browserName === 'edge') {
+        const edgeArgs: string[] = [];
+        if (!headed) edgeArgs.push('--headless=new');
+        const edgeOpts: any = { args: edgeArgs };
+        if (cdpEndpoint) edgeOpts.debuggerAddress = cdpEndpoint;
+        builder.getCapabilities().set('ms:edgeOptions', edgeOpts);
+      } else if (browserName === 'firefox') {
+        const firefoxOpts: any = {};
+        if (!headed) {
+          firefoxOpts.args = ['-headless'];
+        }
+        builder.getCapabilities().set('moz:firefoxOptions', firefoxOpts);
       }
       driver = await builder.build();
     }

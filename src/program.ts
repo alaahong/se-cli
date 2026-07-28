@@ -1,4 +1,4 @@
-import { parseArgs } from './minimist';
+﻿import { parseArgs } from './minimist';
 import { Session } from './session';
 import { Registry } from './registry';
 import { baseDaemonDir, workspaceHash } from './config';
@@ -102,7 +102,7 @@ export async function main(argv: string[]): Promise<void> {
   render(resp);
 }
 
-function findWorkspaceDir(cwd: string): string {
+export function findWorkspaceDir(cwd: string): string {
   let dir = cwd;
   for (let i = 0; i < 10; i++) {
     if (fs.existsSync(path.join(dir, '.selenium-cli'))) return dir;
