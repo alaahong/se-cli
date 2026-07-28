@@ -23,12 +23,19 @@ export class Session {
     return new Promise((resolve) => {
       const sock = net.connect(this.socketPath);
       const timer = setTimeout(() => { sock.destroy(); resolve(false); }, 1000);
-      sock.once('connect', () => { clearTimeout(timer); sock.end(); resolve(true); });
-      sock.once('error', () => { clearTimeout(timer); resolve(false); });
+      sock.once('connect', () => {
+        clearTimeout(timer);
+        sock.destroy();
+        resolve(true);
+      });
+      sock.once('error', () => { clearTimeout(timer); sock.destroy(); resolve(false); });
     });
   }
 
   async startDaemon(opts: { browserName?: string; headed?: boolean; cdpEndpoint?: string } = {}): Promise<void> {
+    // If a daemon is already running on this socket, reuse it.
+    if (await this.canConnect()) return;
+
     const browserName = opts.browserName || 'chrome';
     const daemonScript = path.join(__dirname, 'daemon', 'server.js');
     const args = [daemonScript, this.sessionName, this.socketPath, this.workspaceDir, browserName];
@@ -41,31 +48,49 @@ export class Session {
     });
 
     return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error('daemon start timeout')), 30000);
-      child.stdout?.on('data', (data) => {
+      const timeout = setTimeout(() => {
+        child.kill();
+        reject(new Error('daemon start timeout'));
+      }, 30000);
+      const onStdout = (data: Buffer) => {
         const line = data.toString().trim();
         if (line.startsWith('Daemon listening on')) {
           clearTimeout(timeout);
+          // Detach from the child so it survives the parent's exit.
           child.unref();
-          // Destroy stdio streams so they don't keep the parent's event
-          // loop alive — otherwise execSync-based callers hang until their
-          // timeout even though the daemon started successfully.
+          // Remove listeners and unref+destroy stdio pipes so they don't
+          // keep the parent's event loop alive (which would cause
+          // execSync-based callers to hang until their timeout).
+          child.stdout?.removeListener('data', onStdout);
+          child.stderr?.removeListener('data', onStderr);
+          child.removeListener('error', onError);
+          child.removeListener('exit', onExit);
+          // stdio pipes are net.Socket at runtime; unref to remove from
+          // the event loop's ref count, then destroy to close the handle.
+          const stdoutSock = child.stdout as unknown as { unref?: () => void };
+          const stderrSock = child.stderr as unknown as { unref?: () => void };
+          stdoutSock.unref?.();
+          stderrSock.unref?.();
           child.stdout?.destroy();
           child.stderr?.destroy();
           resolve();
         }
-      });
-      child.stderr?.on('data', (data) => {
+      };
+      const onStderr = (data: Buffer) => {
         process.stderr.write(`daemon stderr: ${data}`);
-      });
-      child.on('error', (err) => {
+      };
+      const onError = (err: Error) => {
         clearTimeout(timeout);
         reject(err);
-      });
-      child.on('exit', (code, signal) => {
+      };
+      const onExit = (code: number | null, signal: NodeJS.Signals | null) => {
         clearTimeout(timeout);
         reject(new Error(`daemon exited early code=${code} signal=${signal}`));
-      });
+      };
+      child.stdout?.on('data', onStdout);
+      child.stderr?.on('data', onStderr);
+      child.on('error', onError);
+      child.on('exit', onExit);
     });
   }
 
@@ -94,6 +119,13 @@ export class Session {
         reject(new Error('daemon connection timeout'));
       }, 30000);
 
+      let settled = false;
+      const cleanup = () => {
+        clearTimeout(timeout);
+        sock.removeAllListeners();
+        sock.destroy();
+      };
+
       sock.once('connect', () => {
         sock.write(JSON.stringify(msg) + '\n');
       });
@@ -102,25 +134,30 @@ export class Session {
       sock.on('data', (data) => {
         buffer += data.toString();
         if (buffer.includes('\n')) {
-          clearTimeout(timeout);
+          if (settled) return;
+          settled = true;
           try {
             const resp = JSON.parse(buffer.split('\n')[0]) as ServerMessage;
-            sock.end();
+            cleanup();
             resolve(resp);
           } catch (e: any) {
+            cleanup();
             reject(e);
           }
         }
       });
 
       sock.once('error', (err) => {
-        clearTimeout(timeout);
+        if (settled) return;
+        settled = true;
+        cleanup();
         reject(err);
       });
 
       sock.once('close', () => {
-        clearTimeout(timeout);
-        // Only reject if we haven't resolved yet (no data received)
+        if (settled) return;
+        settled = true;
+        cleanup();
         if (buffer === '' || !buffer.includes('\n')) {
           reject(new Error('daemon closed connection without response'));
         }

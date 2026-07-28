@@ -9,10 +9,10 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/se-cli"><img src="https://img.shields.io/npm/v/se-cli?color=22C55E&label=npm" alt="npm version" /></a>
-  <a href="https://github.com/alaahong/selenium-cli/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/alaahong/selenium-cli/ci.yml?branch=main&label=CI&color=22C55E" alt="CI" /></a>
+  <a href="https://github.com/se-cli/se-cli/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/se-cli/se-cli/ci.yml?branch=main&label=CI&color=22C55E" alt="CI" /></a>
   <a href="https://www.npmjs.com/package/se-cli"><img src="https://img.shields.io/node/v/se-cli?color=22C55E" alt="Node.js" /></a>
-  <a href="https://github.com/alaahong/selenium-cli/blob/main/LICENSE"><img src="https://img.shields.io/github/license/alaahong/selenium-cli?color=22C55E" alt="License" /></a>
-  <a href="https://github.com/alaahong/selenium-cli"><img src="https://img.shields.io/github/stars/alaahong/selenium-cli?style=social" alt="Stars" /></a>
+  <a href="https://github.com/se-cli/se-cli/blob/main/LICENSE"><img src="https://img.shields.io/github/license/se-cli/se-cli?color=22C55E" alt="License" /></a>
+  <a href="https://github.com/se-cli/se-cli"><img src="https://img.shields.io/github/stars/se-cli/se-cli?style=social" alt="Stars" /></a>
 </p>
 
 ---
@@ -59,6 +59,14 @@ Or use directly with npx:
 ```bash
 npx se-cli open https://example.com
 ```
+
+After installation, the following commands are available (all aliased to the same binary):
+
+| Command | Description |
+|---------|-------------|
+| `se-cli` | Primary command name |
+| `se` | Short alias |
+| `selenium-cli` | Legacy alias for backward compatibility |
 
 ### Prerequisites
 
@@ -297,7 +305,7 @@ Refs are valid only within the current snapshot. After navigation or DOM changes
 
 ```bash
 # Clone
-git clone https://github.com/alaahong/selenium-cli.git
+git clone https://github.com/se-cli/se-cli.git
 cd selenium-cli
 
 # Install
