@@ -1,16 +1,16 @@
 import { Response } from '../../response';
-import { generateAriaSnapshotScript } from '../../snapshot/aria-snapshot';
+import { browser_snapshot } from './snapshot';
 
 export async function browser_find(
   driver: any,
   params: { text?: string; regex?: string },
   response: Response
 ): Promise<void> {
-  const script = generateAriaSnapshotScript();
-  const yaml: string = await driver.executeScript(`
-    const options = { depth: arguments[0] };
-    return (${script})(options);
-  `, 50);
+  // Reuse browser_snapshot to generate the YAML, so find and snapshot
+  // always share the exact same executeScript code path.
+  const snapshotResponse = new Response({ raw: true, json: false });
+  await browser_snapshot(driver, {}, snapshotResponse);
+  const yaml = snapshotResponse.serialize();
 
   const lines = yaml.split('\n');
   const matches: string[] = [];
