@@ -11,7 +11,7 @@
   <a href="https://www.npmjs.com/package/se-cli"><img src="https://img.shields.io/npm/v/se-cli?color=22C55E&label=npm" alt="npm version" /></a>
   <a href="https://github.com/alaahong/selenium-cli/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/alaahong/selenium-cli/ci.yml?branch=main&label=CI&color=22C55E" alt="CI" /></a>
   <a href="https://www.npmjs.com/package/se-cli"><img src="https://img.shields.io/node/v/se-cli?color=22C55E" alt="Node.js" /></a>
-  <a href="https://github.com/alaahong/selenium-cli/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/se-cli?color=22C55E" alt="License" /></a>
+  <a href="https://github.com/alaahong/selenium-cli/blob/main/LICENSE"><img src="https://img.shields.io/github/license/alaahong/selenium-cli?color=22C55E" alt="License" /></a>
   <a href="https://github.com/alaahong/selenium-cli"><img src="https://img.shields.io/github/stars/alaahong/selenium-cli?style=social" alt="Stars" /></a>
 </p>
 
@@ -368,4 +368,4 @@ See [docs/spec.md](docs/spec.md) for full roadmap.
 
 ## License
 
-Apache-2.0
+[Apache License 2.0](LICENSE) - Copyright 2024 alaahong

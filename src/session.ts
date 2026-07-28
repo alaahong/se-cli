@@ -47,6 +47,11 @@ export class Session {
         if (line.startsWith('Daemon listening on')) {
           clearTimeout(timeout);
           child.unref();
+          // Destroy stdio streams so they don't keep the parent's event
+          // loop alive — otherwise execSync-based callers hang until their
+          // timeout even though the daemon started successfully.
+          child.stdout?.destroy();
+          child.stderr?.destroy();
           resolve();
         }
       });

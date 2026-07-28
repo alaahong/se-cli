@@ -59,7 +59,9 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
   try {
     if (!driver) {
       const { Builder } = require('selenium-webdriver');
-      const builder = new Builder().forBrowser(browserName);
+      // selenium-webdriver expects 'MicrosoftEdge' for Edge, not 'edge'.
+      const seleniumBrowserName = browserName === 'edge' ? 'MicrosoftEdge' : browserName;
+      const builder = new Builder().forBrowser(seleniumBrowserName);
 
       if (browserName === 'chrome') {
         const chromeArgs: string[] = [];

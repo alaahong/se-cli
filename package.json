@@ -7,7 +7,9 @@
     "node": ">=18"
   },
   "bin": {
-    "se-cli": "dist/cli.js"
+    "se-cli": "dist/cli.js",
+    "se": "dist/cli.js",
+    "selenium-cli": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
