@@ -35,6 +35,15 @@ const server = net.createServer((socket) => {
       try {
         const msg: ClientMessage = JSON.parse(line);
         lastActivity = Date.now();
+        // Handle 'stop' specially: send response before shutting down,
+        // otherwise process.exit() kills the socket before the client
+        // receives the acknowledgement.
+        if (msg.method === 'stop') {
+          socket.write(JSON.stringify({ ok: true, text: 'stopping' } as ServerMessage) + '\n');
+          socket.end();
+          shutdown();
+          return;
+        }
         const response = await handleMessage(msg);
         socket.write(JSON.stringify(response) + '\n');
       } catch (e: any) {
@@ -50,10 +59,6 @@ const server = net.createServer((socket) => {
 
 async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
   if (msg.method === 'ping') return { ok: true, text: 'pong' };
-  if (msg.method === 'stop') {
-    await shutdown();
-    return { ok: true, text: 'stopping' };
-  }
   // method === 'run' — dispatch to backend
   const { callTool, parseCommand } = require('./backend');
   try {
