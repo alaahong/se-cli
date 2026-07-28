@@ -8,8 +8,9 @@ export async function browser_find(
 ): Promise<void> {
   const script = generateAriaSnapshotScript();
   const yaml: string = await driver.executeScript(`
-    return (${script})(${JSON.stringify({ depth: 50 })});
-  `, null, 50);
+    const options = { depth: arguments[0] };
+    return (${script})(options);
+  `, 50);
 
   const lines = yaml.split('\n');
   const matches: string[] = [];

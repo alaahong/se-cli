@@ -306,7 +306,7 @@ Refs are valid only within the current snapshot. After navigation or DOM changes
 ```bash
 # Clone
 git clone https://github.com/se-cli/se-cli.git
-cd selenium-cli
+cd se-cli
 
 # Install
 npm install

@@ -8,7 +8,15 @@ export async function browser_fill(
   response: Response
 ): Promise<void> {
   const el = await findElement(driver, params.target);
-  await el.clear();
+  // clear() can throw "invalid element state" on some inputs (e.g. React
+  // controlled inputs that aren't fully editable yet). Fall back to a
+  // select-all + delete sequence so we don't block on stubborn elements.
+  try {
+    await el.clear();
+  } catch {
+    await el.sendKeys(Key.CONTROL, 'a', Key.NULL);
+    await el.sendKeys(Key.DELETE);
+  }
   await el.sendKeys(params.value);
   if (params.submit) {
     await el.sendKeys(Key.ENTER);

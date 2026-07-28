@@ -1,15 +1,16 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 
 const CLI = path.join(__dirname, '..', '..', 'dist', 'cli.js');
 
 function run(args: string[], env?: Record<string, string>): string {
-  return execSync(`node ${CLI} ${args.join(' ')}`, {
+  return execFileSync('node', [CLI, ...args], {
     encoding: 'utf8',
     timeout: 60000,
     env: { ...process.env, ...env },
+    shell: false,
   });
 }
 
@@ -101,7 +102,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
 
   (skip ? it.skip : it)('json output mode', () => {
     run(['open', 'https://example.com', `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
-    const result = run(['--json', 'title']);
+    const result = run(['--json', 'title'], { SE_CLI_SESSION: `test-${browser}` });
     const parsed = JSON.parse(result);
     expect(parsed.result).toBe('Example Domain');
   });
