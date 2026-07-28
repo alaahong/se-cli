@@ -37,6 +37,7 @@
 
   <header class="hero">
     <div class="container hero-inner">
+      <img src="assets/img/logo-dark.svg" alt="se-cli" class="hero-logo" width="320" />
       <div class="hero-badge">
         <span class="badge-dot"></span>
         <span>v0.1 MVP · Multi-browser · Daemon architecture</span>
@@ -299,10 +300,10 @@ se-cli close</code></pre>
       <p class="section-lead">Short-lived CLI + long-lived daemon, talking over line-delimited JSON.</p>
 
       <div class="arch-diagram">
-<pre><code>┌─────────────────┐  Unix socket / Win pipe       ┌──────────────────────┐
-│  se-cli         │ ───── line-delimited JSON ──▶ │  se-cli daemon       │
-│  (short-lived)  │ ◀──── single response, close ─ │  (holds WebDriver)   │
-└─────────────────┘                                └──────────────────────┘
+<pre><code>┌─────────────────┐  Unix socket / Win pipe  ┌──────────────────────┐
+│  se-cli         │ ─── line-delimited JSON ─▶ │  se-cli daemon       │
+│  (short-lived)  │ ◀── single response ───── │  (holds WebDriver)   │
+└─────────────────┘                            └──────────────────────┘
                                                           │
                                                           │ W3C WebDriver HTTP
                                                           ▼

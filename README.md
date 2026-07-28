@@ -1,8 +1,21 @@
-# se-cli
+<div align="center">
+  <img src="site/assets/img/logo.svg" alt="se-cli" width="280" />
+</div>
 
-> Token-efficient Selenium browser automation CLI for AI agents and humans.
+<p align="center">
+  Token-efficient Selenium browser automation CLI for AI agents and humans.<br/>
+  Inspired by <a href="https://github.com/microsoft/playwright-cli">playwright-cli</a>, ported to the Selenium ecosystem.
+</p>
 
-Inspired by [playwright-cli](https://github.com/microsoft/playwright-cli), ported to the Selenium ecosystem.
+<p align="center">
+  <a href="https://www.npmjs.com/package/se-cli"><img src="https://img.shields.io/npm/v/se-cli?color=22C55E&label=npm" alt="npm version" /></a>
+  <a href="https://github.com/alaahong/selenium-cli/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/alaahong/selenium-cli/ci.yml?branch=main&label=CI&color=22C55E" alt="CI" /></a>
+  <a href="https://www.npmjs.com/package/se-cli"><img src="https://img.shields.io/node/v/se-cli?color=22C55E" alt="Node.js" /></a>
+  <a href="https://github.com/alaahong/selenium-cli/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/se-cli?color=22C55E" alt="License" /></a>
+  <a href="https://github.com/alaahong/selenium-cli"><img src="https://img.shields.io/github/stars/alaahong/selenium-cli?style=social" alt="Stars" /></a>
+</p>
+
+---
 
 ## Why se-cli?
 
@@ -251,10 +264,10 @@ Agent: I'll navigate to the login page and test it.
 ## Architecture
 
 ```
-┌─────────────────┐  Unix socket / Win pipe       ┌──────────────────────┐
-│  se-cli   │ ───── line-delimited JSON ──▶ │  se-cli daemon │
-│  (short-lived)  │ ◀──── single response, close ─ │  (holds WebDriver)   │
-└─────────────────┘                                └──────────────────────┘
+┌─────────────────┐  Unix socket / Win pipe  ┌──────────────────────┐
+│  se-cli         │ ─── line-delimited JSON ─▶ │  se-cli daemon       │
+│  (short-lived)  │ ◀── single response ───── │  (holds WebDriver)   │
+└─────────────────┘                            └──────────────────────┘
                                                           │
                                                           │ W3C WebDriver HTTP
                                                           ▼
@@ -284,8 +297,8 @@ Refs are valid only within the current snapshot. After navigation or DOM changes
 
 ```bash
 # Clone
-git clone https://github.com/alaahong/se-cli.git
-cd se-cli
+git clone https://github.com/alaahong/selenium-cli.git
+cd selenium-cli
 
 # Install
 npm install
