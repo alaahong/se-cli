@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+
+  unit-test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx tsc
+      - run: npx vitest run --filter unit
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: |
+            coverage/
+            test-results/
+
+  integration-test:
+    name: Integration Tests (${{ matrix.os }} / ${{ matrix.browser }})
+    needs: unit-test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        browser: [chrome, edge, firefox]
+        exclude:
+          # Edge is only on Windows
+          - os: ubuntu-latest
+            browser: edge
+          - os: macos-latest
+            browser: edge
+          # Firefox headless on macOS is flaky in CI
+          - os: macos-latest
+            browser: firefox
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx tsc
+      - name: Install browser
+        run: npx @puppeteer/browsers install ${{ matrix.browser }}@stable
+      - name: Run integration tests
+        env:
+          SELENIUM_CLI_E2E: '1'
+          SELENIUM_CLI_TEST_${{ matrix.browser == 'chrome' && 'CHROME' || matrix.browser == 'edge' && 'EDGE' || 'FIREFOX' }}: '1'
+        run: npx vitest run tests/integration/lifecycle.test.ts
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-${{ matrix.os }}-${{ matrix.browser }}
+          path: .selenium-cli/
+          if-no-files-found: ignore
