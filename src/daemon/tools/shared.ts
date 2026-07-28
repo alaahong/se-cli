@@ -1,12 +1,13 @@
 import { By } from 'selenium-webdriver';
-import * as path from 'path';
 
 export function safeFilename(filename: string): string {
-  const base = path.basename(filename);
-  if (base !== filename) {
-    throw new Error(`Invalid filename: path traversal not allowed. Got: ${filename}`);
+  // Reject any path separator (both POSIX and Windows) so behavior is
+  // platform-independent. `path.basename` alone treats `\` as a regular
+  // character on Linux, which would let Windows-style traversal slip through.
+  if (filename.includes('/') || filename.includes('\\')) {
+    throw new Error(`Invalid filename: path separators are not allowed. Got: ${filename}`);
   }
-  return base;
+  return filename;
 }
 
 export async function resolveTarget(target: string) {
