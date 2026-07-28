@@ -18,8 +18,11 @@ export function makeSocketPath(wsHash: string, sessionName: string): string {
   if (process.platform === 'win32') {
     return `\\\\.\\pipe\\selenium-cli-${uHash}-${wsHash}-${sessionName}`;
   }
+  // Use a flat path under TMPDIR to avoid:
+  //   1. needing to create nested directories before listen(), and
+  //   2. exceeding macOS sun_path 104-byte limit on long TMPDIR values.
   const tmpDir = process.env.TMPDIR || '/tmp';
-  return path.join(tmpDir, 'selenium-cli', uHash, `${wsHash}-${sessionName}.sock`);
+  return path.join(tmpDir, `se-cli-${uHash}-${wsHash}-${sessionName}.sock`);
 }
 
 export function baseDaemonDir(): string {

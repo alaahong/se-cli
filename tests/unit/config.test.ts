@@ -26,7 +26,8 @@ describe('config', () => {
 
   it('makeSocketPath contains identifiers', () => {
     const path = makeSocketPath('ws-hash', 'mysession');
-    expect(path).toMatch(/selenium-cli/);
+    // Windows uses named pipe prefix `selenium-cli`, POSIX uses flat `se-cli`.
+    expect(path).toMatch(/se(lenium)?-cli/);
     expect(path).toContain('mysession');
     expect(path).toContain('ws-hash');
   });
