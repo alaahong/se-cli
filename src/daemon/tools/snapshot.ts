@@ -11,7 +11,8 @@ export async function browser_snapshot(
 ): Promise<void> {
   const script = generateAriaSnapshotScript();
   const yaml: string = await driver.executeScript(`
-    return (${script})(${JSON.stringify({ target: arguments[0], depth: arguments[1] })});
+    const options = { target: arguments[0], depth: arguments[1] };
+    return (${script})(options);
   `, params.target || null, params.depth || 50);
 
   if (params.filename) {
