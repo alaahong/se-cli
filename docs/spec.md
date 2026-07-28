@@ -1,51 +1,51 @@
-# selenium-cli 设计规格
+# selenium-cli Design Specification
 
-**版本**: v0.1.0 (MVP)
-**日期**: 2026-07-28
-**状态**: 已通过 brainstorming，待实现
+**Version**: v0.1.0 (MVP)
+**Date**: 2026-07-28
+**Status**: Brainstorming complete, pending implementation
 
-## 1. 背景与目标
+## 1. Background & Goals
 
-### 1.1 背景
+### 1.1 Background
 
-当前 Selenium MCP 实现 token 消耗过大，主要原因：
-- 工具 schema 体积大，每次调用都加载
-- accessibility tree 全量返回页面数据
-- 无命令行接口，agent 必须通过 MCP 协议交互
+Current Selenium MCP implementations consume too many tokens, mainly because:
+- Tool schemas are large and loaded on every call
+- Accessibility tree returns full page data
+- No command-line interface; agents must interact via the MCP protocol
 
-Microsoft 的 playwright-cli 已验证"短命 CLI + 长寿命 daemon + aria snapshot + ref 引用"架构能有效节约 token。本项目将该思路移植到 Selenium 生态。
+Microsoft's playwright-cli has proven that the "short-lived CLI + long-lived daemon + aria snapshot + ref reference" architecture effectively saves tokens. This project ports that approach to the Selenium ecosystem.
 
-### 1.2 目标
+### 1.2 Goals
 
-构建 `selenium-cli` 命令行工具，提供：
-- 短命 CLI 进程 + 长寿命 daemon 进程架构，daemon 持有 WebDriver 实例跨调用保活
-- 命名会话管理，多浏览器并行隔离
-- aria snapshot + ref 引用机制，token 高效的元素定位
-- 代码生成回放，每次操作输出对应 Selenium 代码
-- 通用 AI agent 友好（不绑定特定 agent，可手动放置 SKILL.md）
+Build a `selenium-cli` command-line tool that provides:
+- Short-lived CLI process + long-lived daemon process architecture; the daemon holds the WebDriver instance and keeps it alive across calls
+- Named session management for parallel multi-browser isolation
+- Aria snapshot + ref reference mechanism for token-efficient element location
+- Code generation replay: each action emits the corresponding Selenium code
+- General AI agent friendly (not bound to a specific agent; SKILL.md can be placed manually)
 
-## 2. 项目结构
+## 2. Project Structure
 
 ```
 d:\code\opensource\selenium-cli\
 ├── src/
-│   ├── cli.ts                  # 入口（编译为 dist/cli.js）
-│   ├── program.ts              # 命令分发、参数解析
-│   ├── session.ts              # daemon 启动 + socket RPC client
-│   ├── registry.ts             # .session 文件注册表
+│   ├── cli.ts                  # Entry point (compiled to dist/cli.js)
+│   ├── program.ts              # Command dispatch, argument parsing
+│   ├── session.ts              # Daemon startup + socket RPC client
+│   ├── registry.ts             # .session file registry
 │   ├── output.ts               # TextOutput / JsonOutput / RawOutput
-│   ├── protocol.ts             # 消息类型定义
-│   ├── config.ts               # 默认配置
+│   ├── protocol.ts             # Message type definitions
+│   ├── config.ts               # Default configuration
 │   ├── daemon/
-│   │   ├── server.ts           # daemon socket server
-│   │   ├── backend.ts          # tool 调度（callTool）
+│   │   ├── server.ts           # Daemon socket server
+│   │   ├── backend.ts          # Tool dispatch (callTool)
 │   │   └── tools/
 │   │       ├── open.ts
 │   │       ├── snapshot.ts
 │   │       ├── click.ts
 │   │       └── ...
 │   └── snapshot/
-│       └── aria-snapshot.ts    # 注入脚本
+│       └── aria-snapshot.ts    # Injected script
 ├── skill/
 │   ├── SKILL.md
 │   └── references/
@@ -57,64 +57,64 @@ d:\code\opensource\selenium-cli\
 └── README.md
 ```
 
-### 关键依赖
+### Key Dependencies
 
-- `selenium-webdriver`：官方 Node 绑定
-- `selenium-manager`：driver 二进制管理（随 selenium-webdriver 自带）
+- `selenium-webdriver`: official Node bindings
+- `selenium-manager`: driver binary management (bundled with selenium-webdriver)
 - TypeScript + Vitest
 
-### 配置目录
+### Configuration Directories
 
-- 注册表: `<系统缓存>/ms-selenium-cli/daemon/<workspaceHash>/<name>.session`
-- 输出目录: `.selenium-cli/`（snapshot 文件、screenshot）
+- Registry: `<system cache>/ms-selenium-cli/daemon/<workspaceHash>/<name>.session`
+- Output directory: `.selenium-cli/` (snapshot files, screenshots)
 
-## 3. 命令集（MVP）
+## 3. Command Set (MVP)
 
-### 3.1 会话级命令（CLI 进程内处理）
-
-```bash
-selenium-cli open [url]              # 启动 daemon + 浏览器
-selenium-cli close                   # 关闭浏览器+daemon
-selenium-cli list                    # 列出所有会话
-selenium-cli close-all               # 关闭所有会话
-selenium-cli kill-all                # 强杀所有进程
-selenium-cli -s=<name> <cmd>         # 命名会话
-```
-
-### 3.2 工具命令（转发给 daemon）
-
-**导航**：`goto <url>` / `go-back` / `go-forward` / `reload`
-
-**交互**：`click <ref|selector>` / `fill <ref|selector> <text>` / `type <text>` / `press <key>` / `select <ref> <value>` / `check <ref>` / `uncheck <ref>`
-
-**快照与查找**：`snapshot` / `snapshot <ref>` / `snapshot --depth=N` / `find <text>` / `find --regex <pattern>`
-
-**保存与执行**：`screenshot [ref]` / `screenshot --filename=f` / `eval "<js>"` / `eval "<js>" <ref>` / `title` / `url`
-
-共 22 个命令。
-
-### 3.3 全局 flags
+### 3.1 Session-level Commands (handled in the CLI process)
 
 ```bash
-selenium-cli --raw <cmd>             # 只输出值
-selenium-cli --json <cmd>            # JSON 结构化输出
-selenium-cli -s=<name> <cmd>         # 指定会话
-selenium-cli open --browser=chrome   # chrome(默认) | edge | firefox
-selenium-cli open --headed           # 默认 headless
-selenium-cli open --cdp=<url>        # attach 到运行中的 Chrome
+selenium-cli open [url]              # Start daemon + browser
+selenium-cli close                   # Close browser + daemon
+selenium-cli list                    # List all sessions
+selenium-cli close-all               # Close all sessions
+selenium-cli kill-all                # Force-kill all processes
+selenium-cli -s=<name> <cmd>         # Named session
 ```
 
-## 4. 进程架构与通信协议
+### 3.2 Tool Commands (forwarded to the daemon)
 
-### 4.1 进程模型
+**Navigation**: `goto <url>` / `go-back` / `go-forward` / `reload`
+
+**Interaction**: `click <ref|selector>` / `fill <ref|selector> <text>` / `type <text>` / `press <key>` / `select <ref> <value>` / `check <ref>` / `uncheck <ref>`
+
+**Snapshot & Search**: `snapshot` / `snapshot <ref>` / `snapshot --depth=N` / `find <text>` / `find --regex <pattern>`
+
+**Save & Execute**: `screenshot [ref]` / `screenshot --filename=f` / `eval "<js>"` / `eval "<js>" <ref>` / `title` / `url`
+
+22 commands in total.
+
+### 3.3 Global Flags
+
+```bash
+selenium-cli --raw <cmd>             # Output only the value
+selenium-cli --json <cmd>            # Structured JSON output
+selenium-cli -s=<name> <cmd>         # Specify session
+selenium-cli open --browser=chrome   # chrome (default) | edge | firefox
+selenium-cli open --headed           # Default is headless
+selenium-cli open --cdp=<url>        # Attach to a running Chrome
+```
+
+## 4. Process Architecture & Communication Protocol
+
+### 4.1 Process Model
 
 ```
 ┌─────────────────┐  Unix socket / Win named pipe      ┌──────────────────────┐
-│  selenium-cli   │ ───────── 行分隔 JSON ───────────▶ │  selenium-cli daemon │
-│  (短命 Node 进程)│ ◀──────── 单条响应后断开 ────────── │  (持有 WebDriver)    │
-└─────────────────┘                                       └──────────────────────┘
+│  selenium-cli   │ ───────── line-delimited JSON ───▶ │  selenium-cli daemon │
+│  (short-lived   │ ◀──────── single response, close ── │  (holds WebDriver)   │
+│   Node process) │                                    └──────────────────────┘
         │                                                          │
-        │ 首次 open 时 spawn(detached:true) ──────────────────────▶│
+        │ spawn(detached:true) on first open ────────────────────▶│
         │                                                          │ W3C WebDriver HTTP
         │                                                          │ ─────────────────▶ ChromeDriver
         │                                                          │                          │
@@ -122,20 +122,20 @@ selenium-cli open --cdp=<url>        # attach 到运行中的 Chrome
         │                                                          │                       Browser
         ▼                                                          ▼
 ┌─────────────────┐                                       ┌──────────────────────┐
-│  .session 文件   │                                       │  aria snapshot 注入   │
+│  .session file  │                                       │  aria snapshot inject │
 └─────────────────┘                                       └──────────────────────┘
 ```
 
-### 4.2 socket 路径
+### 4.2 Socket Path
 
 - **Linux/macOS**: `$TMPDIR/selenium-cli/<userHash>/<workspaceHash>-<sessionName>.sock`
 - **Windows**: `\\.\pipe\selenium-cli-<userHash>-<workspaceHash>-<sessionName>`
 - `userHash = sha1(USERNAME||USER||"default").slice(0,8)`
 - `workspaceHash = sha1(workspaceDir).slice(0,16)`
 
-### 4.3 消息协议（行分隔 JSON）
+### 4.3 Message Protocol (line-delimited JSON)
 
-**CLI → daemon**：
+**CLI → daemon**:
 ```typescript
 interface ClientMessage {
   method: 'run' | 'stop' | 'ping';
@@ -148,7 +148,7 @@ interface ClientMessage {
 }
 ```
 
-**daemon → CLI**：
+**daemon → CLI**:
 ```typescript
 interface ServerMessage {
   ok: boolean;
@@ -160,18 +160,18 @@ interface ServerMessage {
 }
 ```
 
-CLI 连接后发一条消息，收一条响应，立即关连接。daemon 端 `net.createServer` 每连接处理一次请求。
+The CLI connects, sends one message, receives one response, then immediately closes the connection. On the daemon side, `net.createServer` handles one request per connection.
 
-### 4.4 daemon 启动握手
+### 4.4 Daemon Startup Handshake
 
-1. CLI `spawn(process.execPath, [dist/daemon/server.js, sessionName, socketPath, ...flags], { detached: true, stdio: ['ignore','pipe','pipe'] })`
-2. 监听 daemon stdout，等 `"Daemon listening on <socketPath>"` 行
-3. `child.unref()` 让 daemon 脱离父进程
-4. daemon 写 `<name>.session` JSON 文件到磁盘
+1. CLI runs `spawn(process.execPath, [dist/daemon/server.js, sessionName, socketPath, ...flags], { detached: true, stdio: ['ignore','pipe','pipe'] })`
+2. Listens on daemon stdout, waits for the line `"Daemon listening on <socketPath>"`
+3. Calls `child.unref()` to detach the daemon from the parent process
+4. Daemon writes the `<name>.session` JSON file to disk
 
-### 4.5 Response 序列化
+### 4.5 Response Serialization
 
-默认输出 4 个段落：
+Default output has 4 sections:
 ```
 ### Page
 - Page URL: https://example.com/
@@ -188,16 +188,16 @@ await driver.findElement(By.css('[data-se-ref="e2"]')).click();
 clicked
 ```
 
-- `--raw` 模式只输出 Result 值
-- `--json` 输出 `{page, snapshot, code, result}` 对象
+- `--raw` mode outputs only the Result value
+- `--json` outputs a `{page, snapshot, code, result}` object
 
-## 5. Aria Snapshot 注入脚本（核心难点）
+## 5. Aria Snapshot Injection Script (Core Challenge)
 
-### 5.1 算法概览
+### 5.1 Algorithm Overview
 
-注入 JS 到页面，递归遍历 DOM，按 W3C ARIA 规范生成简化的 accessibility tree YAML，同时给可交互元素分配 `data-se-ref="eN"` 属性。
+Inject JS into the page, recursively walk the DOM, generate a simplified accessibility tree YAML per the W3C ARIA spec, and assign `data-se-ref="eN"` attributes to interactive elements.
 
-### 5.2 输出格式
+### 5.2 Output Format
 
 ```yaml
 - document:
@@ -209,15 +209,15 @@ clicked
     - link "Home" [ref=e4]
 ```
 
-### 5.3 角色判定优先级
+### 5.3 Role Determination Priority
 
 ```
-a. 显式 role 属性: <div role="button">
-b. ARIA 隐式角色: <button>→button, <a>→link, <input type=checkbox>→checkbox...
-c. 无角色则用 tagName: <nav>→navigation, <main>→main, <header>→banner
+a. Explicit role attribute: <div role="button">
+b. ARIA implicit role: <button>→button, <a>→link, <input type=checkbox>→checkbox...
+c. Fall back to tagName when no role: <nav>→navigation, <main>→main, <header>→banner
 ```
 
-### 5.4 可交互元素判定（分配 ref）
+### 5.4 Interactive Element Detection (assign ref)
 
 ```javascript
 const INTERACTIVE_TAGS = new Set([
@@ -231,13 +231,13 @@ const INTERACTIVE_ROLES = new Set([
 ]);
 ```
 
-### 5.5 文本与标签提取优先级
+### 5.5 Text & Label Extraction Priority
 
 `aria-label > aria-labelledby > <label for> > alt/title > textContent > placeholder`
 
-文本截断到 80 字符防止 token 爆炸。
+Text is truncated to 80 characters to prevent token bloat.
 
-### 5.6 ref 解析
+### 5.6 Ref Resolution
 
 ```typescript
 async function resolveTarget(driver: WebDriver, target: string) {
@@ -249,43 +249,43 @@ async function resolveTarget(driver: WebDriver, target: string) {
 }
 ```
 
-### 5.7 关键约束
+### 5.7 Key Constraints
 
-1. **ref 仅在单次 snapshot 内有效**：DOM 重建后 `data-se-ref` 丢失，必须重新 snapshot
-2. **iframe 处理（MVP 简化）**：不递归 iframe，输出 `- iframe: <url>` 占位
-3. **Shadow DOM（MVP 简化）**：不递归 open shadow root，输出占位
-4. **token 控制**：超长文本截断 80 字符；`--depth=N` 限制深度（默认 50）；`find` 命令 grep 而非全量输出
-5. **性能**：`getComputedStyle` 仅对疑似隐藏元素调用
+1. **Refs are valid only within a single snapshot**: after DOM rebuild, `data-se-ref` is lost; you must snapshot again
+2. **iframe handling (MVP simplification)**: do not recurse into iframes; output `- iframe: <url>` placeholder
+3. **Shadow DOM (MVP simplification)**: do not recurse into open shadow roots; output placeholder
+4. **Token control**: long text truncated to 80 chars; `--depth=N` limits depth (default 50); `find` command greps instead of dumping everything
+5. **Performance**: `getComputedStyle` is called only for suspected hidden elements
 
-### 5.8 代码生成回放
+### 5.8 Code Generation Replay
 
-每个交互工具在执行动作时硬编码 `response.addCode(...)`：
+Each interaction tool hard-codes `response.addCode(...)` when executing the action:
 ```typescript
 response.addCode(`await driver.findElement(By.css('[data-se-ref="e15"]')).click();`);
 ```
 
-### 5.9 与 playwright-cli 的差距承认
+### 5.9 Acknowledged Gap vs playwright-cli
 
-| 方面 | playwright-cli | selenium-cli MVP |
+| Aspect | playwright-cli | selenium-cli MVP |
 |------|---------------|-----------------|
-| aria 算法 | 内置成熟实现 | 自写简化版，覆盖率约 70-80% |
-| ref 引擎 | 内置 `aria-ref` 选择器引擎 | `data-se-ref` 属性 + CSS selector |
-| snapshot 稳定性 | 高 | 中（需在真实站点迭代） |
-| iframe/shadow | 完整支持 | MVP 占位 |
+| Aria algorithm | Built-in mature implementation | Self-written simplified version, ~70-80% coverage |
+| Ref engine | Built-in `aria-ref` selector engine | `data-se-ref` attribute + CSS selector |
+| Snapshot stability | High | Medium (needs iteration on real sites) |
+| iframe/shadow | Full support | MVP placeholder |
 
-## 6. 错误处理
+## 6. Error Handling
 
-### 6.1 错误分类
+### 6.1 Error Classification
 
-| 错误类型 | 示例 | 处理 |
+| Error Type | Example | Handling |
 |---------|------|------|
-| 启动失败 | driver 二进制未安装、端口占用 | daemon 立即退出，CLI 提示 `selenium-cli install-browser` |
-| 通信失败 | socket 连接超时、daemon 崩溃 | CLI 清理孤儿 `.session` 文件，提示 `open` |
-| WebDriver 错误 | NoSuchElementError、TimeoutError、StaleElementReferenceError | 返回 `{ok:false, error, code}`，CLI 友好提示 |
-| 注入脚本错误 | CSP 阻止、Shadow DOM 边界 | 返回部分 snapshot + warning |
-| 版本不匹配 | CLI 0.2 调用 daemon 0.1 | 握手交换版本，提示 `close && open` |
+| Startup failure | driver binary not installed, port in use | daemon exits immediately, CLI suggests `selenium-cli install-browser` |
+| Communication failure | socket connect timeout, daemon crash | CLI cleans up orphan `.session` files, suggests `open` |
+| WebDriver error | NoSuchElementError, TimeoutError, StaleElementReferenceError | Returns `{ok:false, error, code}`, CLI shows friendly message |
+| Injection script error | CSP blocks, Shadow DOM boundary | Returns partial snapshot + warning |
+| Version mismatch | CLI 0.2 calling daemon 0.1 | Handshake exchanges versions, suggests `close && open` |
 
-### 6.2 错误输出格式
+### 6.2 Error Output Format
 
 ```
 ### Error
@@ -293,130 +293,130 @@ Element not found: [data-se-ref="e15"]
 Hint: run `selenium-cli snapshot` to refresh refs.
 ```
 
-### 6.3 daemon 健壮性
+### 6.3 Daemon Robustness
 
-- `selfDestructOnIdle`：30 分钟无请求自毁（可配）
-- `heartbeat`：driver 周期性 `getTitle()` 探活
-- `gracefulShutdown`：SIGTERM/SIGINT → quit driver → 删 `.session` → 退出
+- `selfDestructOnIdle`: self-destruct after 30 minutes with no requests (configurable)
+- `heartbeat`: driver periodically calls `getTitle()` for liveness check
+- `gracefulShutdown`: SIGTERM/SIGINT → quit driver → delete `.session` → exit
 
-## 7. 测试策略与实现路径
+## 7. Test Strategy & Implementation Path
 
-### 7.1 测试金字塔
+### 7.1 Test Pyramid
 
-- **单元测试（Vitest）**：parseCommand、aria snapshot 脚本、Response 序列化、registry
-- **集成测试**：daemon + 真实 driver + 测试页
-- **E2E 测试**：用 selenium-cli 自身测试自己（吃狗粮）
+- **Unit tests (Vitest)**: parseCommand, aria snapshot script, Response serialization, registry
+- **Integration tests**: daemon + real driver + test pages
+- **E2E tests**: use selenium-cli to test itself (dogfooding)
 
-### 7.2 实现路径（6 步）
+### 7.2 Implementation Path (6 steps)
 
-**Step 1：骨架与协议** — 项目脚手架、protocol.ts、daemon/server.ts、session.ts、registry.ts、cli.ts。验证：能 open 启动 daemon，list 看到会话，close 清理。
+**Step 1: Skeleton & Protocol** — project scaffold, protocol.ts, daemon/server.ts, session.ts, registry.ts, cli.ts. Verify: `open` starts the daemon, `list` shows the session, `close` cleans up.
 
-**Step 2：命令分发与最小命令集** — program.ts、output.ts、backend.ts、命令 `goto/title/url/close`。验证：`open https://example.com && title` 输出 "Example Domain"。
+**Step 2: Command Dispatch & Minimal Command Set** — program.ts, output.ts, backend.ts, commands `goto/title/url/close`. Verify: `open https://example.com && title` outputs "Example Domain".
 
-**Step 3：aria snapshot 注入脚本** — snapshot/aria-snapshot.ts、daemon/tools/snapshot.ts、find.ts。验证：todomvc 跑 snapshot，YAML 含 `- textbox` `- button`。
+**Step 3: Aria Snapshot Injection Script** — snapshot/aria-snapshot.ts, daemon/tools/snapshot.ts, find.ts. Verify: snapshot on todomvc, YAML contains `- textbox` `- button`.
 
-**Step 4：交互命令** — click/fill/type/press/select/check/uncheck + resolveTarget + 代码生成回放。验证：todomvc 完整跑 add todo → check → clear。
+**Step 4: Interaction Commands** — click/fill/type/press/select/check/uncheck + resolveTarget + code generation replay. Verify: todomvc full flow add todo → check → clear.
 
-**Step 5：保存与执行** — screenshot、eval、go-back/forward/reload。验证：screenshot 生成 PNG，eval 返回正确值。
+**Step 5: Save & Execute** — screenshot, eval, go-back/forward/reload. Verify: screenshot generates a PNG, eval returns the correct value.
 
-**Step 6：会话管理完善** — `-s=<name>`、list、close-all、kill-all、--browser、--headed、--cdp。验证：多会话并行，CDP attach。
+**Step 6: Session Management Polish** — `-s=<name>`, list, close-all, kill-all, --browser, --headed, --cdp. Verify: parallel multi-session, CDP attach.
 
-### 7.3 验收标准
+### 7.3 Acceptance Criteria
 
 ```bash
 selenium-cli open https://demo.playwright.dev/todomvc/
 selenium-cli snapshot
-# 输出含 - textbox [ref=e1] - button "Add" [ref=e2]
+# Output contains - textbox [ref=e1] - button "Add" [ref=e2]
 
 selenium-cli fill e1 "Buy groceries"
 selenium-cli click e2
 selenium-cli snapshot
-# 输出含 - listitem "Buy groceries" [ref=e3]
+# Output contains - listitem "Buy groceries" [ref=e3]
 
 selenium-cli --raw eval "document.querySelectorAll('.todo-list li').length"
-# 输出: 1
+# Output: 1
 
 selenium-cli screenshot --filename=todo.png
 selenium-cli close
 ```
 
-每次交互命令输出对应 Selenium 代码：
+Each interaction command outputs the corresponding Selenium code:
 ```
 ### Ran Selenium code
 await driver.findElement(By.css('[data-se-ref="e2"]')).click();
 ```
 
-## 8. 后续 TODO（v0.2+ 路线图）
+## 8. Roadmap (v0.2+)
 
-按优先级排序，每个版本递增交付。
+Sorted by priority, delivered incrementally per version.
 
-### v0.2：实用能力补全
+### v0.2: Practical Capability Completion
 
-- [ ] **storage 管理**：`cookie-list/get/set/delete/clear`、`localstorage-*`、`sessionstorage-*`（用 execute_script 包装）
-- [ ] **state save/load**：导出 cookie + storage 到 JSON，恢复时反向加载
-- [ ] **tab 管理**：`tab-list`、`tab-new`、`tab-close`、`tab-select`（基于 `window_handles` + `switch_to.window`）
-- [ ] **install --skills**：把 SKILL.md 复制到 `.claude/skills/selenium-cli/` 或 `.agents/skills/selenium-cli/`
-- [ ] **--profile=<path>**：持久化用户数据目录
-- [ ] **--persistent**：自动分配 userDataDir
+- [ ] **Storage management**: `cookie-list/get/set/delete/clear`, `localstorage-*`, `sessionstorage-*` (wrapped via `execute_script`)
+- [ ] **State save/load**: export cookies + storage to JSON, restore by loading in reverse
+- [ ] **Tab management**: `tab-list`, `tab-new`, `tab-close`, `tab-select` (based on `window_handles` + `switch_to.window`)
+- [ ] **install --skills**: copy SKILL.md to `.claude/skills/selenium-cli/` or `.agents/skills/selenium-cli/`
+- [ ] **--profile=<path>**: persistent user data directory
+- [ ] **--persistent**: auto-assign userDataDir
 
-### v0.3：iframe 与 Shadow DOM
+### v0.3: iframe & Shadow DOM
 
-- [ ] **iframe 递归 snapshot**：跨 frame ref（如 `f3e15`），用 `driver.switchTo().frame()` 实现
-- [ ] **Shadow DOM 递归**：open shadow root 递归遍历 `el.shadowRoot`
-- [ ] **find 命令增强**：支持跨 frame 搜索
+- [ ] **iframe recursive snapshot**: cross-frame refs (e.g. `f3e15`), implemented via `driver.switchTo().frame()`
+- [ ] **Shadow DOM recursion**: recursively traverse `el.shadowRoot` for open shadow roots
+- [ ] **find command enhancement**: support cross-frame search
 
-### v0.4：网络与调试
+### v0.4: Network & Debugging
 
-- [ ] **network route mock**：基于 Selenium 4 BiDi `add_request_handler` / `add_response_handler`，包装 `route <pattern> --status=404` / `route <pattern> --body='...'` / `route-list` / `unroute`
-- [ ] **console 日志**：`console [min-level]` 收集浏览器 console 消息（BiDi logging 模块）
-- [ ] **requests 列表**：`requests` 列出网络请求，`request <index>` 查看详情
-- [ ] **highlight**：`highlight <ref> [--style=...]` 持久化高亮，`highlight --hide` 隐藏
+- [ ] **Network route mock**: based on Selenium 4 BiDi `add_request_handler` / `add_response_handler`, wrap `route <pattern> --status=404` / `route <pattern> --body='...'` / `route-list` / `unroute`
+- [ ] **Console logs**: `console [min-level]` collects browser console messages (BiDi logging module)
+- [ ] **Requests list**: `requests` lists network requests, `request <index>` shows details
+- [ ] **highlight**: `highlight <ref> [--style=...]` persistent highlight, `highlight --hide` to hide
 
-### v0.5：录制与回放
+### v0.5: Recording & Replay
 
-- [ ] **run-code**：执行任意 Selenium 代码片段（`run-code "async driver => ..."`）
-- [ ] **代码生成增强**：支持生成 role-based locator（`By.role('button', {name: 'Submit'})`），更稳定
-- [ ] **generate-locator <ref>**：从 ref 生成最佳 locator 表达式
-- [ ] **录制模式**：`selenium-cli record` 进入录制模式，用户操作生成完整测试文件
+- [ ] **run-code**: execute arbitrary Selenium code snippets (`run-code "async driver => ..."`)
+- [ ] **Code generation enhancement**: support role-based locators (`By.role('button', {name: 'Submit'})`) for stability
+- [ ] **generate-locator <ref>**: generate the best locator expression from a ref
+- [ ] **Recording mode**: `selenium-cli record` enters recording mode; user actions generate a complete test file
 
-### v0.6：可视化与高级连接
+### v0.6: Visualization & Advanced Connections
 
-- [ ] **show dashboard**：独立窗口展示所有 session 实时镜像，可点击接管鼠标键盘（Electron 或 Playwright-driven UI）
-- [ ] **show --annotate**：用户在页面画框注释，agent 收到标注截图 + snapshot + notes
-- [ ] **attach --extension**：通过浏览器扩展控制真实 Chrome/Edge
-- [ ] **attach 到 Grid**：`--endpoint=<url>` 连接 Selenium Grid 4
+- [ ] **show dashboard**: a separate window showing real-time mirrors of all sessions, click to take over mouse and keyboard (Electron or Playwright-driven UI)
+- [ ] **show --annotate**: user draws boxes on the page to annotate; agent receives annotated screenshot + snapshot + notes
+- [ ] **attach --extension**: control a real Chrome/Edge via a browser extension
+- [ ] **attach to Grid**: `--endpoint=<url>` connect to Selenium Grid 4
 
-### v0.7：测试集成（探索性）
+### v0.7: Test Integration (Exploratory)
 
-- [ ] **attach 到 pytest-selenium 暂停点**：fork 或 hook pytest-selenium，实现"测试暂停暴露 session 给外部接管"（高难度，可能不可行）
-- [ ] **plan/generate/heal 工作流**：仿 playwright-cli 测试生成工作流，针对 pytest-selenium 适配
-- [ ] **trace viewer**：基于 BiDi 事件流实现简化版 trace（远不及 Playwright Trace Viewer）
+- [ ] **Attach to pytest-selenium pause point**: fork or hook pytest-selenium to expose a "test pause, external takeover of session" mechanism (high difficulty, may be infeasible)
+- [ ] **plan/generate/heal workflow**: mimic the playwright-cli test generation workflow, adapted for pytest-selenium
+- [ ] **trace viewer**: simplified trace based on BiDi event streams (far from Playwright Trace Viewer parity)
 
-### 长期目标（不承诺版本）
+### Long-term Goals (no version commitment)
 
-- [ ] **多语言绑定**：Python/Java 客户端 SDK（CLI 仍用 Node）
-- [ ] **云浏览器集成**：Browserbase 等 SaaS 浏览器后端
-- [ ] **MCP 兼容层**：把 daemon 暴露成 MCP server，CLI 与 MCP 共享 tool handle（仿 playwright-cli 架构）
-- [ ] **AI agent 生态适配**：针对 Claude Code/Cursor/Copilot 各自优化 SKILL.md
+- [ ] **Multi-language bindings**: Python/Java client SDK (CLI stays Node)
+- [ ] **Cloud browser integration**: Browserbase and other SaaS browser backends
+- [ ] **MCP compatibility layer**: expose the daemon as an MCP server; CLI and MCP share tool handles (mimicking playwright-cli architecture)
+- [ ] **AI agent ecosystem adaptation**: optimize SKILL.md for Claude Code/Cursor/Copilot individually
 
-### 永不实现（明确放弃）
+### Will Never Implement (explicitly abandoned)
 
-- ❌ **原生 aria ref 引擎**：不可能达到 Playwright `aria-ref` 选择器引擎的稳定性，永远靠 `data-se-ref` 属性
-- ❌ **完整 tracing 等价物**：Selenium 无原生 tracing，BiDi 事件流体验差几个量级，不追求对等
+- ❌ **Native aria ref engine**: cannot match the stability of Playwright's `aria-ref` selector engine; will always rely on the `data-se-ref` attribute
+- ❌ **Full tracing equivalent**: Selenium has no native tracing; BiDi event streams are orders of magnitude worse, no parity pursued
 
-## 9. 风险与缓解
+## 9. Risks & Mitigation
 
-| 风险 | 影响 | 缓解 |
+| Risk | Impact | Mitigation |
 |------|------|------|
-| aria snapshot 覆盖率不足 | agent 误判元素 → 失败率高 | 在常见站点（todomvc/登录/表单/导航）迭代脚本，目标 80% 场景可用 |
-| ref 在 DOM 重建后失效 | agent 跳过 snapshot 直接操作 | 强制工作流：操作前检查 ref 是否存在，不存在则提示 snapshot |
-| BiDi 稳定性（v0.4+） | network handler 静默失败 | 优先用 CDP（Chromium only），BiDi 作为 Firefox fallback |
-| daemon 孤儿进程 | 资源泄漏 | selfDestructOnIdle + heartbeat + list 时探活清理 |
-| Selenium driver 版本漂移 | 浏览器更新后 driver 不匹配 | 依赖 selenium-manager 自动管理，启动失败提示 install-browser |
+| Aria snapshot coverage insufficient | agent misidentifies elements → high failure rate | iterate the script on common sites (todomvc/login/forms/navigation), target 80% scenario coverage |
+| Refs invalid after DOM rebuild | agent skips snapshot and acts directly | enforce workflow: check ref existence before acting; if missing, prompt snapshot |
+| BiDi stability (v0.4+) | network handler silently fails | prefer CDP (Chromium only), BiDi as Firefox fallback |
+| Daemon orphan processes | resource leak | selfDestructOnIdle + heartbeat + liveness cleanup during list |
+| Selenium driver version drift | driver mismatch after browser update | rely on selenium-manager auto-management; on startup failure suggest install-browser |
 
-## 10. 参考
+## 10. References
 
-- playwright-cli 源码（d:\code\opensource\playwright-cli）— 架构参考
-- [Playwright aria snapshot 算法](https://playwright.dev/docs/aria-snapshots) — 算法灵感来源
-- [Selenium 4 WebDriver BiDi](https://www.selenium.dev/documentation/webdriver/bidi/) — v0.4+ 网络能力基础
-- [W3C ARIA 1.2](https://www.w3.org/TR/wai-aria-1.2/) — 角色判定规范
+- playwright-cli source (d:\code\opensource\playwright-cli) — architecture reference
+- [Playwright aria snapshot algorithm](https://playwright.dev/docs/aria-snapshots) — algorithm inspiration
+- [Selenium 4 WebDriver BiDi](https://www.selenium.dev/documentation/webdriver/bidi/) — foundation for v0.4+ network capabilities
+- [W3C ARIA 1.2](https://www.w3.org/TR/wai-aria-1.2/) — role determination spec

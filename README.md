@@ -252,8 +252,8 @@ Agent: I'll navigate to the login page and test it.
 
 ```
 ┌─────────────────┐  Unix socket / Win pipe       ┌──────────────────────┐
-│  selenium-cli   │ ───── 行分隔 JSON ──────────▶ │  selenium-cli daemon │
-│  (短命进程)      │ ◀──── 单条响应后断开 ───────── │  (持有 WebDriver)    │
+│  selenium-cli   │ ───── line-delimited JSON ──▶ │  selenium-cli daemon │
+│  (short-lived)  │ ◀──── single response, close ─ │  (holds WebDriver)   │
 └─────────────────┘                                └──────────────────────┘
                                                           │
                                                           │ W3C WebDriver HTTP
