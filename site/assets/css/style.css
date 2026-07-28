@@ -306,6 +306,22 @@ code, pre { font-family: var(--font-mono); font-size: 0.9em; }
 .dev-structure .dir { color: var(--brand-bright); }
 .dev-structure .file { color: var(--text); }
 
+/* === Environment & Configuration === */
+.env-group { max-width: 880px; margin: 0 auto 36px; }
+.env-group-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.env-group-title-icon { font-size: 1.1rem; }
+.env-table { width: 100%; border-collapse: collapse; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.env-table th, .env-table td { padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+.env-table th { background: var(--bg-alt); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-mute); font-weight: 600; }
+.env-table tr:last-child td { border-bottom: 0; }
+.env-table td { font-size: 0.88rem; color: var(--text-dim); vertical-align: top; }
+.env-table td code { color: var(--brand-bright); font-family: var(--font-mono); font-size: 0.84em; background: var(--bg-code); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+.env-table .env-desc { color: var(--text-dim); }
+.env-table .env-example { color: var(--text-mute); font-family: var(--font-mono); font-size: 0.82rem; }
+.env-note { max-width: 880px; margin: 20px auto 0; padding: 14px 18px; background: rgba(56, 189, 248, 0.06); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: var(--radius); font-size: 0.88rem; color: var(--text-dim); }
+.env-note strong { color: var(--accent); }
+.env-note code { color: var(--brand-bright); background: var(--bg-code); padding: 1px 6px; border-radius: 4px; font-size: 0.85em; }
+
 /* === Footer === */
 .footer { padding: 40px 0; border-top: 1px solid var(--border); background: var(--bg-alt); }
 .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }

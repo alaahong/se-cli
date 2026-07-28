@@ -51,6 +51,7 @@
         <a href="#quickstart">Quick Start</a>
         <a href="#examples">Examples</a>
         <a href="#commands">Commands</a>
+        <a href="#environment">Config</a>
         <a href="#architecture">Architecture</a>
         <a href="#agents">AI Agents</a>
         <a href="#browsers">Browsers</a>
@@ -515,7 +516,176 @@ await driver.findElement(
     </div>
   </section>
 
-  <section class="section" id="architecture">
+  <section class="section" id="environment">
+    <div class="container">
+      <h2 class="section-title">Environment &amp; Configuration</h2>
+      <p class="section-lead">Selenium ecosystem environment variables, driver paths, and configuration tips for se-cli users.</p>
+
+      <div class="env-group">
+        <div class="env-group-title">
+          <span class="env-group-title-icon">🔧</span>
+          se-cli Environment Variables
+        </div>
+        <table class="env-table">
+          <thead><tr><th>Variable</th><th>Description</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>SE_CLI_SESSION</code></td><td class="env-desc">Default session name when <code>-s</code> flag is not provided</td><td class="env-example">my-session</td></tr>
+            <tr><td><code>SE_CLI_E2E</code></td><td class="env-desc">Set to <code>1</code> to run integration tests (requires real browsers)</td><td class="env-example">1</td></tr>
+            <tr><td><code>SE_CLI_TEST_CHROME</code></td><td class="env-desc">Set to <code>1</code> to run Chrome integration test cases</td><td class="env-example">1</td></tr>
+            <tr><td><code>SE_CLI_TEST_EDGE</code></td><td class="env-desc">Set to <code>1</code> to run Edge integration test cases</td><td class="env-example">1</td></tr>
+            <tr><td><code>SE_CLI_TEST_FIREFOX</code></td><td class="env-desc">Set to <code>1</code> to run Firefox integration test cases</td><td class="env-example">1</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="env-group">
+        <div class="env-group-title">
+          <span class="env-group-title-icon">⚙️</span>
+          Selenium Manager Variables
+        </div>
+        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;">
+          <code>selenium-manager</code> (bundled with <code>selenium-webdriver</code>) auto-downloads drivers. These variables control its behavior. Priority: CLI args &gt; config file (<code>~/.cache/selenium/se-config.toml</code>) &gt; env vars.
+        </p>
+        <table class="env-table">
+          <thead><tr><th>Variable</th><th>Description</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>SE_BROWSER</code></td><td class="env-desc">Browser name for driver resolution</td><td class="env-example">chrome</td></tr>
+            <tr><td><code>SE_DRIVER</code></td><td class="env-desc">Driver name to use</td><td class="env-example">chromedriver</td></tr>
+            <tr><td><code>SE_BROWSER_VERSION</code></td><td class="env-desc">Pin browser major version</td><td class="env-example">120, beta, dev</td></tr>
+            <tr><td><code>SE_DRIVER_VERSION</code></td><td class="env-desc">Pin driver version</td><td class="env-example">120.0.6099.71</td></tr>
+            <tr><td><code>SE_BROWSER_PATH</code></td><td class="env-desc">Absolute path to browser binary (for version detection)</td><td class="env-example">/usr/bin/google-chrome</td></tr>
+            <tr><td><code>SE_DRIVER_MIRROR_URL</code></td><td class="env-desc">Mirror URL for driver downloads (useful in China)</td><td class="env-example">https://npmmirror.com/mirrors/chromedriver/</td></tr>
+            <tr><td><code>SE_BROWSER_MIRROR_URL</code></td><td class="env-desc">Mirror URL for browser downloads</td><td class="env-example">https://mirror.example.com/firefox/</td></tr>
+            <tr><td><code>SE_PROXY</code></td><td class="env-desc">HTTP proxy for network requests</td><td class="env-example">user:pass@proxy:8080</td></tr>
+            <tr><td><code>SE_TIMEOUT</code></td><td class="env-desc">Network request timeout in seconds (default: 300)</td><td class="env-example">600</td></tr>
+            <tr><td><code>SE_OFFLINE</code></td><td class="env-desc">Disable network requests and downloads</td><td class="env-example">true</td></tr>
+            <tr><td><code>SE_CACHE_PATH</code></td><td class="env-desc">Local cache path for drivers and browsers</td><td class="env-example">~/.cache/selenium</td></tr>
+            <tr><td><code>SE_SKIP_DRIVER_IN_PATH</code></td><td class="env-desc">Ignore drivers found in system PATH</td><td class="env-example">true</td></tr>
+            <tr><td><code>SE_SKIP_BROWSER_IN_PATH</code></td><td class="env-desc">Ignore browsers found in system PATH</td><td class="env-example">true</td></tr>
+            <tr><td><code>SE_AVOID_STATS</code></td><td class="env-desc">Disable anonymous usage statistics reporting</td><td class="env-example">true</td></tr>
+            <tr><td><code>SE_DEBUG</code></td><td class="env-desc">Enable DEBUG-level Selenium Manager logs</td><td class="env-example">true</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="env-group">
+        <div class="env-group-title">
+          <span class="env-group-title-icon">📁</span>
+          Driver Path System Properties
+        </div>
+        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;">
+          Traditional driver location via JVM system properties. When set, Selenium Manager won't intervene (acts as fallback only). se-cli passes these to the underlying <code>selenium-webdriver</code> Builder.
+        </p>
+        <table class="env-table">
+          <thead><tr><th>Property</th><th>Description</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>webdriver.chrome.driver</code></td><td class="env-desc">Path to ChromeDriver binary</td><td class="env-example">/usr/local/bin/chromedriver</td></tr>
+            <tr><td><code>webdriver.gecko.driver</code></td><td class="env-desc">Path to GeckoDriver (Firefox) binary</td><td class="env-example">/usr/local/bin/geckodriver</td></tr>
+            <tr><td><code>webdriver.edge.driver</code></td><td class="env-desc">Path to Microsoft EdgeDriver binary</td><td class="env-example">C:\drivers\msedgedriver.exe</td></tr>
+            <tr><td><code>webdriver.ie.driver</code></td><td class="env-desc">Path to IEDriverServer binary</td><td class="env-example">C:\drivers\IEDriverServer.exe</td></tr>
+          </tbody>
+        </table>
+        <div class="env-note">
+          <strong>Tip:</strong> On Node.js, set these before launching se-cli: <code>webdriver.chrome.driver=/path/to/chromedriver se-cli open https://example.com</code>. Or put the driver binary in your system <code>PATH</code> — Selenium Manager will find it automatically.
+        </div>
+      </div>
+
+      <div class="env-group">
+        <div class="env-group-title">
+          <span class="env-group-title-icon">🌐</span>
+          Browser Binary Path Variables
+        </div>
+        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;">
+          When browsers are installed in non-default locations, use these variables to help Selenium Manager locate them.
+        </p>
+        <table class="env-table">
+          <thead><tr><th>Variable</th><th>Description</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>SE_BROWSER_PATH</code></td><td class="env-desc">Selenium Manager — browser binary absolute path</td><td class="env-example">C:\Program Files\Google\Chrome\Application\chrome.exe</td></tr>
+            <tr><td><code>CHROME_BIN</code></td><td class="env-desc">Chrome/Chromium binary path (recognized by some tools)</td><td class="env-example">/usr/bin/google-chrome-stable</td></tr>
+            <tr><td><code>CHROME_PATH</code></td><td class="env-desc">Alternative Chrome binary path variable</td><td class="env-example">/opt/google/chrome/chrome</td></tr>
+            <tr><td><code>FIREFOX_BIN</code></td><td class="env-desc">Firefox binary path</td><td class="env-example">/usr/bin/firefox</td></tr>
+            <tr><td><code>MOZ_HEADLESS</code></td><td class="env-desc">Firefox headless mode switch (recognized by Firefox itself)</td><td class="env-example">1</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="env-group">
+        <div class="env-group-title">
+          <span class="env-group-title-icon">🔗</span>
+          Remote WebDriver &amp; Grid Variables
+        </div>
+        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;">
+          For connecting to Selenium Grid or cloud providers (BrowserStack, Sauce Labs, etc.). se-cli's <code>--endpoint</code> flag for Grid attach is on the v0.6 roadmap.
+        </p>
+        <table class="env-table">
+          <thead><tr><th>Variable</th><th>Description</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>SELENIUM_REMOTE_URL</code></td><td class="env-desc">Remote WebDriver server URL (Grid or SaaS)</td><td class="env-example">http://localhost:4444</td></tr>
+            <tr><td><code>SELENIUM_GRID_URL</code></td><td class="env-desc">Selenium Grid URL (alternative binding)</td><td class="env-example">http://grid.example.com:4444</td></tr>
+            <tr><td><code>SE_HUB_HOST</code></td><td class="env-desc">Grid Hub hostname</td><td class="env-example">grid.example.com</td></tr>
+            <tr><td><code>SE_HUB_PORT</code></td><td class="env-desc">Grid Hub port (default: 4444)</td><td class="env-example">4444</td></tr>
+            <tr><td><code>SE_NODE_MAX_SESSIONS</code></td><td class="env-desc">Max concurrent sessions per node (default: 1)</td><td class="env-example">4</td></tr>
+            <tr><td><code>SE_NODE_SESSION_TIMEOUT</code></td><td class="env-desc">Session idle timeout in seconds (default: 300)</td><td class="env-example">600</td></tr>
+          </tbody>
+        </table>
+        <div class="env-note">
+          <strong>Note:</strong> se-cli currently manages local browsers only. Remote Grid attach (<code>--endpoint</code>) is planned for v0.6. The variables above are recognized by the underlying <code>selenium-webdriver</code> library when configuring remote connections manually.
+        </div>
+      </div>
+
+      <div class="env-group">
+        <div class="env-group-title">
+          <span class="env-group-title-icon">🐳</span>
+          Docker &amp; CI Tips
+        </div>
+        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;">
+          Common patterns for running se-cli in Docker containers and CI pipelines.
+        </p>
+        <table class="env-table">
+          <thead><tr><th>Variable</th><th>Description</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>SE_OFFLINE</code></td><td class="env-desc">Use pre-installed browsers/drivers in Docker image (default: true in Selenium images)</td><td class="env-example">true</td></tr>
+            <tr><td><code>SE_SCREEN_WIDTH</code></td><td class="env-desc">Screen width for headless display (Docker)</td><td class="env-example">1920</td></tr>
+            <tr><td><code>SE_SCREEN_HEIGHT</code></td><td class="env-desc">Screen height for headless display (Docker)</td><td class="env-example">1080</td></tr>
+            <tr><td><code>SE_START_XVFB</code></td><td class="env-desc">Start Xvfb virtual display in container</td><td class="env-example">true</td></tr>
+            <tr><td><code>DISPLAY</code></td><td class="env-desc">X11 display address for Linux headless environments</td><td class="env-example">:99</td></tr>
+            <tr><td><code>SE_JAVA_OPTS</code></td><td class="env-desc">Extra JVM options for Selenium Grid components</td><td class="env-example">-Xmx512m</td></tr>
+          </tbody>
+        </table>
+        <div class="env-note">
+          <strong>CI tip:</strong> In GitHub Actions, Chrome is pre-installed on <code>ubuntu-latest</code> runners. For other browsers, use <code>npx @puppeteer/browsers install chrome@stable</code> before running se-cli. Set <code>SE_AVOID_STATS=true</code> to disable telemetry in CI.
+        </div>
+      </div>
+
+      <div class="env-group">
+        <div class="env-group-title">
+          <span class="env-group-title-icon">💡</span>
+          se-cli CLI Flags Reference
+        </div>
+        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;">
+          se-cli-specific flags that control browser selection, output format, and session behavior. These take priority over environment variables.
+        </p>
+        <table class="env-table">
+          <thead><tr><th>Flag</th><th>Description</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>--browser=&lt;name&gt;</code></td><td class="env-desc">Browser selection: chrome (default), edge, firefox</td><td class="env-example">--browser=firefox</td></tr>
+            <tr><td><code>--headed</code></td><td class="env-desc">Show browser window (default: headless)</td><td class="env-example">se-cli open --headed</td></tr>
+            <tr><td><code>--cdp=&lt;url&gt;</code></td><td class="env-desc">Attach to running Chrome/Edge via CDP</td><td class="env-example">--cdp=http://localhost:9222</td></tr>
+            <tr><td><code>-s=&lt;name&gt;</code></td><td class="env-desc">Named session for parallel browsers</td><td class="env-example">-s=firefox-session</td></tr>
+            <tr><td><code>--raw</code></td><td class="env-desc">Output only the result value (for scripting)</td><td class="env-example">se-cli --raw title</td></tr>
+            <tr><td><code>--json</code></td><td class="env-desc">Structured JSON output</td><td class="env-example">se-cli --json snapshot</td></tr>
+            <tr><td><code>--filename=&lt;f&gt;</code></td><td class="env-desc">Save snapshot/screenshot to file</td><td class="env-example">--filename=page.yml</td></tr>
+            <tr><td><code>--depth=&lt;N&gt;</code></td><td class="env-desc">Limit aria snapshot recursion depth (default: 50)</td><td class="env-example">--depth=3</td></tr>
+            <tr><td><code>--regex=&lt;pattern&gt;</code></td><td class="env-desc">Search snapshot with regex (find command)</td><td class="env-example">--regex "price.*\\$[0-9]+"</td></tr>
+            <tr><td><code>--submit</code></td><td class="env-desc">Submit form after fill (Enter key)</td><td class="env-example">se-cli fill e1 "text" --submit</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="architecture">
     <div class="container">
       <h2 class="section-title">Architecture</h2>
       <p class="section-lead">Short-lived CLI + long-lived daemon, talking over line-delimited JSON.</p>
@@ -556,7 +726,7 @@ await driver.findElement(
     </div>
   </section>
 
-  <section class="section section-alt" id="agents">
+  <section class="section" id="agents">
     <div class="container">
       <h2 class="section-title">AI Agent Integration</h2>
       <p class="section-lead">Works with any agent that runs shell commands. No MCP server, no schema bloat.</p>
@@ -617,7 +787,7 @@ Agent: I'll navigate and test the login flow.
     </div>
   </section>
 
-  <section class="section" id="comparison">
+  <section class="section section-alt" id="comparison">
     <div class="container">
       <h2 class="section-title">vs. playwright-cli</h2>
       <p class="section-lead">Different tradeoffs. Pick the one that fits your stack.</p>
@@ -641,7 +811,7 @@ Agent: I'll navigate and test the login flow.
     </div>
   </section>
 
-  <section class="section section-alt" id="browsers">
+  <section class="section" id="browsers">
     <div class="container">
       <h2 class="section-title">Browser Support</h2>
       <p class="section-lead">Three browsers, one CLI. Drivers are auto-managed — no manual setup.</p>
@@ -689,7 +859,7 @@ Agent: I'll navigate and test the login flow.
     </div>
   </section>
 
-  <section class="section" id="roadmap">
+  <section class="section section-alt" id="roadmap">
     <div class="container">
       <h2 class="section-title">Roadmap</h2>
       <p class="section-lead">Incremental delivery, version by version. <a href="https://github.com/se-cli/se-cli/issues?q=is%3Aissue+label%3Av0.2">Track on GitHub →</a></p>
@@ -747,7 +917,7 @@ Agent: I'll navigate and test the login flow.
     </div>
   </section>
 
-  <section class="section section-alt" id="development">
+  <section class="section" id="development">
     <div class="container">
       <h2 class="section-title">Development</h2>
       <p class="section-lead">Open source, Apache-2.0. Clone, build, test, and contribute.</p>
@@ -809,7 +979,7 @@ npx vitest run tests/integration/</code></pre>
     </div>
   </section>
 
-  <section class="section" id="faq">
+  <section class="section section-alt" id="faq">
     <div class="container">
       <h2 class="section-title">FAQ</h2>
       <p class="section-lead">Common questions about se-cli.</p>
