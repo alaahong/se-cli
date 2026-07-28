@@ -24,7 +24,12 @@ const crypto = require('crypto');
 const wsHash = crypto.createHash('sha1').update(workspaceDir).digest('hex').slice(0, 16);
 const registry = new Registry(baseDaemonDir());
 
+// Track the current socket so we can send an error response if the
+// process crashes unexpectedly (e.g. native browser driver crash).
+let activeSocket: net.Socket | null = null;
+
 const server = net.createServer((socket) => {
+  activeSocket = socket;
   let buffer = '';
   socket.on('data', async (data) => {
     buffer += data.toString();
@@ -48,7 +53,7 @@ const server = net.createServer((socket) => {
         socket.write(JSON.stringify(response) + '\n');
       } catch (e: any) {
         const errResp: ServerMessage = { ok: false, error: e.message, code: 'DRIVER_ERROR' };
-        socket.write(JSON.stringify(errResp) + '\n');
+        try { socket.write(JSON.stringify(errResp) + '\n'); } catch {}
       }
     }
   });
@@ -70,20 +75,20 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
 
       if (browserName === 'chrome') {
         const chromeArgs: string[] = [];
-        if (!headed && !cdpEndpoint) chromeArgs.push('--headless=new', '--no-sandbox', '--disable-dev-shm-usage');
+        if (!headed && !cdpEndpoint) chromeArgs.push('--headless=new', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu');
         const chromeOpts: any = { args: chromeArgs };
         if (cdpEndpoint) chromeOpts.debuggerAddress = cdpEndpoint;
         builder.getCapabilities().set('goog:chromeOptions', chromeOpts);
       } else if (browserName === 'edge') {
         const edgeArgs: string[] = [];
-        if (!headed) edgeArgs.push('--headless=new');
+        if (!headed) edgeArgs.push('--headless=new', '--disable-gpu');
         const edgeOpts: any = { args: edgeArgs };
         if (cdpEndpoint) edgeOpts.debuggerAddress = cdpEndpoint;
         builder.getCapabilities().set('ms:edgeOptions', edgeOpts);
       } else if (browserName === 'firefox') {
         const firefoxOpts: any = {};
         if (!headed) {
-          firefoxOpts.args = ['-headless'];
+          firefoxOpts.args = ['-headless', '--no-remote'];
         }
         builder.getCapabilities().set('moz:firefoxOptions', firefoxOpts);
       }
@@ -114,6 +119,20 @@ async function shutdown() {
   }
   process.exit(0);
 }
+
+// Catch uncaught exceptions so the daemon doesn't silently crash.
+// Try to send an error response to the client before shutting down.
+process.on('uncaughtException', (err: Error) => {
+  process.stderr.write(`Uncaught exception: ${err.message}\n${err.stack || ''}\n`);
+  if (activeSocket && !activeSocket.destroyed) {
+    try {
+      const errResp: ServerMessage = { ok: false, error: `daemon crash: ${err.message}`, code: 'DRIVER_ERROR' };
+      activeSocket.write(JSON.stringify(errResp) + '\n');
+      activeSocket.end();
+    } catch {}
+  }
+  shutdown();
+});
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);

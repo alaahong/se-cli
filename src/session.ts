@@ -99,7 +99,24 @@ export class Session {
       method: 'run',
       params: { args, cwd, raw: opts.raw, json: opts.json },
     };
-    return this.sendAndClose(msg);
+    // Retry on connection failures — the daemon may have just started
+    // and the browser driver isn't ready yet.
+    let lastErr: Error | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        return await this.sendAndClose(msg);
+      } catch (e: any) {
+        lastErr = e;
+        // Only retry on connection errors, not on legitimate error responses.
+        const msg = e.message || '';
+        if (msg.includes('daemon closed connection') || msg.includes('ECONNREFUSED') || msg.includes('connect ENOENT')) {
+          await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+          continue;
+        }
+        throw e;
+      }
+    }
+    throw lastErr;
   }
 
   async stop(): Promise<void> {

@@ -1,18 +1,20 @@
 import { Response } from '../../response';
-import { browser_snapshot } from './snapshot';
+import { generateAriaSnapshotScript } from '../../snapshot/aria-snapshot';
 
 export async function browser_find(
   driver: any,
   params: { text?: string; regex?: string },
   response: Response
 ): Promise<void> {
-  // Reuse browser_snapshot to generate the YAML, so find and snapshot
-  // always share the exact same executeScript code path.
-  const snapshotResponse = new Response({ raw: true, json: false });
-  await browser_snapshot(driver, {}, snapshotResponse);
-  const yaml = snapshotResponse.serialize();
+  // Call executeScript directly to get the snapshot YAML, sharing the
+  // exact same script generation code as browser_snapshot.
+  const script = generateAriaSnapshotScript();
+  const yaml: string = await driver.executeScript(`
+    const options = { target: arguments[0], depth: arguments[1] };
+    return (${script})(options);
+  `, null, 50);
 
-  const lines = yaml.split('\n');
+  const lines = (yaml || '').split('\n');
   const matches: string[] = [];
 
   if (params.regex) {
@@ -41,5 +43,9 @@ export async function browser_find(
     });
   }
 
-  response.addResult(matches.join('\n'));
+  if (matches.length === 0) {
+    response.addResult('No matches found.');
+  } else {
+    response.addResult(matches.join('\n'));
+  }
 }

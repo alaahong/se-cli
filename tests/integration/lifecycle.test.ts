@@ -64,7 +64,8 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   (skip ? it.skip : it)('clicks element by ref', () => {
     run(['open', 'https://demo.playwright.dev/todomvc/', `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
     const snapshot = run(['--raw', 'snapshot'], { SE_CLI_SESSION: `test-${browser}` });
-    const refMatch = snapshot.match(/ref=(e\d+)/);
+    // Look for a textbox ref specifically — the first ref might be a link or other element.
+    const refMatch = snapshot.match(/textbox[^\n]*ref=(e\d+)/);
     expect(refMatch).not.toBeNull();
     const ref = refMatch![1];
     run(['fill', ref, 'Buy groceries'], { SE_CLI_SESSION: `test-${browser}` });
