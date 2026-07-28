@@ -22,9 +22,9 @@ export class Session {
   async canConnect(): Promise<boolean> {
     return new Promise((resolve) => {
       const sock = net.connect(this.socketPath);
-      sock.once('connect', () => { sock.end(); resolve(true); });
-      sock.once('error', () => resolve(false));
-      setTimeout(() => { sock.destroy(); resolve(false); }, 1000);
+      const timer = setTimeout(() => { sock.destroy(); resolve(false); }, 1000);
+      sock.once('connect', () => { clearTimeout(timer); sock.end(); resolve(true); });
+      sock.once('error', () => { clearTimeout(timer); resolve(false); });
     });
   }
 
@@ -56,6 +56,10 @@ export class Session {
       child.on('error', (err) => {
         clearTimeout(timeout);
         reject(err);
+      });
+      child.on('exit', (code, signal) => {
+        clearTimeout(timeout);
+        reject(new Error(`daemon exited early code=${code} signal=${signal}`));
       });
     });
   }
@@ -107,6 +111,14 @@ export class Session {
       sock.once('error', (err) => {
         clearTimeout(timeout);
         reject(err);
+      });
+
+      sock.once('close', () => {
+        clearTimeout(timeout);
+        // Only reject if we haven't resolved yet (no data received)
+        if (buffer === '' || !buffer.includes('\n')) {
+          reject(new Error('daemon closed connection without response'));
+        }
       });
     });
   }

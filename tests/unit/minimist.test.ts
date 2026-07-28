@@ -23,6 +23,11 @@ describe('parseArgs', () => {
     expect(result.session).toBe('mysession');
   });
 
+  it('parses -s name (space-separated) alias', () => {
+    const result = parseArgs(['-s', 'mysession', 'open'], { boolean: [], string: ['session'], alias: { s: 'session' } });
+    expect(result.session).toBe('mysession');
+  });
+
   it('parses --filename path', () => {
     const result = parseArgs(['--filename=todo.png', 'screenshot'], { boolean: [], string: ['filename'], alias: {} });
     expect(result.filename).toBe('todo.png');

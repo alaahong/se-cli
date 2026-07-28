@@ -1,4 +1,13 @@
 import { By } from 'selenium-webdriver';
+import * as path from 'path';
+
+export function safeFilename(filename: string): string {
+  const base = path.basename(filename);
+  if (base !== filename) {
+    throw new Error(`Invalid filename: path traversal not allowed. Got: ${filename}`);
+  }
+  return base;
+}
 
 export async function resolveTarget(target: string) {
   const refMatch = target.match(/^e\d+$/);

@@ -1,4 +1,5 @@
 import * as net from 'net';
+import * as fs from 'fs';
 import { Registry, SessionConfig } from '../registry';
 import { baseDaemonDir } from '../config';
 import type { ClientMessage, ServerMessage } from '../protocol';
@@ -37,6 +38,9 @@ const server = net.createServer((socket) => {
       }
     }
   });
+  socket.on('error', () => {
+    // Silently ignore socket errors (client disconnect, EPIPE, etc.)
+  });
 });
 
 async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
@@ -74,9 +78,14 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
 async function shutdown() {
   try {
     if (driver) await driver.quit();
-  } catch {}
+  } catch (e: any) {
+    process.stderr.write(`driver quit failed: ${e.message}\n`);
+  }
   registry.deleteSession(wsHash, sessionName);
   server.close();
+  if (process.platform !== 'win32') {
+    try { fs.unlinkSync(socketPath); } catch {}
+  }
   process.exit(0);
 }
 
@@ -109,6 +118,16 @@ const config: SessionConfig = {
   pid: process.pid,
 };
 registry.writeSession(wsHash, config);
+
+server.on('error', (err: any) => {
+  process.stderr.write(`Server error: ${err.message}\n`);
+  shutdown();
+});
+
+// Remove stale socket file on POSIX
+if (process.platform !== 'win32') {
+  try { fs.unlinkSync(socketPath); } catch {}
+}
 
 server.listen(socketPath, () => {
   console.log(`Daemon listening on ${socketPath}`);

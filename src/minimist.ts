@@ -14,9 +14,6 @@ export function parseArgs(argv: string[], opts: ParseOptions): ParsedArgs {
   const allBoolean = new Set(opts.boolean);
   const allString = new Set(opts.string);
 
-  for (const key of Object.values(opts.alias)) {
-    allBoolean.add(key);
-  }
   for (const [alias, full] of Object.entries(opts.alias)) {
     if (allBoolean.has(full)) allBoolean.add(alias);
     if (allString.has(full)) allString.add(alias);

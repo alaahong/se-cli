@@ -1,5 +1,5 @@
 import { Response } from '../../response';
-import { findElement } from './shared';
+import { findElement, safeFilename } from './shared';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -18,7 +18,7 @@ export async function browser_screenshot(
 
   const outDir = path.join(process.cwd(), '.selenium-cli');
   fs.mkdirSync(outDir, { recursive: true });
-  const filename = params.filename || `screenshot-${Date.now()}.png`;
+  const filename = params.filename ? safeFilename(params.filename) : `screenshot-${Date.now()}.png`;
   const file = path.join(outDir, filename);
   fs.writeFileSync(file, image);
 

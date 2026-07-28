@@ -1,14 +1,21 @@
 import type { ServerMessage } from './protocol';
 
+export class CliError extends Error {
+  constructor(message: string, public code?: string) {
+    super(message);
+    this.name = 'CliError';
+  }
+}
+
 export function render(msg: ServerMessage): void {
   if (!msg.ok) {
-    process.stderr.write(`Error: ${msg.error || 'unknown'}\n`);
+    let text = `Error: ${msg.error || 'unknown'}\n`;
     if (msg.code === 'DAEMON_DEAD') {
-      process.stderr.write('Hint: run `selenium-cli open` to start a session.\n');
+      text += 'Hint: run `selenium-cli open` to start a session.\n';
     } else if (msg.code === 'ELEMENT_NOT_FOUND') {
-      process.stderr.write('Hint: run `selenium-cli snapshot` to refresh refs.\n');
+      text += 'Hint: run `selenium-cli snapshot` to refresh refs.\n';
     }
-    process.exit(1);
+    throw new CliError(text.trim(), msg.code);
   }
   if (msg.text !== undefined) process.stdout.write(msg.text + '\n');
   else if (msg.raw !== undefined) process.stdout.write(msg.raw);

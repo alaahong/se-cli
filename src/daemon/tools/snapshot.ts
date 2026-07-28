@@ -1,5 +1,6 @@
 import { Response } from '../../response';
 import { generateAriaSnapshotScript } from '../../snapshot/aria-snapshot';
+import { safeFilename } from './shared';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -16,7 +17,7 @@ export async function browser_snapshot(
   if (params.filename) {
     const outDir = path.join(process.cwd(), '.selenium-cli');
     fs.mkdirSync(outDir, { recursive: true });
-    const file = path.join(outDir, params.filename);
+    const file = path.join(outDir, safeFilename(params.filename));
     fs.writeFileSync(file, yaml);
     response.addResult(`[Snapshot](.selenium-cli/${params.filename})`);
   } else {

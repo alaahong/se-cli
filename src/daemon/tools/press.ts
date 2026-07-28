@@ -16,6 +16,7 @@ const KEY_MAP: Record<string, string> = {
 export async function browser_press(driver: any, params: { key: string }, response: Response): Promise<void> {
   const key = KEY_MAP[params.key] || params.key;
   await driver.switchTo().activeElement().sendKeys(key);
-  response.addCode(`await driver.switchTo().activeElement().sendKeys(Key.${params.key.toUpperCase()});`);
+  const codeKey = params.key in KEY_MAP ? `Key.${params.key.toUpperCase()}` : `'${params.key}'`;
+  response.addCode(`await driver.switchTo().activeElement().sendKeys(${codeKey});`);
   response.addResult(`pressed ${params.key}`);
 }
