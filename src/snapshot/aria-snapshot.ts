@@ -96,6 +96,11 @@ export function generateAriaSnapshotScript(): string {
     if (el.hidden) return true;
     if (el.getAttribute('aria-hidden') === 'true') return true;
     if (el.style && (el.style.display === 'none' || el.style.visibility === 'hidden')) return true;
+    // getComputedStyle for elements that may be hidden via CSS classes
+    try {
+      const style = window.getComputedStyle(el);
+      if (style.display === 'none' || style.visibility === 'hidden') return true;
+    } catch (e) {}
     return false;
   }
 
@@ -145,8 +150,23 @@ export function generateAriaSnapshotScript(): string {
       lines.push(indent + '- ' + role + labelPart + attrs + refAttr);
     }
 
+    // Detect iframes and output placeholder
     for (const child of el.children) {
+      if (child.tagName === 'IFRAME') {
+        const src = child.src || child.getAttribute('src') || '';
+        const indent2 = '  '.repeat(level + 1);
+        lines.push(indent2 + '- iframe: ' + src);
+        continue;
+      }
       walk(child, level + 1, depth);
+    }
+    // Detect open shadow roots
+    if (el.shadowRoot) {
+      const indent2 = '  '.repeat(level + 1);
+      lines.push(indent2 + '- shadowroot:');
+      for (const child of el.shadowRoot.children) {
+        walk(child, level + 2, depth);
+      }
     }
   }
 

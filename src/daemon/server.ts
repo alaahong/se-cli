@@ -51,15 +51,23 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
     if (!driver) {
       const { Builder } = require('selenium-webdriver');
       const builder = new Builder().forBrowser(browserName);
-      if (!headed) builder.getCapabilities().set('goog:chromeOptions', { args: ['--headless=new', '--no-sandbox', '--disable-dev-shm-usage'] });
-      if (cdpEndpoint) builder.getCapabilities().set('goog:chromeOptions', { debuggerAddress: cdpEndpoint });
+      if (browserName === 'chrome') {
+        const chromeOpts: any = { args: ['--no-sandbox', '--disable-dev-shm-usage'] };
+        if (!headed && !cdpEndpoint) chromeOpts.args.unshift('--headless=new');
+        if (cdpEndpoint) chromeOpts.debuggerAddress = cdpEndpoint;
+        builder.getCapabilities().set('goog:chromeOptions', chromeOpts);
+      }
       driver = await builder.build();
     }
     const { toolName, toolParams } = parseCommand(msg.params.args);
     const response = await callTool(driver, toolName, toolParams, { raw: !!msg.params.raw, json: !!msg.params.json });
     return { ok: true, text: response.serialize() };
   } catch (e: any) {
-    return { ok: false, error: e.message, code: 'DRIVER_ERROR' };
+    let code: ServerMessage['code'] = 'DRIVER_ERROR';
+    const name = e.name || '';
+    if (name === 'NoSuchElementError' || name === 'StaleElementReferenceError') code = 'ELEMENT_NOT_FOUND';
+    else if (name === 'TimeoutError') code = 'TIMEOUT';
+    return { ok: false, error: e.message, code };
   }
 }
 
@@ -79,6 +87,17 @@ setInterval(() => {
   if (Date.now() - lastActivity > 30 * 60 * 1000) shutdown();
 }, 60 * 1000);
 
+// Heartbeat: periodically check driver health via getTitle()
+setInterval(async () => {
+  if (!driver) return;
+  try {
+    await driver.getTitle();
+  } catch (e: any) {
+    process.stderr.write('heartbeat failed: ' + e.message + '\n');
+    await shutdown();
+  }
+}, 60 * 1000);
+
 const config: SessionConfig = {
   name: sessionName,
   version,
@@ -87,6 +106,7 @@ const config: SessionConfig = {
   workspaceDir,
   persistent: false,
   browserName,
+  pid: process.pid,
 };
 registry.writeSession(wsHash, config);
 

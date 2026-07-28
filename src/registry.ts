@@ -9,6 +9,7 @@ export interface SessionConfig {
   workspaceDir: string;
   persistent: boolean;
   browserName: 'chrome' | 'edge' | 'firefox';
+  pid?: number;
 }
 
 export class Registry {
