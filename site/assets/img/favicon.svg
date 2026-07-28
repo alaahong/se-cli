@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="selenium-cli logo">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f1420"/>
+      <stop offset="1" stop-color="#0b0f17"/>
+    </linearGradient>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5fd33a"/>
+      <stop offset="1" stop-color="#43B02A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded background -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bg)" stroke="#1f2735" stroke-width="1.5"/>
+
+  <!-- Terminal window -->
+  <rect x="11" y="17" width="42" height="30" rx="4" fill="#0a0e16" stroke="#2a3344" stroke-width="1"/>
+
+  <!-- Title bar dots -->
+  <circle cx="16" cy="22" r="1.4" fill="#f87171"/>
+  <circle cx="20" cy="22" r="1.4" fill="#fbbf24"/>
+  <circle cx="24" cy="22" r="1.4" fill="#5fd33a"/>
+
+  <!-- Prompt caret > -->
+  <path d="M16 31 L21 34 L16 37" fill="none" stroke="url(#brand)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Command underscore cursor -->
+  <rect x="24" y="35" width="9" height="2.2" rx="1" fill="#5fd33a"/>
+
+  <!-- Bottom browser strip -->
+  <rect x="11" y="50" width="42" height="5" rx="2.5" fill="url(#brand)" opacity="0.85"/>
+</svg>

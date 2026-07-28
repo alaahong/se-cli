@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Token-efficient Selenium browser automation CLI for AI agents and humans. Multi-browser, daemon architecture, aria snapshots." />
+  <title>selenium-cli — Token-efficient Selenium for AI agents</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <nav class="nav" id="nav">
+    <div class="container nav-inner">
+      <a href="#" class="nav-logo" aria-label="selenium-cli home">
+        <img src="assets/img/favicon.svg" alt="" width="28" height="28" />
+        <span>selenium-cli</span>
+      </a>
+      <div class="nav-links" id="nav-links">
+        <a href="#features">Features</a>
+        <a href="#quickstart">Quick Start</a>
+        <a href="#commands">Commands</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#roadmap">Roadmap</a>
+        <a href="https://github.com/alaahong/selenium-cli" class="nav-gh" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="container hero-inner">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        <span>v0.1 MVP · Multi-browser · Daemon architecture</span>
+      </div>
+      <h1 class="hero-title">
+        Token-efficient Selenium<br />
+        <span class="hero-title-accent">for AI agents &amp; humans</span>
+      </h1>
+      <p class="hero-subtitle">
+        A short-lived CLI + long-lived daemon that drives Chrome, Edge, and Firefox.
+        Aria snapshots and ref references keep token cost low — agent-friendly by design,
+        scriptable by humans.
+      </p>
+      <div class="hero-cta">
+        <a href="#quickstart" class="btn btn-primary">Get Started</a>
+        <a href="https://github.com/alaahong/selenium-cli" class="btn btn-ghost" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          View on GitHub
+        </a>
+      </div>
+      <div class="hero-install">
+        <code id="install-cmd">npm install -g selenium-cli</code>
+        <button class="copy-btn" data-copy="install-cmd" aria-label="Copy install command">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25z"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="hero-glow" aria-hidden="true"></div>
+  </header>
+
+  <section class="section section-why">
+    <div class="container">
+      <h2 class="section-title">Why selenium-cli?</h2>
+      <p class="section-lead">
+        Selenium MCP implementations burn tokens — heavy schemas, full accessibility dumps, no CLI.
+        selenium-cli borrows the proven architecture from
+        <a href="https://github.com/microsoft/playwright-cli" target="_blank" rel="noopener">playwright-cli</a>
+        and ports it to the Selenium ecosystem.
+      </p>
+      <div class="why-grid">
+        <div class="why-card">
+          <div class="why-icon why-icon-red">🔥</div>
+          <h3>The Problem</h3>
+          <p>Selenium MCP loads ~5KB of schema per call. The full accessibility tree is returned every time. There's no CLI — agents are forced through verbose JSON-RPC envelopes.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon why-icon-green">✨</div>
+          <h3>The Solution</h3>
+          <p>A short-lived CLI process sends one JSON line to a long-lived daemon. Aria snapshots return compact YAML with element refs. Every action emits reusable Selenium code.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="features">
+    <div class="container">
+      <h2 class="section-title">Features</h2>
+      <p class="section-lead">Everything you need to drive a browser from a shell or an AI agent.</p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>10× fewer tokens</h3>
+          <p>Compact aria snapshots with refs (<code>e1</code>, <code>e2</code>) instead of full accessibility tree dumps. Schemas never enter the agent's context.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🌐</div>
+          <h3>Multi-browser</h3>
+          <p>Chrome, Edge, and Firefox supported out of the box. One CLI, three browsers, single session or parallel named sessions.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔄</div>
+          <h3>Session persistence</h3>
+          <p>The daemon holds the WebDriver across CLI calls. No browser restart per command. No driver reconnect overhead.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🏷️</div>
+          <h3>Named sessions</h3>
+          <p>Run multiple browsers in parallel with <code>-s=name</code>. Isolate contexts, switch between sessions, close them all at once.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <h3>Agent-agnostic</h3>
+          <p>Works with any AI agent that runs shell commands — Claude Code, Cursor, Copilot CLI. Drop in <code>SKILL.md</code> and go.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📝</div>
+          <h3>Code generation</h3>
+          <p>Every action emits the equivalent Selenium code. Copy directly into your test files — no translation step.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <h3>Aria snapshots</h3>
+          <p>YAML representation of the page following W3C ARIA roles. Interactive elements get refs you can act on by name.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔌</div>
+          <h3>CDP attach</h3>
+          <p>Attach to a running Chrome via <code>--cdp=&lt;url&gt;</code>. Inspect real sessions, debug real state.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🧪</div>
+          <h3>Tested &amp; CI-ready</h3>
+          <p>99 unit tests + 30 integration tests. GitHub Actions matrix across OS and browsers. npm publish on release.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="quickstart">
+    <div class="container">
+      <h2 class="section-title">Quick Start</h2>
+      <p class="section-lead">Install, open a page, snapshot, interact — in under a minute.</p>
+
+      <div class="qs-grid">
+        <div class="qs-step">
+          <div class="qs-num">1</div>
+          <h3>Install</h3>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">bash</span>
+              <button class="copy-btn" data-copy="qs1" aria-label="Copy"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25z"/></svg></button>
+            </div>
+            <pre><code id="qs1">npm install -g selenium-cli</code></pre>
+          </div>
+        </div>
+
+        <div class="qs-step">
+          <div class="qs-num">2</div>
+          <h3>Open &amp; snapshot</h3>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">bash</span>
+              <button class="copy-btn" data-copy="qs2" aria-label="Copy"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25z"/></svg></button>
+            </div>
+<pre><code id="qs2">selenium-cli open https://example.com
+selenium-cli snapshot
+# - document:
+#   - heading "Example Domain" [level=1]
+#   - link "More information..." [ref=e1]</code></pre>
+          </div>
+        </div>
+
+        <div class="qs-step">
+          <div class="qs-num">3</div>
+          <h3>Interact by ref</h3>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">bash</span>
+              <button class="copy-btn" data-copy="qs3" aria-label="Copy"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25z"/></svg></button>
+            </div>
+<pre><code id="qs3">selenium-cli click e1
+
+### Ran Selenium code
+await driver.findElement(
+  By.css('[data-se-ref="e1"]')
+).click();
+
+selenium-cli close</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="commands">
+    <div class="container">
+      <h2 class="section-title">Command Reference</h2>
+      <p class="section-lead">22 commands across sessions, navigation, interaction, snapshots, and execution.</p>
+
+      <div class="cmd-tabs" role="tablist">
+        <button class="cmd-tab active" data-tab="session" role="tab">Session</button>
+        <button class="cmd-tab" data-tab="nav" role="tab">Navigation</button>
+        <button class="cmd-tab" data-tab="interact" role="tab">Interaction</button>
+        <button class="cmd-tab" data-tab="snap" role="tab">Snapshot</button>
+        <button class="cmd-tab" data-tab="exec" role="tab">Save &amp; Execute</button>
+        <button class="cmd-tab" data-tab="flags" role="tab">Flags</button>
+      </div>
+
+      <div class="cmd-panel active" data-panel="session">
+        <table class="cmd-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>open [url]</code></td><td>Start daemon + browser, optionally navigate to URL</td></tr>
+            <tr><td><code>close</code></td><td>Close browser and daemon</td></tr>
+            <tr><td><code>list</code></td><td>List all sessions</td></tr>
+            <tr><td><code>close-all</code></td><td>Close all sessions gracefully</td></tr>
+            <tr><td><code>kill-all</code></td><td>Force-kill all sessions</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cmd-panel" data-panel="nav">
+        <table class="cmd-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>goto &lt;url&gt;</code></td><td>Navigate to URL</td></tr>
+            <tr><td><code>go-back</code></td><td>Browser back</td></tr>
+            <tr><td><code>go-forward</code></td><td>Browser forward</td></tr>
+            <tr><td><code>reload</code></td><td>Reload page</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cmd-panel" data-panel="interact">
+        <table class="cmd-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>click &lt;ref|selector&gt;</code></td><td>Click element</td></tr>
+            <tr><td><code>fill &lt;ref|selector&gt; &lt;text&gt;</code></td><td>Clear and fill input</td></tr>
+            <tr><td><code>type &lt;text&gt;</code></td><td>Type into focused element</td></tr>
+            <tr><td><code>press &lt;key&gt;</code></td><td>Press keyboard key (Enter, Tab, Escape, …)</td></tr>
+            <tr><td><code>select &lt;ref&gt; &lt;value&gt;</code></td><td>Select dropdown option</td></tr>
+            <tr><td><code>check &lt;ref&gt;</code></td><td>Check checkbox</td></tr>
+            <tr><td><code>uncheck &lt;ref&gt;</code></td><td>Uncheck checkbox</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cmd-panel" data-panel="snap">
+        <table class="cmd-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>snapshot [ref]</code></td><td>Aria snapshot of page or element subtree</td></tr>
+            <tr><td><code>snapshot --depth=N</code></td><td>Limit snapshot depth</td></tr>
+            <tr><td><code>snapshot --filename=f.yml</code></td><td>Save snapshot to file</td></tr>
+            <tr><td><code>find &lt;text&gt;</code></td><td>Search snapshot for text</td></tr>
+            <tr><td><code>find --regex &lt;pattern&gt;</code></td><td>Search snapshot with regex</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cmd-panel" data-panel="exec">
+        <table class="cmd-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>screenshot [ref]</code></td><td>Take screenshot (full page or element)</td></tr>
+            <tr><td><code>screenshot --filename=f.png</code></td><td>Save screenshot to file</td></tr>
+            <tr><td><code>eval "&lt;js&gt;"</code></td><td>Execute JavaScript, return result</td></tr>
+            <tr><td><code>eval "&lt;js&gt;" &lt;ref&gt;</code></td><td>Execute JavaScript on element</td></tr>
+            <tr><td><code>title</code></td><td>Get page title</td></tr>
+            <tr><td><code>url</code></td><td>Get current URL</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cmd-panel" data-panel="flags">
+        <table class="cmd-table">
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>--raw</code></td><td>Output only the result value (for scripting)</td></tr>
+            <tr><td><code>--json</code></td><td>Structured JSON output</td></tr>
+            <tr><td><code>-s=&lt;name&gt;</code></td><td>Use named session</td></tr>
+            <tr><td><code>--browser=chrome|edge|firefox</code></td><td>Browser selection (default: chrome)</td></tr>
+            <tr><td><code>--headed</code></td><td>Show browser window (default: headless)</td></tr>
+            <tr><td><code>--cdp=&lt;url&gt;</code></td><td>Attach to running Chrome via CDP</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="architecture">
+    <div class="container">
+      <h2 class="section-title">Architecture</h2>
+      <p class="section-lead">Short-lived CLI + long-lived daemon, talking over line-delimited JSON.</p>
+
+      <div class="arch-diagram">
+<pre><code>┌─────────────────┐  Unix socket / Win pipe       ┌──────────────────────┐
+│  selenium-cli   │ ───── line-delimited JSON ──▶ │  selenium-cli daemon │
+│  (short-lived)  │ ◀──── single response, close ─ │  (holds WebDriver)   │
+└─────────────────┘                                └──────────────────────┘
+                                                          │
+                                                          │ W3C WebDriver HTTP
+                                                          ▼
+                                                    ┌──────────┐
+                                                    │ Browser  │
+                                                    │(Chrome/  │
+                                                    │ Edge/FF) │
+                                                    └──────────┘</code></pre>
+      </div>
+
+      <div class="arch-grid">
+        <div class="arch-card">
+          <h3>CLI process</h3>
+          <p>Spawned per command. Sends one JSON line, receives one response, exits. Zero schema overhead — the daemon holds all the state.</p>
+        </div>
+        <div class="arch-card">
+          <h3>Daemon process</h3>
+          <p>Spawned on first <code>open</code>. Persists across CLI calls. Holds the WebDriver instance, the snapshot tree, and the ref registry.</p>
+        </div>
+        <div class="arch-card">
+          <h3>Communication</h3>
+          <p>Line-delimited JSON over Unix socket (Linux/macOS) or Windows named pipe. One request per connection — no long-lived streams.</p>
+        </div>
+        <div class="arch-card">
+          <h3>Session registry</h3>
+          <p><code>.session</code> JSON files in <code>&lt;cache&gt;/ms-selenium-cli/daemon/</code>. Survives CLI exits; cleaned up on <code>close</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="comparison">
+    <div class="container">
+      <h2 class="section-title">vs. playwright-cli</h2>
+      <p class="section-lead">Different tradeoffs. Pick the one that fits your stack.</p>
+      <div class="table-wrap">
+        <table class="cmp-table">
+          <thead>
+            <tr><th>Feature</th><th>playwright-cli</th><th>selenium-cli</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Aria snapshot</td><td>Built-in mature</td><td>Self-written, ~80% coverage</td></tr>
+            <tr><td>Ref engine</td><td>Native <code>aria-ref</code></td><td><code>data-se-ref</code> attribute</td></tr>
+            <tr><td>Multi-browser</td><td>Chromium only</td><td>Chrome + Edge + Firefox</td></tr>
+            <tr><td>Real Safari</td><td>No</td><td>Possible via Safari driver</td></tr>
+            <tr><td>iframe support</td><td>Full</td><td>Placeholder (v0.3)</td></tr>
+            <tr><td>Shadow DOM</td><td>Full</td><td>Placeholder (v0.3)</td></tr>
+            <tr><td>Test runner attach</td><td>Yes (Playwright test)</td><td>No (v0.7 exploratory)</td></tr>
+            <tr><td>Tracing</td><td>Full</td><td>Not planned</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="roadmap">
+    <div class="container">
+      <h2 class="section-title">Roadmap</h2>
+      <p class="section-lead">Incremental delivery, version by version. <a href="https://github.com/alaahong/selenium-cli/issues?q=is%3Aissue+label%3Av0.2">Track on GitHub →</a></p>
+      <div class="roadmap">
+        <div class="roadmap-item">
+          <div class="roadmap-version">v0.2</div>
+          <div class="roadmap-body">
+            <h3>Practical Capability Completion</h3>
+            <p>Storage management (cookies, localStorage, sessionStorage), state save/load, tab management, <code>install --skills</code>, <code>--profile</code>, <code>--persistent</code>.</p>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-version">v0.3</div>
+          <div class="roadmap-body">
+            <h3>iframe &amp; Shadow DOM</h3>
+            <p>Recursive iframe snapshots with cross-frame refs (<code>f1e3</code>). Shadow DOM recursion. <code>find</code> searches across frames and shadow roots.</p>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-version">v0.4</div>
+          <div class="roadmap-body">
+            <h3>Network &amp; Debugging</h3>
+            <p>Network route mocking (BiDi/CDP), browser console log capture, network requests inspection, persistent element highlighting.</p>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-version">v0.5</div>
+          <div class="roadmap-body">
+            <h3>Recording &amp; Replay</h3>
+            <p><code>run-code</code> for arbitrary snippets, role-based locator code generation, <code>generate-locator</code>, recording mode for test files.</p>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-version">v0.6</div>
+          <div class="roadmap-body">
+            <h3>Visualization &amp; Connections</h3>
+            <p>Live session dashboard, page annotation, browser extension attach, Selenium Grid 4 endpoint attach.</p>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-version">v0.7</div>
+          <div class="roadmap-body">
+            <h3>Test Integration (exploratory)</h3>
+            <p>Attach to pytest-selenium pause points, plan/generate/heal workflow, simplified trace viewer.</p>
+          </div>
+        </div>
+        <div class="roadmap-item roadmap-item-long">
+          <div class="roadmap-version roadmap-version-long">long-term</div>
+          <div class="roadmap-body">
+            <h3>Future Exploration</h3>
+            <p>Python/Java client SDKs, cloud browser providers (Browserbase), MCP compatibility layer, per-agent SKILL.md optimization.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section cta-section">
+    <div class="container cta-inner">
+      <h2>Start automating with fewer tokens</h2>
+      <p>Install selenium-cli and let your agent drive any browser.</p>
+      <div class="cta-buttons">
+        <a href="#quickstart" class="btn btn-primary">Get Started</a>
+        <a href="https://github.com/alaahong/selenium-cli/blob/main/docs/spec.md" class="btn btn-ghost" target="_blank" rel="noopener">Read the Spec</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <img src="assets/img/favicon.svg" alt="" width="24" height="24" />
+        <span>selenium-cli</span>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/alaahong/selenium-cli">GitHub</a>
+        <a href="https://github.com/alaahong/selenium-cli/issues">Issues</a>
+        <a href="https://github.com/alaahong/selenium-cli/blob/main/docs/spec.md">Spec</a>
+        <a href="https://github.com/alaahong/selenium-cli/blob/main/README.md">README</a>
+        <a href="https://github.com/alaahong/selenium-cli/blob/main/LICENSE">License</a>
+      </div>
+      <div class="footer-copy">
+        Apache-2.0 · Built with inspiration from <a href="https://github.com/microsoft/playwright-cli" target="_blank" rel="noopener">playwright-cli</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
