@@ -87,10 +87,19 @@ export async function main(argv: string[]): Promise<void> {
     return;
   }
 
-  // Tool commands — forward to daemon
+  // Tool commands — forward to daemon.
+  // Strip CLI-level flags (--raw, --json, --headed, --browser, --cdp, -s, --session,
+  // --persistent, --help) so the daemon only sees the command and its tool-specific
+  // flags (e.g. --filename, --depth, --regex, --submit).
+  const cliFlags = new Set(['raw', 'json', 'headed', 'persistent', 'help', 'browser', 'cdp', 's', 'session']);
+  const forwardArgs = argv.filter(arg => {
+    const m = arg.match(/^-{1,2}([\w-]+)(=.*)?$/);
+    if (!m) return true; // positional arg — keep
+    return !cliFlags.has(m[1]);
+  });
   let resp: ServerMessage;
   try {
-    resp = await session.run(argv, cwd, { raw: args.raw, json: args.json });
+    resp = await session.run(forwardArgs, cwd, { raw: args.raw, json: args.json });
   } catch (e: any) {
     // Connection failed: clean up orphan session file and hint to reopen
     const registry = new Registry(baseDaemonDir());

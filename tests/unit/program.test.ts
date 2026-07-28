@@ -127,6 +127,61 @@ describe('main command routing', () => {
     runSpy.mockRestore();
   });
 
+  it('strips --raw flag before forwarding command to daemon', async () => {
+    const sessionModule = await import('../../src/session');
+    const runSpy = vi.spyOn(sessionModule.Session.prototype, 'run').mockResolvedValue({
+      ok: true,
+      text: 'Example Domain',
+    });
+    const outputModule = await import('../../src/output');
+    const renderSpy = vi.spyOn(outputModule, 'render').mockImplementation(() => {});
+
+    await main(['--raw', 'title']);
+
+    expect(runSpy).toHaveBeenCalledWith(['title'], originalCwd, expect.objectContaining({ raw: true }));
+
+    runSpy.mockRestore();
+    renderSpy.mockRestore();
+  });
+
+  it('strips --json flag but keeps tool-specific flags', async () => {
+    const sessionModule = await import('../../src/session');
+    const runSpy = vi.spyOn(sessionModule.Session.prototype, 'run').mockResolvedValue({
+      ok: true,
+      text: 'saved test.png',
+    });
+    const outputModule = await import('../../src/output');
+    const renderSpy = vi.spyOn(outputModule, 'render').mockImplementation(() => {});
+
+    await main(['--json', 'screenshot', '--filename=test.png']);
+
+    expect(runSpy).toHaveBeenCalledWith(
+      ['screenshot', '--filename=test.png'],
+      originalCwd,
+      expect.objectContaining({ json: true }),
+    );
+
+    runSpy.mockRestore();
+    renderSpy.mockRestore();
+  });
+
+  it('strips -s session flag before forwarding command to daemon', async () => {
+    const sessionModule = await import('../../src/session');
+    const runSpy = vi.spyOn(sessionModule.Session.prototype, 'run').mockResolvedValue({
+      ok: true,
+      text: 'Example Domain',
+    });
+    const outputModule = await import('../../src/output');
+    const renderSpy = vi.spyOn(outputModule, 'render').mockImplementation(() => {});
+
+    await main(['-s=mysession', '--raw', 'title']);
+
+    expect(runSpy).toHaveBeenCalledWith(['title'], originalCwd, expect.objectContaining({ raw: true }));
+
+    runSpy.mockRestore();
+    renderSpy.mockRestore();
+  });
+
   it('close command calls session.stop', async () => {
     const sessionModule = await import('../../src/session');
     const stopSpy = vi.spyOn(sessionModule.Session.prototype, 'stop').mockResolvedValue(undefined);
