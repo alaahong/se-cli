@@ -16,7 +16,7 @@ export function workspaceHash(workspaceDir: string): string {
 export function makeSocketPath(wsHash: string, sessionName: string): string {
   const uHash = userHash();
   if (process.platform === 'win32') {
-    return `\\\\.\\pipe\\selenium-cli-${uHash}-${wsHash}-${sessionName}`;
+    return `\\\\.\\pipe\\se-cli-${uHash}-${wsHash}-${sessionName}`;
   }
   // Use a flat path under TMPDIR to avoid:
   //   1. needing to create nested directories before listen(), and
@@ -28,7 +28,7 @@ export function makeSocketPath(wsHash: string, sessionName: string): string {
 export function baseDaemonDir(): string {
   const cacheDir = process.env.LOCALAPPDATA
     || (process.platform === 'darwin' ? path.join(os.homedir(), 'Library', 'Caches') : path.join(os.homedir(), '.cache'));
-  return path.join(cacheDir, 'ms-selenium-cli', 'daemon');
+  return path.join(cacheDir, 'ms-se-cli', 'daemon');
 }
 
 export function sessionFileDir(wsHash: string): string {
@@ -50,5 +50,5 @@ export interface SessionConfig {
 }
 
 export function outputDir(cwd: string): string {
-  return path.join(cwd, '.selenium-cli');
+  return path.join(cwd, '.se-cli');
 }

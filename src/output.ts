@@ -11,9 +11,9 @@ export function render(msg: ServerMessage): void {
   if (!msg.ok) {
     let text = `Error: ${msg.error || 'unknown'}\n`;
     if (msg.code === 'DAEMON_DEAD') {
-      text += 'Hint: run `selenium-cli open` to start a session.\n';
+      text += 'Hint: run `se-cli open` to start a session.\n';
     } else if (msg.code === 'ELEMENT_NOT_FOUND') {
-      text += 'Hint: run `selenium-cli snapshot` to refresh refs.\n';
+      text += 'Hint: run `se-cli snapshot` to refresh refs.\n';
     }
     throw new CliError(text.trim(), msg.code);
   }

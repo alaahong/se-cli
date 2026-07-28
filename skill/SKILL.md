@@ -1,66 +1,66 @@
 ---
-name: selenium-cli
+name: se-cli
 description: Automate browser interactions and test web pages using Selenium.
-allowed-tools: Bash(selenium-cli:*) Bash(npx:*)
+allowed-tools: Bash(se-cli:*) Bash(npx:*)
 ---
 
-# Browser Automation with selenium-cli
+# Browser Automation with se-cli
 
 ## Quick start
 
 ```bash
-selenium-cli open
-selenium-cli goto https://example.com
-selenium-cli snapshot
-selenium-cli click e3
-selenium-cli close
+se-cli open
+se-cli goto https://example.com
+se-cli snapshot
+se-cli click e3
+se-cli close
 ```
 
 ## Commands
 
 ### Core
 ```bash
-selenium-cli open [url]
-selenium-cli goto <url>
-selenium-cli close
-selenium-cli snapshot [ref] [--depth=N]
-selenium-cli find <text>
-selenium-cli find --regex <pattern>
-selenium-cli click <ref|selector>
-selenium-cli fill <ref|selector> <text>
-selenium-cli type <text>
-selenium-cli press <key>
-selenium-cli select <ref> <value>
-selenium-cli check <ref>
-selenium-cli uncheck <ref>
-selenium-cli screenshot [ref] [--filename=f]
-selenium-cli eval "<js>" [ref]
-selenium-cli title
-selenium-cli url
+se-cli open [url]
+se-cli goto <url>
+se-cli close
+se-cli snapshot [ref] [--depth=N]
+se-cli find <text>
+se-cli find --regex <pattern>
+se-cli click <ref|selector>
+se-cli fill <ref|selector> <text>
+se-cli type <text>
+se-cli press <key>
+se-cli select <ref> <value>
+se-cli check <ref>
+se-cli uncheck <ref>
+se-cli screenshot [ref] [--filename=f]
+se-cli eval "<js>" [ref]
+se-cli title
+se-cli url
 ```
 
 ### Navigation
 ```bash
-selenium-cli go-back
-selenium-cli go-forward
-selenium-cli reload
+se-cli go-back
+se-cli go-forward
+se-cli reload
 ```
 
 ### Sessions
 ```bash
-selenium-cli -s=<name> <cmd>
-selenium-cli list
-selenium-cli close-all
+se-cli -s=<name> <cmd>
+se-cli list
+se-cli close-all
 ```
 
 ## Snapshots
 
-After each command, selenium-cli provides an aria snapshot of the page.
+After each command, se-cli provides an aria snapshot of the page.
 Each interactive element has a `[ref=eN]` attribute. Use the ref to interact:
 ```bash
-selenium-cli snapshot
+se-cli snapshot
 # Output: - link "Home" [ref=e1]
-selenium-cli click e1
+se-cli click e1
 ```
 
 Refs are valid only until the page changes. Re-run `snapshot` after navigation or DOM updates.
@@ -68,11 +68,11 @@ Refs are valid only until the page changes. Re-run `snapshot` after navigation o
 ## Example: Form submission
 
 ```bash
-selenium-cli open https://example.com/login
-selenium-cli snapshot
-selenium-cli fill e1 "user@example.com"
-selenium-cli fill e2 "password"
-selenium-cli click e3
-selenium-cli snapshot
-selenium-cli close
+se-cli open https://example.com/login
+se-cli snapshot
+se-cli fill e1 "user@example.com"
+se-cli fill e2 "password"
+se-cli click e3
+se-cli snapshot
+se-cli close
 ```

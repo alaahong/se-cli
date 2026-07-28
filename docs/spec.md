@@ -1,4 +1,4 @@
-# selenium-cli Design Specification
+# se-cli Design Specification
 
 **Version**: v0.1.0 (MVP)
 **Date**: 2026-07-28
@@ -17,7 +17,7 @@ Microsoft's playwright-cli has proven that the "short-lived CLI + long-lived dae
 
 ### 1.2 Goals
 
-Build a `selenium-cli` command-line tool that provides:
+Build a `se-cli` command-line tool that provides:
 - Short-lived CLI process + long-lived daemon process architecture; the daemon holds the WebDriver instance and keeps it alive across calls
 - Named session management for parallel multi-browser isolation
 - Aria snapshot + ref reference mechanism for token-efficient element location
@@ -27,7 +27,7 @@ Build a `selenium-cli` command-line tool that provides:
 ## 2. Project Structure
 
 ```
-d:\code\opensource\selenium-cli\
+d:\code\opensource\se-cli\
 ├── src/
 │   ├── cli.ts                  # Entry point (compiled to dist/cli.js)
 │   ├── program.ts              # Command dispatch, argument parsing
@@ -65,20 +65,20 @@ d:\code\opensource\selenium-cli\
 
 ### Configuration Directories
 
-- Registry: `<system cache>/ms-selenium-cli/daemon/<workspaceHash>/<name>.session`
-- Output directory: `.selenium-cli/` (snapshot files, screenshots)
+- Registry: `<system cache>/ms-se-cli/daemon/<workspaceHash>/<name>.session`
+- Output directory: `.se-cli/` (snapshot files, screenshots)
 
 ## 3. Command Set (MVP)
 
 ### 3.1 Session-level Commands (handled in the CLI process)
 
 ```bash
-selenium-cli open [url]              # Start daemon + browser
-selenium-cli close                   # Close browser + daemon
-selenium-cli list                    # List all sessions
-selenium-cli close-all               # Close all sessions
-selenium-cli kill-all                # Force-kill all processes
-selenium-cli -s=<name> <cmd>         # Named session
+se-cli open [url]              # Start daemon + browser
+se-cli close                   # Close browser + daemon
+se-cli list                    # List all sessions
+se-cli close-all               # Close all sessions
+se-cli kill-all                # Force-kill all processes
+se-cli -s=<name> <cmd>         # Named session
 ```
 
 ### 3.2 Tool Commands (forwarded to the daemon)
@@ -96,12 +96,12 @@ selenium-cli -s=<name> <cmd>         # Named session
 ### 3.3 Global Flags
 
 ```bash
-selenium-cli --raw <cmd>             # Output only the value
-selenium-cli --json <cmd>            # Structured JSON output
-selenium-cli -s=<name> <cmd>         # Specify session
-selenium-cli open --browser=chrome   # chrome (default) | edge | firefox
-selenium-cli open --headed           # Default is headless
-selenium-cli open --cdp=<url>        # Attach to a running Chrome
+se-cli --raw <cmd>             # Output only the value
+se-cli --json <cmd>            # Structured JSON output
+se-cli -s=<name> <cmd>         # Specify session
+se-cli open --browser=chrome   # chrome (default) | edge | firefox
+se-cli open --headed           # Default is headless
+se-cli open --cdp=<url>        # Attach to a running Chrome
 ```
 
 ## 4. Process Architecture & Communication Protocol
@@ -110,7 +110,7 @@ selenium-cli open --cdp=<url>        # Attach to a running Chrome
 
 ```
 ┌─────────────────┐  Unix socket / Win named pipe      ┌──────────────────────┐
-│  selenium-cli   │ ───────── line-delimited JSON ───▶ │  selenium-cli daemon │
+│  se-cli   │ ───────── line-delimited JSON ───▶ │  se-cli daemon │
 │  (short-lived   │ ◀──────── single response, close ── │  (holds WebDriver)   │
 │   Node process) │                                    └──────────────────────┘
         │                                                          │
@@ -128,8 +128,8 @@ selenium-cli open --cdp=<url>        # Attach to a running Chrome
 
 ### 4.2 Socket Path
 
-- **Linux/macOS**: `$TMPDIR/selenium-cli/<userHash>/<workspaceHash>-<sessionName>.sock`
-- **Windows**: `\\.\pipe\selenium-cli-<userHash>-<workspaceHash>-<sessionName>`
+- **Linux/macOS**: `$TMPDIR/se-cli/<userHash>/<workspaceHash>-<sessionName>.sock`
+- **Windows**: `\\.\pipe\se-cli-<userHash>-<workspaceHash>-<sessionName>`
 - `userHash = sha1(USERNAME||USER||"default").slice(0,8)`
 - `workspaceHash = sha1(workspaceDir).slice(0,16)`
 
@@ -266,7 +266,7 @@ response.addCode(`await driver.findElement(By.css('[data-se-ref="e15"]')).click(
 
 ### 5.9 Acknowledged Gap vs playwright-cli
 
-| Aspect | playwright-cli | selenium-cli MVP |
+| Aspect | playwright-cli | se-cli MVP |
 |------|---------------|-----------------|
 | Aria algorithm | Built-in mature implementation | Self-written simplified version, ~70-80% coverage |
 | Ref engine | Built-in `aria-ref` selector engine | `data-se-ref` attribute + CSS selector |
@@ -279,7 +279,7 @@ response.addCode(`await driver.findElement(By.css('[data-se-ref="e15"]')).click(
 
 | Error Type | Example | Handling |
 |---------|------|------|
-| Startup failure | driver binary not installed, port in use | daemon exits immediately, CLI suggests `selenium-cli install-browser` |
+| Startup failure | driver binary not installed, port in use | daemon exits immediately, CLI suggests `se-cli install-browser` |
 | Communication failure | socket connect timeout, daemon crash | CLI cleans up orphan `.session` files, suggests `open` |
 | WebDriver error | NoSuchElementError, TimeoutError, StaleElementReferenceError | Returns `{ok:false, error, code}`, CLI shows friendly message |
 | Injection script error | CSP blocks, Shadow DOM boundary | Returns partial snapshot + warning |
@@ -290,7 +290,7 @@ response.addCode(`await driver.findElement(By.css('[data-se-ref="e15"]')).click(
 ```
 ### Error
 Element not found: [data-se-ref="e15"]
-Hint: run `selenium-cli snapshot` to refresh refs.
+Hint: run `se-cli snapshot` to refresh refs.
 ```
 
 ### 6.3 Daemon Robustness
@@ -305,7 +305,7 @@ Hint: run `selenium-cli snapshot` to refresh refs.
 
 - **Unit tests (Vitest)**: parseCommand, aria snapshot script, Response serialization, registry
 - **Integration tests**: daemon + real driver + test pages
-- **E2E tests**: use selenium-cli to test itself (dogfooding)
+- **E2E tests**: use se-cli to test itself (dogfooding)
 
 ### 7.2 Implementation Path (6 steps)
 
@@ -324,20 +324,20 @@ Hint: run `selenium-cli snapshot` to refresh refs.
 ### 7.3 Acceptance Criteria
 
 ```bash
-selenium-cli open https://demo.playwright.dev/todomvc/
-selenium-cli snapshot
+se-cli open https://demo.playwright.dev/todomvc/
+se-cli snapshot
 # Output contains - textbox [ref=e1] - button "Add" [ref=e2]
 
-selenium-cli fill e1 "Buy groceries"
-selenium-cli click e2
-selenium-cli snapshot
+se-cli fill e1 "Buy groceries"
+se-cli click e2
+se-cli snapshot
 # Output contains - listitem "Buy groceries" [ref=e3]
 
-selenium-cli --raw eval "document.querySelectorAll('.todo-list li').length"
+se-cli --raw eval "document.querySelectorAll('.todo-list li').length"
 # Output: 1
 
-selenium-cli screenshot --filename=todo.png
-selenium-cli close
+se-cli screenshot --filename=todo.png
+se-cli close
 ```
 
 Each interaction command outputs the corresponding Selenium code:
@@ -355,7 +355,7 @@ Sorted by priority, delivered incrementally per version.
 - [ ] **Storage management**: `cookie-list/get/set/delete/clear`, `localstorage-*`, `sessionstorage-*` (wrapped via `execute_script`)
 - [ ] **State save/load**: export cookies + storage to JSON, restore by loading in reverse
 - [ ] **Tab management**: `tab-list`, `tab-new`, `tab-close`, `tab-select` (based on `window_handles` + `switch_to.window`)
-- [ ] **install --skills**: copy SKILL.md to `.claude/skills/selenium-cli/` or `.agents/skills/selenium-cli/`
+- [ ] **install --skills**: copy SKILL.md to `.claude/skills/se-cli/` or `.agents/skills/se-cli/`
 - [ ] **--profile=<path>**: persistent user data directory
 - [ ] **--persistent**: auto-assign userDataDir
 
@@ -377,7 +377,7 @@ Sorted by priority, delivered incrementally per version.
 - [ ] **run-code**: execute arbitrary Selenium code snippets (`run-code "async driver => ..."`)
 - [ ] **Code generation enhancement**: support role-based locators (`By.role('button', {name: 'Submit'})`) for stability
 - [ ] **generate-locator <ref>**: generate the best locator expression from a ref
-- [ ] **Recording mode**: `selenium-cli record` enters recording mode; user actions generate a complete test file
+- [ ] **Recording mode**: `se-cli record` enters recording mode; user actions generate a complete test file
 
 ### v0.6: Visualization & Advanced Connections
 

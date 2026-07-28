@@ -1,4 +1,4 @@
-﻿import { parseArgs } from './minimist';
+import { parseArgs } from './minimist';
 import { Session } from './session';
 import { Registry } from './registry';
 import { baseDaemonDir, workspaceHash } from './config';
@@ -20,7 +20,7 @@ export async function main(argv: string[]): Promise<void> {
     process.exit(0);
   }
 
-  const sessionName = args.session || process.env.SELENIUM_CLI_SESSION || 'default';
+  const sessionName = args.session || process.env.SE_CLI_SESSION || 'default';
   const cwd = process.cwd();
   const workspaceDir = findWorkspaceDir(cwd);
   const session = new Session(workspaceDir, sessionName);
@@ -96,7 +96,7 @@ export async function main(argv: string[]): Promise<void> {
     const registry = new Registry(baseDaemonDir());
     const wsHash = workspaceHash(workspaceDir);
     registry.deleteSession(wsHash, sessionName);
-    console.error('### Error\nDaemon not reachable: ' + (e.message || e) + '\nHint: run `selenium-cli open` to start a new session.');
+    console.error('### Error\nDaemon not reachable: ' + (e.message || e) + '\nHint: run `se-cli open` to start a new session.');
     process.exit(1);
   }
   render(resp);
@@ -105,7 +105,7 @@ export async function main(argv: string[]): Promise<void> {
 export function findWorkspaceDir(cwd: string): string {
   let dir = cwd;
   for (let i = 0; i < 10; i++) {
-    if (fs.existsSync(path.join(dir, '.selenium-cli'))) return dir;
+    if (fs.existsSync(path.join(dir, '.se-cli'))) return dir;
     const parent = path.dirname(dir);
     if (parent === dir) break;
     dir = parent;
@@ -114,15 +114,15 @@ export function findWorkspaceDir(cwd: string): string {
 }
 
 function printHelp(): void {
-  console.log(`selenium-cli - token-efficient Selenium browser automation
+  console.log(`se-cli - token-efficient Selenium browser automation
 
 Usage:
-  selenium-cli open [url] [--browser=chrome|edge|firefox] [--headed] [--cdp=url]
-  selenium-cli close
-  selenium-cli list
-  selenium-cli close-all
-  selenium-cli kill-all
-  selenium-cli -s=<name> <cmd>
+  se-cli open [url] [--browser=chrome|edge|firefox] [--headed] [--cdp=url]
+  se-cli close
+  se-cli list
+  se-cli close-all
+  se-cli kill-all
+  se-cli -s=<name> <cmd>
 
 Commands:
   goto <url>              navigate to url

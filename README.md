@@ -1,12 +1,12 @@
-# selenium-cli
+# se-cli
 
 > Token-efficient Selenium browser automation CLI for AI agents and humans.
 
 Inspired by [playwright-cli](https://github.com/microsoft/playwright-cli), ported to the Selenium ecosystem.
 
-## Why selenium-cli?
+## Why se-cli?
 
-Current Selenium MCP implementations consume too many tokens — large tool schemas loaded on every call, full accessibility tree dumps, and no command-line interface. **selenium-cli** solves this with a CLI + daemon architecture that minimizes token usage while maximizing agent productivity.
+Current Selenium MCP implementations consume too many tokens — large tool schemas loaded on every call, full accessibility tree dumps, and no command-line interface. **se-cli** solves this with a CLI + daemon architecture that minimizes token usage while maximizing agent productivity.
 
 ### The Problem
 
@@ -18,9 +18,9 @@ Current Selenium MCP implementations consume too many tokens — large tool sche
 
 ### The Solution
 
-**selenium-cli** uses a short-lived CLI + long-lived daemon architecture:
+**se-cli** uses a short-lived CLI + long-lived daemon architecture:
 
-- **Short-lived CLI**: each `selenium-cli <cmd>` is a stateless process — just sends one JSON line to the daemon, gets one line back, exits. Zero schema overhead.
+- **Short-lived CLI**: each `se-cli <cmd>` is a stateless process — just sends one JSON line to the daemon, gets one line back, exits. Zero schema overhead.
 - **Long-lived daemon**: holds the WebDriver instance across calls. No reconnection cost, no driver restart overhead.
 - **Aria snapshot + refs**: page state captured as compact YAML with element refs (`e1`, `e2`). Interact by ref instead of verbose selectors.
 - **Code generation**: every action emits the equivalent Selenium code — copy directly into test files.
@@ -38,13 +38,13 @@ Current Selenium MCP implementations consume too many tokens — large tool sche
 ## Installation
 
 ```bash
-npm install -g selenium-cli
+npm install -g se-cli
 ```
 
 Or use directly with npx:
 
 ```bash
-npx selenium-cli open https://example.com
+npx se-cli open https://example.com
 ```
 
 ### Prerequisites
@@ -61,10 +61,10 @@ npx selenium-cli open https://example.com
 
 ```bash
 # Start a session and navigate
-selenium-cli open https://example.com
+se-cli open https://example.com
 
 # Take a snapshot to see the page structure
-selenium-cli snapshot
+se-cli snapshot
 # Output:
 # - document:
 #   - heading "Example Domain" [level=1]
@@ -72,14 +72,14 @@ selenium-cli snapshot
 #   - link "More information..." [ref=e1]
 
 # Interact by ref
-selenium-cli click e1
+se-cli click e1
 
 # Get page info
-selenium-cli title
-selenium-cli url
+se-cli title
+se-cli url
 
 # Close the session
-selenium-cli close
+se-cli close
 ```
 
 ## Commands
@@ -152,30 +152,30 @@ selenium-cli close
 ### Basic Form Submission
 
 ```bash
-selenium-cli open https://example.com/login
-selenium-cli snapshot
+se-cli open https://example.com/login
+se-cli snapshot
 # - textbox "Email" [ref=e1]
 # - textbox "Password" [ref=e2]
 # - button "Sign in" [ref=e3]
 
-selenium-cli fill e1 "user@example.com"
-selenium-cli fill e2 "password123"
-selenium-cli click e3
-selenium-cli snapshot
-selenium-cli close
+se-cli fill e1 "user@example.com"
+se-cli fill e2 "password123"
+se-cli click e3
+se-cli snapshot
+se-cli close
 ```
 
 ### Multi-Session (Parallel Browsers)
 
 ```bash
-selenium-cli -s=chrome open https://example.com --browser=chrome
-selenium-cli -s=firefox open https://example.com --browser=firefox
+se-cli -s=chrome open https://example.com --browser=chrome
+se-cli -s=firefox open https://example.com --browser=firefox
 
-selenium-cli -s=chrome title
-selenium-cli -s=firefox title
+se-cli -s=chrome title
+se-cli -s=firefox title
 
-selenium-cli -s=chrome close
-selenium-cli -s=firefox close
+se-cli -s=chrome close
+se-cli -s=firefox close
 ```
 
 ### Attach to Running Chrome
@@ -185,17 +185,17 @@ selenium-cli -s=firefox close
 google-chrome --remote-debugging-port=9222
 
 # Attach
-selenium-cli open --cdp=http://localhost:9222
+se-cli open --cdp=http://localhost:9222
 ```
 
 ### Scripting with --raw
 
 ```bash
 # Get title for use in shell scripts
-TITLE=$(selenium-cli --raw title)
+TITLE=$(se-cli --raw title)
 
 # Count elements
-COUNT=$(selenium-cli --raw eval "document.querySelectorAll('.item').length")
+COUNT=$(se-cli --raw eval "document.querySelectorAll('.item').length")
 echo "Found $COUNT items"
 ```
 
@@ -204,7 +204,7 @@ echo "Found $COUNT items"
 Every interaction command outputs the equivalent Selenium code:
 
 ```
-$ selenium-cli click e1
+$ se-cli click e1
 
 ### Ran Selenium code
 ```js
@@ -221,21 +221,21 @@ Place `skill/SKILL.md` into your agent's skills directory:
 
 ```bash
 # For Claude Code
-mkdir -p .claude/skills/selenium-cli
-cp skill/SKILL.md .claude/skills/selenium-cli/
+mkdir -p .claude/skills/se-cli
+cp skill/SKILL.md .claude/skills/se-cli/
 ```
 
-The agent can then use `selenium-cli` commands directly:
+The agent can then use `se-cli` commands directly:
 
 ```
 User: "Check that the login page works"
 Agent: I'll navigate to the login page and test it.
-  $ selenium-cli open https://app.example.com/login
-  $ selenium-cli snapshot
-  $ selenium-cli fill e1 "test@example.com"
-  $ selenium-cli fill e2 "password"
-  $ selenium-cli click e3
-  $ selenium-cli snapshot
+  $ se-cli open https://app.example.com/login
+  $ se-cli snapshot
+  $ se-cli fill e1 "test@example.com"
+  $ se-cli fill e2 "password"
+  $ se-cli click e3
+  $ se-cli snapshot
   The login succeeded — I can see the dashboard.
 ```
 
@@ -252,7 +252,7 @@ Agent: I'll navigate to the login page and test it.
 
 ```
 ┌─────────────────┐  Unix socket / Win pipe       ┌──────────────────────┐
-│  selenium-cli   │ ───── line-delimited JSON ──▶ │  selenium-cli daemon │
+│  se-cli   │ ───── line-delimited JSON ──▶ │  se-cli daemon │
 │  (short-lived)  │ ◀──── single response, close ─ │  (holds WebDriver)   │
 └─────────────────┘                                └──────────────────────┘
                                                           │
@@ -268,7 +268,7 @@ Agent: I'll navigate to the login page and test it.
 - **CLI process**: spawned per command, sends one JSON line, receives one response, exits
 - **Daemon process**: spawned on first `open`, persists across CLI calls, holds WebDriver
 - **Communication**: line-delimited JSON over Unix socket (Linux/macOS) or Windows named pipe
-- **Session registry**: `.session` JSON files in `<cache>/ms-selenium-cli/daemon/`
+- **Session registry**: `.session` JSON files in `<cache>/ms-se-cli/daemon/`
 
 ### Aria Snapshot & Refs
 
@@ -284,8 +284,8 @@ Refs are valid only within the current snapshot. After navigation or DOM changes
 
 ```bash
 # Clone
-git clone https://github.com/alaahong/selenium-cli.git
-cd selenium-cli
+git clone https://github.com/alaahong/se-cli.git
+cd se-cli
 
 # Install
 npm install
@@ -297,7 +297,7 @@ npx tsc
 npx vitest run tests/unit/
 
 # Run integration tests (requires browsers installed)
-SELENIUM_CLI_E2E=1 SELENIUM_CLI_TEST_CHROME=1 npx vitest run tests/integration/
+SE_CLI_E2E=1 SE_CLI_TEST_CHROME=1 npx vitest run tests/integration/
 ```
 
 ### Project Structure
@@ -331,7 +331,7 @@ src/
 
 ## Comparison with playwright-cli
 
-| Feature | playwright-cli | selenium-cli |
+| Feature | playwright-cli | se-cli |
 |---------|---------------|--------------|
 | Aria snapshot | Built-in mature | Self-written ~80% coverage |
 | Ref engine | Native `aria-ref` selector | `data-se-ref` attribute |

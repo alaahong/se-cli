@@ -68,16 +68,17 @@ jobs:
       - run: npm ci
       - run: npx tsc
       - name: Install browser
+        if: matrix.browser != 'edge'
         run: npx @puppeteer/browsers install ${{ matrix.browser }}@stable
       - name: Run integration tests
         env:
-          SELENIUM_CLI_E2E: '1'
-          SELENIUM_CLI_TEST_${{ matrix.browser == 'chrome' && 'CHROME' || matrix.browser == 'edge' && 'EDGE' || 'FIREFOX' }}: '1'
+          SE_CLI_E2E: '1'
+          SE_CLI_TEST_${{ matrix.browser == 'chrome' && 'CHROME' || matrix.browser == 'edge' && 'EDGE' || 'FIREFOX' }}: '1'
         run: npx vitest run tests/integration/lifecycle.test.ts
       - name: Upload screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: screenshots-${{ matrix.os }}-${{ matrix.browser }}
-          path: .selenium-cli/
+          path: .se-cli/
           if-no-files-found: ignore

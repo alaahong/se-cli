@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="se-cli icon">
+  <!-- Brand icon: rounded square with >_ terminal symbol -->
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="3"/>
+  <!-- Prompt caret > -->
+  <path d="M92 100 L136 128 L92 156" fill="none" stroke="#22C55E" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Underscore cursor _ -->
+  <line x1="152" y1="156" x2="184" y2="156" stroke="#22C55E" stroke-width="20" stroke-linecap="round"/>
+</svg>

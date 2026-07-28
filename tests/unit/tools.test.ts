@@ -234,11 +234,11 @@ describe('tool handlers', () => {
       const driver = makeMockDriver({ scriptResult: yaml });
       const response = new Response({ raw: false, json: false });
       await browser_snapshot(driver, { filename: 'snap.yml' }, response);
-      const file = path.join(tmpCwd, '.selenium-cli', 'snap.yml');
+      const file = path.join(tmpCwd, '.se-cli', 'snap.yml');
       expect(fs.existsSync(file)).toBe(true);
       expect(fs.readFileSync(file, 'utf8')).toBe(yaml);
       const out = response.serialize();
-      expect(out).toContain('[Snapshot](.selenium-cli/snap.yml)');
+      expect(out).toContain('[Snapshot](.se-cli/snap.yml)');
     });
   });
 
@@ -248,13 +248,13 @@ describe('tool handlers', () => {
       const response = new Response({ raw: false, json: false });
       await browser_screenshot(driver, { filename: 'shot.png' }, response);
       expect(driver.takeScreenshot).toHaveBeenCalled();
-      const file = path.join(tmpCwd, '.selenium-cli', 'shot.png');
+      const file = path.join(tmpCwd, '.se-cli', 'shot.png');
       expect(fs.existsSync(file)).toBe(true);
       // base64 'BASE64PNG' decoded should be a non-empty buffer
       const stat = fs.statSync(file);
       expect(stat.size).toBeGreaterThan(0);
       const out = response.serialize();
-      expect(out).toContain('[Screenshot](.selenium-cli/shot.png)');
+      expect(out).toContain('[Screenshot](.se-cli/shot.png)');
       expect(out).toContain('takeScreenshot');
     });
 
@@ -263,7 +263,7 @@ describe('tool handlers', () => {
       const response = new Response({ raw: false, json: false });
       await browser_screenshot(driver, { target: 'e1', filename: 'el.png' }, response);
       expect(driver.findElement).toHaveBeenCalled();
-      const file = path.join(tmpCwd, '.selenium-cli', 'el.png');
+      const file = path.join(tmpCwd, '.se-cli', 'el.png');
       expect(fs.existsSync(file)).toBe(true);
     });
 
@@ -271,7 +271,7 @@ describe('tool handlers', () => {
       const driver = makeMockDriver();
       const response = new Response({ raw: false, json: false });
       await browser_screenshot(driver, {}, response);
-      const dir = path.join(tmpCwd, '.selenium-cli');
+      const dir = path.join(tmpCwd, '.se-cli');
       const files = fs.readdirSync(dir).filter(f => f.startsWith('screenshot-') && f.endsWith('.png'));
       expect(files.length).toBe(1);
     });

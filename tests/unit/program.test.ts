@@ -5,7 +5,7 @@ import * as os from 'os';
 import { findWorkspaceDir, main } from '../../src/program';
 
 describe('findWorkspaceDir', () => {
-  it('returns cwd when no .selenium-cli dir is found', () => {
+  it('returns cwd when no .se-cli dir is found', () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'se-cli-ws-'));
     try {
       const result = findWorkspaceDir(tmp);
@@ -15,10 +15,10 @@ describe('findWorkspaceDir', () => {
     }
   });
 
-  it('finds .selenium-cli in the current directory', () => {
+  it('finds .se-cli in the current directory', () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'se-cli-ws-'));
     try {
-      fs.mkdirSync(path.join(tmp, '.selenium-cli'));
+      fs.mkdirSync(path.join(tmp, '.se-cli'));
       const result = findWorkspaceDir(tmp);
       expect(result).toBe(tmp);
     } finally {
@@ -26,10 +26,10 @@ describe('findWorkspaceDir', () => {
     }
   });
 
-  it('finds .selenium-cli in a parent directory', () => {
+  it('finds .se-cli in a parent directory', () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'se-cli-ws-'));
     try {
-      fs.mkdirSync(path.join(tmp, '.selenium-cli'));
+      fs.mkdirSync(path.join(tmp, '.se-cli'));
       const child = path.join(tmp, 'sub', 'deep');
       fs.mkdirSync(child, { recursive: true });
       const result = findWorkspaceDir(child);
@@ -39,7 +39,7 @@ describe('findWorkspaceDir', () => {
     }
   });
 
-  it('returns cwd when no .selenium-cli found after 10 levels up', () => {
+  it('returns cwd when no .se-cli found after 10 levels up', () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'se-cli-ws-'));
     try {
       // Build a deeply nested path. findWorkspaceDir stops after 10 iterations
@@ -47,7 +47,7 @@ describe('findWorkspaceDir', () => {
       const deep = path.join(tmp, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k');
       fs.mkdirSync(deep, { recursive: true });
       const result = findWorkspaceDir(deep);
-      // Either returns deep (cwd) or a parent that contains .selenium-cli, but
+      // Either returns deep (cwd) or a parent that contains .se-cli, but
       // we created none, so it must equal deep.
       expect(result).toBe(deep);
     } finally {
@@ -83,7 +83,7 @@ describe('main command routing', () => {
     await expect(main(['--help'])).rejects.toThrow('process.exit called');
     expect(consoleLogSpy).toHaveBeenCalled();
     const helpText = consoleLogSpy.mock.calls.map(c => c[0]).join('\n');
-    expect(helpText).toContain('selenium-cli');
+    expect(helpText).toContain('se-cli');
     expect(helpText).toContain('Usage');
   });
 
@@ -150,7 +150,7 @@ describe('main command routing', () => {
       // Pre-create a session file via the Registry
       const { Registry } = await import('../../src/registry');
       const { workspaceHash } = await import('../../src/config');
-      const reg = new Registry(path.join(tmpBase, 'ms-selenium-cli', 'daemon'));
+      const reg = new Registry(path.join(tmpBase, 'ms-se-cli', 'daemon'));
       const wsHash = workspaceHash(originalCwd);
       reg.writeSession(wsHash, {
         name: 'list-test',
@@ -185,7 +185,7 @@ describe('main command routing', () => {
     try {
       const { Registry } = await import('../../src/registry');
       const { workspaceHash } = await import('../../src/config');
-      const reg = new Registry(path.join(tmpBase, 'ms-selenium-cli', 'daemon'));
+      const reg = new Registry(path.join(tmpBase, 'ms-se-cli', 'daemon'));
       const wsHash = workspaceHash(originalCwd);
       reg.writeSession(wsHash, {
         name: 'ca-test1',
