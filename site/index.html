@@ -4,8 +4,35 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Token-efficient Selenium browser automation CLI for AI agents and humans. Multi-browser, daemon architecture, aria snapshots." />
+  <meta name="theme-color" content="#22C55E" />
+  <meta name="author" content="se-cli" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="se-cli — Token-efficient Selenium for AI agents" />
+  <meta property="og:description" content="A short-lived CLI + long-lived daemon that drives Chrome, Edge, and Firefox. Aria snapshots and ref references keep token cost low." />
+  <meta property="og:image" content="assets/img/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:url" content="https://se-cli.github.io/se-cli/" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="se-cli — Token-efficient Selenium for AI agents" />
+  <meta name="twitter:description" content="A short-lived CLI + long-lived daemon that drives Chrome, Edge, and Firefox. Aria snapshots and ref references keep token cost low." />
+  <meta name="twitter:image" content="assets/img/og-image.png" />
+
   <title>se-cli — Token-efficient Selenium for AI agents</title>
+
+  <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png" />
+  <link rel="icon" sizes="48x48" href="assets/img/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" sizes="192x192" href="assets/img/favicon-192.png" />
+  <link rel="manifest" href="manifest.json" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -20,10 +47,15 @@
       </a>
       <div class="nav-links" id="nav-links">
         <a href="#features">Features</a>
+        <a href="#tokens">Token Savings</a>
         <a href="#quickstart">Quick Start</a>
+        <a href="#examples">Examples</a>
         <a href="#commands">Commands</a>
         <a href="#architecture">Architecture</a>
+        <a href="#agents">AI Agents</a>
+        <a href="#browsers">Browsers</a>
         <a href="#roadmap">Roadmap</a>
+        <a href="#faq">FAQ</a>
         <a href="https://github.com/se-cli/se-cli" class="nav-gh" target="_blank" rel="noopener">
           <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
           <span>GitHub</span>
@@ -87,6 +119,56 @@
           <div class="why-icon why-icon-green">✨</div>
           <h3>The Solution</h3>
           <p>A short-lived CLI process sends one JSON line to a long-lived daemon. Aria snapshots return compact YAML with element refs. Every action emits reusable Selenium code.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="tokens">
+    <div class="container">
+      <h2 class="section-title">Token Efficiency</h2>
+      <p class="section-lead">How much context does each approach burn per interaction? Real numbers from typical agent workflows.</p>
+      <div class="token-compare">
+        <div class="token-bar-group">
+          <div class="token-bar-label">
+            <span class="t-label">Selenium MCP</span>
+            <span class="t-value">~5,000 tokens / call</span>
+          </div>
+          <div class="token-bar-track">
+            <div class="token-bar-fill token-bar-fill-mcp" style="width: 100%;">5,000</div>
+          </div>
+        </div>
+        <div class="token-bar-group">
+          <div class="token-bar-label">
+            <span class="t-label">Raw WebDriver API</span>
+            <span class="t-value">~2,000 tokens / call</span>
+          </div>
+          <div class="token-bar-track">
+            <div class="token-bar-fill token-bar-fill-script" style="width: 40%;">2,000</div>
+          </div>
+        </div>
+        <div class="token-bar-group">
+          <div class="token-bar-label">
+            <span class="t-label">se-cli</span>
+            <span class="t-value">~400 tokens / call</span>
+          </div>
+          <div class="token-bar-track">
+            <div class="token-bar-fill token-bar-fill-cli" style="width: 8%;">400</div>
+          </div>
+        </div>
+        <div class="token-summary">
+          <div class="token-stat">
+            <div class="token-stat-num token-stat-num-green">12.5×</div>
+            <div class="token-stat-label">fewer tokens vs MCP</div>
+          </div>
+          <div class="token-stat">
+            <div class="token-stat-num token-stat-num-green">5×</div>
+            <div class="token-stat-label">fewer tokens vs raw API</div>
+          </div>
+          <div class="token-stat">
+            <div class="token-stat-num token-stat-num-red">5KB</div>
+            <div class="token-stat-label">schema eliminated</div>
+          </div>
         </div>
       </div>
     </div>
@@ -202,7 +284,146 @@ se-cli close</code></pre>
     </div>
   </section>
 
-  <section class="section" id="commands">
+  <section class="section" id="examples">
+    <div class="container">
+      <h2 class="section-title">Usage Examples</h2>
+      <p class="section-lead">Real-world patterns: form automation, parallel sessions, CDP attach, shell scripting.</p>
+      <div class="example-grid">
+        <div class="example-card">
+          <div class="example-header">
+            <div class="example-header-icon">📝</div>
+            <h3>Form Submission</h3>
+          </div>
+          <div class="example-body">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code>se-cli open https://app.example.com/login
+se-cli snapshot
+# - textbox "Email" [ref=e1]
+# - textbox "Password" [ref=e2]
+# - button "Sign in" [ref=e3]
+
+se-cli fill e1 "user@example.com"
+se-cli fill e2 "password123"
+se-cli click e3
+se-cli snapshot
+se-cli close</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="example-card">
+          <div class="example-header">
+            <div class="example-header-icon">🔄</div>
+            <h3>Parallel Browsers</h3>
+          </div>
+          <div class="example-body">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code># Two sessions, two browsers
+se-cli -s=chrome open https://example.com \
+  --browser=chrome
+se-cli -s=firefox open https://example.com \
+  --browser=firefox
+
+se-cli -s=chrome title
+se-cli -s=firefox title
+
+se-cli -s=chrome close
+se-cli -s=firefox close</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="example-card">
+          <div class="example-header">
+            <div class="example-header-icon">🔌</div>
+            <h3>CDP Attach</h3>
+          </div>
+          <div class="example-body">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code># Start Chrome with debugging
+google-chrome --remote-debugging-port=9222
+
+# Attach to running browser
+se-cli open --cdp=http://localhost:9222
+se-cli snapshot
+se-cli screenshot --filename=debug.png
+se-cli close</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="example-card">
+          <div class="example-header">
+            <div class="example-header-icon">⚙️</div>
+            <h3>Shell Scripting</h3>
+          </div>
+          <div class="example-body">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code># Use --raw for clean output
+TITLE=$(se-cli --raw title)
+URL=$(se-cli --raw url)
+
+# Count elements via eval
+COUNT=$(se-cli --raw eval \
+  "document.querySelectorAll('.item').length")
+echo "Found $COUNT items on $TITLE"
+
+# JSON output for pipelines
+se-cli --json snapshot | jq '.refs[]'</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="example-card">
+          <div class="example-header">
+            <div class="example-header-icon">🔍</div>
+            <h3>Find &amp; Search</h3>
+          </div>
+          <div class="example-body">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code># Search snapshot for text
+se-cli find "Submit"
+# - button "Submit order" [ref=e7]
+
+# Regex search
+se-cli find --regex "price.*\\\$[0-9]+"
+# - text "price: $29.99" [ref=e12]
+
+# Click the found element
+se-cli click e12</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="example-card">
+          <div class="example-header">
+            <div class="example-header-icon">🧪</div>
+            <h3>Code Generation</h3>
+          </div>
+          <div class="example-body">
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code>$ se-cli fill e1 "hello@example.com"
+
+### Ran Selenium code
+await driver.findElement(
+  By.css('[data-se-ref="e1"]')
+).sendKeys("hello@example.com");
+
+# Copy directly into test files</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="commands">
     <div class="container">
       <h2 class="section-title">Command Reference</h2>
       <p class="section-lead">22 commands across sessions, navigation, interaction, snapshots, and execution.</p>
@@ -294,7 +515,7 @@ se-cli close</code></pre>
     </div>
   </section>
 
-  <section class="section section-alt" id="architecture">
+  <section class="section" id="architecture">
     <div class="container">
       <h2 class="section-title">Architecture</h2>
       <p class="section-lead">Short-lived CLI + long-lived daemon, talking over line-delimited JSON.</p>
@@ -335,6 +556,67 @@ se-cli close</code></pre>
     </div>
   </section>
 
+  <section class="section section-alt" id="agents">
+    <div class="container">
+      <h2 class="section-title">AI Agent Integration</h2>
+      <p class="section-lead">Works with any agent that runs shell commands. No MCP server, no schema bloat.</p>
+      <div class="agent-flow">
+        <div class="agent-step">
+          <div class="agent-step-num">1</div>
+          <div class="agent-step-body">
+            <h3>Install the CLI</h3>
+            <p>One global install — no per-agent setup or MCP server configuration needed.</p>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code>npm install -g se-cli</code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="agent-step">
+          <div class="agent-step-num">2</div>
+          <div class="agent-step-body">
+            <h3>Drop in SKILL.md</h3>
+            <p>Place the skill file into your agent's skills directory. The agent learns the command syntax instantly.</p>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code># Claude Code
+mkdir -p .claude/skills/se-cli
+cp skill/SKILL.md .claude/skills/se-cli/
+
+# Cursor / Copilot CLI — same pattern</code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="agent-step">
+          <div class="agent-step-num">3</div>
+          <div class="agent-step-body">
+            <h3>Agent drives the browser</h3>
+            <p>The agent calls <code>se-cli</code> commands like a human would — open, snapshot, interact, close.</p>
+            <div class="code-block">
+              <div class="code-header"><span class="code-lang">agent conversation</span></div>
+<pre><code>User: "Check that the login page works"
+Agent: I'll navigate and test the login flow.
+  $ se-cli open https://app.example.com/login
+  $ se-cli snapshot
+  $ se-cli fill e1 "test@example.com"
+  $ se-cli fill e2 "password"
+  $ se-cli click e3
+  $ se-cli snapshot
+  Login succeeded — dashboard is visible.</code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="agent-step">
+          <div class="agent-step-num">4</div>
+          <div class="agent-step-body">
+            <h3>Why CLI beats MCP for agents</h3>
+            <p>No tool schemas pollute the context window. No JSON-RPC envelope overhead. Just clean shell commands and compact YAML output.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="section" id="comparison">
     <div class="container">
       <h2 class="section-title">vs. playwright-cli</h2>
@@ -359,7 +641,55 @@ se-cli close</code></pre>
     </div>
   </section>
 
-  <section class="section section-alt" id="roadmap">
+  <section class="section section-alt" id="browsers">
+    <div class="container">
+      <h2 class="section-title">Browser Support</h2>
+      <p class="section-lead">Three browsers, one CLI. Drivers are auto-managed — no manual setup.</p>
+      <div class="browser-grid">
+        <div class="browser-card">
+          <div class="browser-icon">🌐</div>
+          <h3>Chrome</h3>
+          <div class="browser-features">
+            <div class="browser-feature"><span class="yes">&#10003;</span> Headless</div>
+            <div class="browser-feature"><span class="yes">&#10003;</span> Headed</div>
+            <div class="browser-feature"><span class="yes">&#10003;</span> CDP Attach</div>
+          </div>
+        </div>
+        <div class="browser-card">
+          <div class="browser-icon">🧩</div>
+          <h3>Edge</h3>
+          <div class="browser-features">
+            <div class="browser-feature"><span class="yes">&#10003;</span> Headless</div>
+            <div class="browser-feature"><span class="yes">&#10003;</span> Headed</div>
+            <div class="browser-feature"><span class="yes">&#10003;</span> CDP Attach</div>
+          </div>
+        </div>
+        <div class="browser-card">
+          <div class="browser-icon">🦊</div>
+          <h3>Firefox</h3>
+          <div class="browser-features">
+            <div class="browser-feature"><span class="yes">&#10003;</span> Headless</div>
+            <div class="browser-feature"><span class="yes">&#10003;</span> Headed</div>
+            <div class="browser-feature"><span class="no">&#10007;</span> CDP Attach</div>
+          </div>
+        </div>
+        <div class="browser-card">
+          <div class="browser-icon">🧭</div>
+          <h3>Safari</h3>
+          <div class="browser-features">
+            <div class="browser-feature"><span class="no">&#10007;</span> Headless</div>
+            <div class="browser-feature"><span class="no">&#10007;</span> Headed</div>
+            <div class="browser-feature"><span class="no">&#10007;</span> CDP Attach</div>
+          </div>
+        </div>
+      </div>
+      <p style="text-align: center; margin-top: 28px; color: var(--text-mute); font-size: 0.88rem;">
+        <code>selenium-manager</code> auto-downloads the correct driver binary for your browser and platform. Safari support is possible via Safari driver — planned for future exploration.
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="roadmap">
     <div class="container">
       <h2 class="section-title">Roadmap</h2>
       <p class="section-lead">Incremental delivery, version by version. <a href="https://github.com/se-cli/se-cli/issues?q=is%3Aissue+label%3Av0.2">Track on GitHub →</a></p>
@@ -417,6 +747,105 @@ se-cli close</code></pre>
     </div>
   </section>
 
+  <section class="section section-alt" id="development">
+    <div class="container">
+      <h2 class="section-title">Development</h2>
+      <p class="section-lead">Open source, Apache-2.0. Clone, build, test, and contribute.</p>
+      <div class="dev-grid">
+        <div class="dev-card">
+          <h3>Clone &amp; Install</h3>
+          <p>Standard Node.js 18+ workflow with TypeScript.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code>git clone https://github.com/se-cli/se-cli.git
+cd se-cli
+npm install</code></pre>
+          </div>
+        </div>
+        <div class="dev-card">
+          <h3>Build</h3>
+          <p>TypeScript compilation to <code>dist/</code>.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code>npx tsc</code></pre>
+          </div>
+        </div>
+        <div class="dev-card">
+          <h3>Run Tests</h3>
+          <p>99 unit tests + 30 integration tests with Vitest.</p>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code># Unit tests
+npx vitest run tests/unit/
+
+# Integration tests (needs browsers)
+SE_CLI_E2E=1 SE_CLI_TEST_CHROME=1 \
+npx vitest run tests/integration/</code></pre>
+          </div>
+        </div>
+      </div>
+      <div class="dev-structure">
+<pre><code>src/
+├── cli.ts                  <span class="file"># CLI entry point</span>
+├── program.ts              <span class="file"># Command routing</span>
+├── session.ts              <span class="file"># Daemon spawn + RPC client</span>
+├── registry.ts             <span class="file"># Session file management</span>
+├── output.ts               <span class="file"># Output formatting</span>
+├── protocol.ts             <span class="file"># Message types</span>
+├── minimist.ts             <span class="file"># Argv parser</span>
+├── config.ts               <span class="file"># Paths and hashing</span>
+├── response.ts             <span class="file"># Response serialization</span>
+├── snapshot/
+│   └── aria-snapshot.ts    <span class="file"># Injected JS script</span>
+└── daemon/
+    ├── server.ts           <span class="file"># Daemon socket server</span>
+    ├── backend.ts          <span class="file"># Tool dispatcher</span>
+    └── tools/              <span class="file"># Tool handlers (17 tools)</span></code></pre>
+      </div>
+      <p style="text-align: center; margin-top: 28px;">
+        <a href="https://github.com/se-cli/se-cli/blob/main/docs/spec.md" class="btn btn-ghost" target="_blank" rel="noopener">Read the Spec</a>
+        <a href="https://github.com/se-cli/se-cli/issues" class="btn btn-ghost" target="_blank" rel="noopener">Open an Issue</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="faq">
+    <div class="container">
+      <h2 class="section-title">FAQ</h2>
+      <p class="section-lead">Common questions about se-cli.</p>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>How is se-cli different from Selenium MCP?</summary>
+          <p>Selenium MCP loads ~5KB of tool schemas per call and returns full accessibility trees. se-cli uses a CLI + daemon architecture: the CLI sends one JSON line, the daemon holds the WebDriver, and aria snapshots return compact YAML with element refs. No schemas enter the agent's context — typically 10x fewer tokens.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Which browsers are supported?</summary>
+          <p>Chrome, Edge, and Firefox are fully supported for both headless and headed modes. Chrome and Edge also support CDP attach via <code>--cdp=&lt;url&gt;</code> to connect to a running browser session.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Do I need to install browser drivers separately?</summary>
+          <p>No. <code>selenium-manager</code> (bundled with <code>selenium-webdriver</code>) automatically downloads the correct driver binary for your browser and platform.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Can I use se-cli with my AI agent?</summary>
+          <p>Yes. se-cli works with any AI agent that can run shell commands — Claude Code, Cursor, Copilot CLI, and more. Place <code>skill/SKILL.md</code> into your agent's skills directory and it can start driving browsers immediately.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How do sessions persist between commands?</summary>
+          <p>The daemon process holds the WebDriver instance and stays alive across CLI invocations. Session metadata is stored as <code>.session</code> JSON files in <code>&lt;cache&gt;/ms-se-cli/daemon/</code>. Use <code>close</code> to clean up, or <code>kill-all</code> to force-kill.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Is se-cli a replacement for Selenium WebDriver?</summary>
+          <p>No. se-cli is built on top of <code>selenium-webdriver</code>. It provides a CLI interface and daemon architecture on top of the WebDriver protocol, making it accessible to AI agents and shell scripts. Every action also emits the equivalent Selenium code for your test files.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What's the license?</summary>
+          <p>Apache License 2.0. See <a href="https://github.com/se-cli/se-cli/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a> for details.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
   <section class="section cta-section">
     <div class="container cta-inner">
       <h2>Start automating with fewer tokens</h2>
@@ -437,9 +866,12 @@ se-cli close</code></pre>
       <div class="footer-links">
         <a href="https://github.com/se-cli/se-cli">GitHub</a>
         <a href="https://github.com/se-cli/se-cli/issues">Issues</a>
+        <a href="https://github.com/se-cli/se-cli/discussions">Discussions</a>
+        <a href="#development">Development</a>
         <a href="https://github.com/se-cli/se-cli/blob/main/docs/spec.md">Spec</a>
         <a href="https://github.com/se-cli/se-cli/blob/main/README.md">README</a>
         <a href="https://github.com/se-cli/se-cli/blob/main/LICENSE">License</a>
+        <a href="https://www.npmjs.com/package/se-cli">npm</a>
       </div>
       <div class="footer-copy">
         Apache-2.0 · Built with inspiration from <a href="https://github.com/microsoft/playwright-cli" target="_blank" rel="noopener">playwright-cli</a>

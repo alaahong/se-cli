@@ -113,6 +113,23 @@
     sections.forEach(function (s) { io.observe(s.section); });
   }
 
+  // === Token bar animation ===
+  var tokenBars = document.querySelectorAll('.token-bar-fill');
+  if (tokenBars.length && 'IntersectionObserver' in window) {
+    var barObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          var bar = entry.target;
+          var width = bar.style.width;
+          bar.style.width = '0';
+          setTimeout(function () { bar.style.width = width; }, 100);
+          barObserver.unobserve(bar);
+        }
+      });
+    }, { threshold: 0.3 });
+    tokenBars.forEach(function (bar) { barObserver.observe(bar); });
+  }
+
   // === Smooth scroll offset for sticky nav ===
   document.querySelectorAll('a[href^="#"]').forEach(function (a) {
     a.addEventListener('click', function (e) {
