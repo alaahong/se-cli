@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Form Elements</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #2c3e50; }
+    .form-group { margin-bottom: 1.5rem; }
+    label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+    input[type="text"], input[type="email"], textarea, select {
+      width: 100%; padding: 0.5rem; font-size: 1rem; box-sizing: border-box;
+      border: 1px solid #ccc; border-radius: 4px;
+    }
+    textarea { min-height: 80px; resize: vertical; }
+    .checkbox-group, .radio-group { display: flex; flex-direction: column; gap: 0.5rem; }
+    .checkbox-group label, .radio-group label { display: flex; align-items: center; gap: 0.5rem; font-weight: normal; }
+    .status { margin-top: 1rem; padding: 0.75rem; background: #f0f9ff; border-radius: 4px; min-height: 1.5rem; }
+    button { padding: 0.5rem 1.5rem; font-size: 1rem; background: #22C55E; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #16a34a; }
+  </style>
+</head>
+<body>
+  <h1>Form Elements Test Page</h1>
+
+  <form id="test-form" onsubmit="event.preventDefault(); submitForm();">
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" placeholder="Enter username" aria-label="Username">
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" placeholder="Enter email" aria-label="Email">
+    </div>
+
+    <div class="form-group">
+      <label for="bio">Bio</label>
+      <textarea id="bio" name="bio" placeholder="Tell us about yourself" aria-label="Bio"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="country">Country</label>
+      <select id="country" name="country" aria-label="Country">
+        <option value="">Select a country</option>
+        <option value="us">United States</option>
+        <option value="uk">United Kingdom</option>
+        <option value="cn">China</option>
+        <option value="jp">Japan</option>
+        <option value="de">Germany</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <span>Subscribe to:</span>
+      <div class="checkbox-group">
+        <label><input type="checkbox" id="newsletter" name="newsletter" value="newsletter"> Newsletter</label>
+        <label><input type="checkbox" id="updates" name="updates" value="updates"> Product Updates</label>
+        <label><input type="checkbox" id="promotions" name="promotions" value="promotions"> Promotions</label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <span>Preferred contact method:</span>
+      <div class="radio-group">
+        <label><input type="radio" id="contact-email" name="contact" value="email"> Email</label>
+        <label><input type="radio" id="contact-phone" name="contact" value="phone"> Phone</label>
+        <label><input type="radio" id="contact-mail" name="contact" value="mail"> Mail</label>
+      </div>
+    </div>
+
+    <button type="submit">Submit Form</button>
+  </form>
+
+  <div class="status" id="status" role="status" aria-live="polite">Form not submitted yet.</div>
+
+  <script>
+    function submitForm() {
+      var username = document.getElementById('username').value;
+      var country = document.getElementById('country').value;
+      var newsletter = document.getElementById('newsletter').checked;
+      var updates = document.getElementById('updates').checked;
+      var status = document.getElementById('status');
+
+      var parts = [];
+      if (username) parts.push('name=' + username);
+      if (country) parts.push('country=' + country);
+      if (newsletter) parts.push('newsletter=yes');
+      if (updates) parts.push('updates=yes');
+
+      status.textContent = parts.length > 0
+        ? 'Submitted: ' + parts.join(', ')
+        : 'Submitted with no data.';
+    }
+
+    // Visual feedback for checkbox/radio changes
+    document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(function(el) {
+      el.addEventListener('change', function() {
+        var status = document.getElementById('status');
+        var name = el.id || el.name;
+        status.textContent = name + ' is ' + (el.checked ? 'checked' : 'unchecked');
+      });
+    });
+
+    // Visual feedback for select changes
+    document.getElementById('country').addEventListener('change', function() {
+      var status = document.getElementById('status');
+      status.textContent = 'Country selected: ' + this.options[this.selectedIndex].text;
+    });
+  </script>
+</body>
+</html>

@@ -1,7 +1,8 @@
-import { describe, it, expect, afterEach, beforeEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, beforeAll, afterAll } from 'vitest';
 import { execFileSync } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
+import { startTestServer, type TestServer } from './test-server';
 
 const CLI = path.join(__dirname, '..', '..', 'dist', 'cli.js');
 
@@ -16,18 +17,25 @@ function run(args: string[], env?: Record<string, string>): string {
 
 const BROWSERS = ['chrome', 'edge', 'firefox'];
 
-// Local fixture files — no external network dependency.
-// Each page is designed for specific test scenarios.
-const FIXTURES_DIR = path.join(__dirname, 'fixtures');
-function fixtureUrl(name: string): string {
-  return 'file://' + path.join(FIXTURES_DIR, name).replace(/\\/g, '/');
-}
-const EXAMPLE_URL  = fixtureUrl('example.html');   // basic page: title, url, eval, screenshot
-const TODO_URL     = fixtureUrl('todo.html');       // interactive: fill, press Enter, click
-const FORMS_URL    = fixtureUrl('forms.html');       // form elements: fill, select, check, uncheck
-const LINKS_URL    = fixtureUrl('links.html');       // navigation: click links, go-back/forward
-const SNAPSHOT_URL = fixtureUrl('snapshot.html');    // rich ARIA: snapshot, find, find --regex
-const BUTTONS_URL  = fixtureUrl('buttons.html');     // buttons: click by ref, verify action
+// HTTP test server — started once for all browser suites.
+// Supports static fixture files and extensible dynamic routes.
+let server: TestServer;
+
+beforeAll(async () => {
+  server = await startTestServer();
+}, 10000);
+
+afterAll(async () => {
+  await server?.close();
+}, 10000);
+
+// URL helpers — resolved after server starts.
+const EXAMPLE_URL  = () => server.url('example.html');   // basic page: title, url, eval, screenshot
+const TODO_URL     = () => server.url('todo.html');       // interactive: fill, press Enter, click
+const FORMS_URL    = () => server.url('forms.html');       // form elements: fill, select, check, uncheck
+const LINKS_URL    = () => server.url('links.html');       // navigation: click links, go-back/forward
+const SNAPSHOT_URL = () => server.url('snapshot.html');    // rich ARIA: snapshot, find, find --regex
+const BUTTONS_URL  = () => server.url('buttons.html');     // buttons: click by ref, verify action
 
 describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   const skip = !process.env.SE_CLI_E2E || !process.env[`SE_CLI_TEST_${browser.toUpperCase()}`];
@@ -52,7 +60,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   });
 
   (skip ? it.skip : it)('lists sessions', () => {
-    run(['open', EXAMPLE_URL, `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    run(['open', EXAMPLE_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
     const result = run(['list']);
     expect(result).toContain(S());
   });
@@ -60,7 +68,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   // --- Navigation ---
 
   (skip ? it.skip : it)('navigates to URL', () => {
-    run(['open', EXAMPLE_URL, `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    run(['open', EXAMPLE_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
     const title = run(['--raw', 'title'], { SE_CLI_SESSION: S() }).trim();
     expect(title).toBe('Example Domain');
     const url = run(['--raw', 'url'], { SE_CLI_SESSION: S() }).trim();
@@ -69,10 +77,10 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
 
   (skip ? it.skip : it)('navigates back/forward/reload', () => {
     // Start on links page, navigate to example, then back to links, forward to example.
-    run(['open', LINKS_URL, `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    run(['open', LINKS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
     expect(run(['--raw', 'title'], { SE_CLI_SESSION: S() }).trim()).toBe('Navigation Links');
 
-    run(['goto', EXAMPLE_URL], { SE_CLI_SESSION: S() });
+    run(['goto', EXAMPLE_URL()], { SE_CLI_SESSION: S() });
     expect(run(['--raw', 'title'], { SE_CLI_SESSION: S() }).trim()).toBe('Example Domain');
 
     run(['go-back'], { SE_CLI_SESSION: S() });
@@ -87,7 +95,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
 
   (skip ? it.skip : it)('clicks link by ref to navigate', () => {
     // Open the links page, click the link to the example page via ref.
-    run(['open', LINKS_URL, `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    run(['open', LINKS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
     const snapshot = run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
     // Find the ref for the "Go to Example Page" link.
     const refMatch = snapshot.match(/Go to Example Page[^\n]*ref=(e\d+)/);
@@ -101,7 +109,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   // --- Snapshot & Find ---
 
   (skip ? it.skip : it)('takes snapshot with refs', () => {
-    run(['open', SNAPSHOT_URL, `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    run(['open', SNAPSHOT_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
     const snapshot = run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
     // snapshot.html has links, buttons, textboxes, etc.
     expect(snapshot).toContain('link');
@@ -111,14 +119,14 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   });
 
   (skip ? it.skip : it)('finds text in snapshot', () => {
-    run(['open', SNAPSHOT_URL, `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    run(['open', SNAPSHOT_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
     const result = run(['--raw', 'find', 'Card One'], { SE_CLI_SESSION: S() });
     expect(result).toContain('Card One');
     expect(result).not.toContain('No matches found');
   });
 
   (skip ? it.skip : it)('finds text with regex', () => {
-    run(['open', SNAPSHOT_URL, `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    run(['open', SNAPSHOT_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
     // Search for table data (Alpha, Beta, Gamma) with regex.
     const result = run(['--raw', 'find', '--regex', 'Alpha|Beta|Gamma'], { SE_CLI_SESSION: S() });
     expect(result).toContain('Alpha');
@@ -129,7 +137,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   // --- Interaction: fill, type, press ---
 
   (skip ? it.skip : it)('fills input field and verifies value', () => {
-    run(['open', FORMS_URL, `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    run(['open', FORMS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
     const snapshot = run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
     // Find the "Username" textbox ref.
     const refMatch = snapshot.match(/Username[^\n]*ref=(e\d+)/);
@@ -142,7 +150,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   });
 
   (skip ? it.skip : it)('fills textarea via ref', () => {
-    run(['open', FORMS_URL, `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    run(['open', FORMS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
     const snapshot = run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
     // Find the "Bio" textarea ref — it's a textbox role.
     // The snapshot shows "Bio" as the label; match the textbox after it.
@@ -155,7 +163,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   });
 
   (skip ? it.skip : it)('types text into focused element', () => {
-    run(['open', FORMS_URL, `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    run(['open', FORMS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
     // Focus the email field via eval.
     run(['eval', `document.getElementById('email').focus()`], { SE_CLI_SESSION: S() });
     run(['type', 'user@example.com'], { SE_CLI_SESSION: S() });
@@ -164,7 +172,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   });
 
   (skip ? it.skip : it)('fills and presses Enter in todo app', () => {
-    run(['open', TODO_URL, `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    run(['open', TODO_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
     const snapshot = run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
     const refMatch = snapshot.match(/textbox[^\n]*ref=(e\d+)/);
     expect(refMatch).not.toBeNull();
@@ -178,7 +186,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   // --- Interaction: select, check, uncheck ---
 
   (skip ? it.skip : it)('selects dropdown option', () => {
-    run(['open', FORMS_URL, `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    run(['open', FORMS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
     const snapshot = run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
     // Find the combobox (select) ref — labeled "Country".
     const refMatch = snapshot.match(/Country[^\n]*ref=(e\d+)/);
@@ -191,7 +199,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   });
 
   (skip ? it.skip : it)('checks and unchecks checkbox', () => {
-    run(['open', FORMS_URL, `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    run(['open', FORMS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
     const snapshot = run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
     // Find the "Newsletter" checkbox ref.
     const refMatch = snapshot.match(/Newsletter[^\n]*ref=(e\d+)/);
@@ -212,7 +220,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   // --- Interaction: click button ---
 
   (skip ? it.skip : it)('clicks button by ref and verifies action', () => {
-    run(['open', BUTTONS_URL, `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    run(['open', BUTTONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
     const snapshot = run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
     // Find the "Increment +1" button ref.
     const refMatch = snapshot.match(/Increment \+1[^\n]*ref=(e\d+)/);
@@ -227,7 +235,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   // --- Screenshot & Eval ---
 
   (skip ? it.skip : it)('takes screenshot', () => {
-    run(['open', EXAMPLE_URL, `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    run(['open', EXAMPLE_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
     const result = run(['screenshot', '--filename=test.png'], { SE_CLI_SESSION: S() });
     expect(result).toContain('test.png');
     const file = path.join(process.cwd(), '.se-cli', 'test.png');
@@ -236,7 +244,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   });
 
   (skip ? it.skip : it)('evaluates JavaScript', () => {
-    run(['open', EXAMPLE_URL, `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    run(['open', EXAMPLE_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
     const result = run(['--raw', 'eval', 'document.title'], { SE_CLI_SESSION: S() }).trim();
     expect(result).toBe('Example Domain');
   });
@@ -244,7 +252,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   // --- Output modes ---
 
   (skip ? it.skip : it)('json output mode', () => {
-    run(['open', EXAMPLE_URL, `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    run(['open', EXAMPLE_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
     const result = run(['--json', 'title'], { SE_CLI_SESSION: S() });
     const parsed = JSON.parse(result);
     expect(parsed.result).toBe('Example Domain');
