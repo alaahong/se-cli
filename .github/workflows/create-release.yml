@@ -1,11 +1,14 @@
 name: Create Release
 
-# This workflow creates a GitHub Release, which then triggers
-# publish.yml → npm publish automatically.
+# This workflow creates a GitHub Release (draft by default), which then
+# triggers publish.yml → npm publish automatically once published.
 #
 # Two trigger modes:
-#   1. Push a version tag (git tag v0.2.0 && git push origin v0.2.0)
+#   1. Push a version tag:  git tag v0.2.0 && git push origin v0.2.0
 #   2. Manual dispatch from the Actions tab (enters a version number)
+#
+# The release is created as a DRAFT by default. Review the draft on the
+# Releases page, then click "Publish" to trigger npm publish.
 
 on:
   push:
@@ -23,10 +26,10 @@ on:
         type: boolean
         default: false
       draft:
-        description: 'Create as draft (publish manually to trigger npm)'
+        description: 'Create as draft (recommended — publish manually to trigger npm)'
         required: false
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: write  # required to create tags and releases
@@ -63,7 +66,7 @@ jobs:
         with:
           fetch-depth: 0  # full history for changelog
 
-      - name: Checkout (manual dispatch — tag from main)
+      - name: Checkout (manual dispatch — from main)
         if: github.event_name == 'workflow_dispatch'
         uses: actions/checkout@v4
         with:
@@ -108,38 +111,19 @@ jobs:
           git tag '${{ steps.ver.outputs.tag }}' -m "Release ${{ steps.ver.outputs.tag }}"
           git push origin '${{ steps.ver.outputs.tag }}'
 
-      # ── Generate release notes ──────────────────────────────────────
-      - name: Generate changelog
-        id: changelog
+      # ── Build npm tarball for release assets ────────────────────────
+      - name: Set package version and pack
+        id: pack
         run: |
-          # Find the previous tag for the changelog range
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-
-          if [ -n "$PREV_TAG" ]; then
-            echo "Previous release: $PREV_TAG"
-            # Get commits between previous tag and HEAD
-            COMMITS=$(git log "$PREV_TAG..HEAD" --pretty=format:"- %s" --no-merges)
-          else
-            echo "No previous tag found — using last 30 commits"
-            COMMITS=$(git log --pretty=format:"- %s" --no-merges -30)
-          fi
-
-          # Build release notes
-          {
-            echo "## What's Changed"
-            echo ""
-            echo "$COMMITS"
-            echo ""
-            if [ -n "$PREV_TAG" ]; then
-              echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${{ steps.ver.outputs.tag }}"
-            fi
-          } > release-notes.md
-
-          echo "─── Release Notes ───"
-          cat release-notes.md
+          npm version '${{ steps.ver.outputs.version }}' --no-git-tag-version --allow-same-version
+          npm pack
+          TARBALL=$(ls *.tgz)
+          echo "tarball=$TARBALL" >> $GITHUB_OUTPUT
+          echo "✓ Packaged: $TARBALL"
 
       # ── Create GitHub Release ───────────────────────────────────────
       - name: Create release
+        id: release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -147,20 +131,67 @@ jobs:
           if [ "${{ inputs.prerelease }}" = "true" ]; then
             ARGS="$ARGS --prerelease"
           fi
-          if [ "${{ inputs.draft }}" = "true" ]; then
+          # Default to draft for both tag push and manual dispatch
+          # (empty inputs.draft means tag push — also default to draft)
+          DRAFT="${{ inputs.draft }}"
+          if [ "$DRAFT" != "false" ]; then
             ARGS="$ARGS --draft"
           fi
 
+          # Use --generate-notes for GitHub's auto-generated release notes
+          # (includes PR links, new contributors, and full changelog link)
           gh release create '${{ steps.ver.outputs.tag }}' \
             --title "${{ steps.ver.outputs.tag }}" \
-            --notes-file release-notes.md \
+            --generate-notes \
             --target main \
+            '${{ steps.pack.outputs.tarball }}' \
             $ARGS
 
+          RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/${{ steps.ver.outputs.tag }}"
+          echo "url=$RELEASE_URL" >> $GITHUB_OUTPUT
           echo ""
-          echo "✓ Release created: https://github.com/${{ github.repository }}/releases/tag/${{ steps.ver.outputs.tag }}"
-          if [ "${{ inputs.draft }}" != "true" ]; then
-            echo "  → npm publish workflow will trigger automatically"
-          else
+          echo "✓ Release created: $RELEASE_URL"
+          if [ "$DRAFT" != "false" ]; then
             echo "  → Draft created — publish it manually to trigger npm publish"
+          else
+            echo "  → npm publish workflow will trigger automatically"
           fi
+
+      # ── Job summary ────────────────────────────────────────────────
+      - name: Job summary
+        if: always()
+        run: |
+          STATUS="✅ Success"
+          if [ "${{ job.status }}" != "success" ]; then
+            STATUS="❌ ${{ job.status }}"
+          fi
+
+          {
+            echo "## Release: ${{ steps.ver.outputs.tag }} — $STATUS"
+            echo ""
+            echo "| Field | Value |"
+            echo "|-------|-------|"
+            echo "| Tag | \`${{ steps.ver.outputs.tag }}\` |"
+            echo "| Version | \`${{ steps.ver.outputs.version }}\` |"
+            echo "| Prerelease | \`${{ inputs.prerelease || 'false' }}\` |"
+            echo "| Draft | \`${{ inputs.draft || 'true' }}\` |"
+            if [ "${{ steps.release.outputs.url }}" != "" ]; then
+              echo "| Release URL | [View on GitHub](${{ steps.release.outputs.url }}) |"
+            fi
+            echo ""
+            echo "### Next Steps"
+            echo ""
+            DRAFT="${{ inputs.draft }}"
+            if [ "$DRAFT" != "false" ]; then
+              if [ "${{ steps.release.outputs.url }}" != "" ]; then
+                echo "1. Review the [draft release](${{ steps.release.outputs.url }})"
+              else
+                echo "1. Review the draft release on the Releases page"
+              fi
+              echo "2. Edit release notes if needed"
+              echo "3. Click **Publish release** to trigger npm publish"
+            else
+              echo "1. npm publish workflow triggered automatically"
+              echo "2. Check [Actions](https://github.com/${{ github.repository }}/actions) for publish status"
+            fi
+          } >> $GITHUB_STEP_SUMMARY
