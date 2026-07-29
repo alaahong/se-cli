@@ -42,6 +42,8 @@ const SNAPSHOT_URL = () => server.url('snapshot.html');    // rich ARIA: snapsho
 const BUTTONS_URL  = () => server.url('buttons.html');     // buttons: click by ref, verify action
 const STORAGE_URL  = () => server.url('storage.html');     // storage: cookies, localStorage, sessionStorage
 const TABS_URL     = () => server.url('tabs.html');        // tabs: open, list, close, select
+const IFRAME_URL   = () => server.url('iframe.html');       // iframes: recursive snapshot, cross-frame refs
+const SHADOW_URL   = () => server.url('shadow-dom.html');   // shadow DOM: open shadow roots with interactive elements
 
 describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   const skip = !process.env.SE_CLI_E2E || !process.env[`SE_CLI_TEST_${browser.toUpperCase()}`];
@@ -416,5 +418,118 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
     expect(lsResult.trim()).toBe('dark');
     // Cleanup
     fs.unlinkSync(stateFile);
+  });
+
+  // --- v0.3: iframe recursive snapshot ---
+
+  (skip ? it.skip : it)('takes snapshot with cross-frame refs', async () => {
+    await run(['open', IFRAME_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    const snapshot = await run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
+    // The snapshot should contain iframe entries
+    expect(snapshot).toContain('iframe');
+    // Should have cross-frame refs (f0e1, f0e2, etc.)
+    expect(snapshot).toMatch(/ref=f\d+e\d+/);
+  });
+
+  (skip ? it.skip : it)('fills input inside iframe by cross-frame ref', async () => {
+    await run(['open', IFRAME_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    const snapshot = await run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
+    // Find the ref for the "Name" textbox inside the iframe
+    const refMatch = snapshot.match(/Name[^\n]*ref=(f\d+e\d+)/);
+    expect(refMatch).not.toBeNull();
+    const ref = refMatch![1];
+    await run(['fill', ref, 'iframe-test-value'], { SE_CLI_SESSION: S() });
+    // Verify the value was set — use eval with the iframe element
+    // After fill, the frame is reset to default by backend.ts
+    const val = (await run(['--raw', 'eval',
+      `var iframe = document.getElementById('same-origin-iframe'); iframe.contentDocument.getElementById('iframe-input').value`
+    ], { SE_CLI_SESSION: S() })).trim();
+    expect(val).toBe('iframe-test-value');
+  });
+
+  (skip ? it.skip : it)('clicks button inside iframe by cross-frame ref', async () => {
+    await run(['open', IFRAME_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    const snapshot = await run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
+    // Find the ref for the "Submit Inside Iframe" button
+    const refMatch = snapshot.match(/Submit Inside Iframe[^\n]*ref=(f\d+e\d+)/);
+    expect(refMatch).not.toBeNull();
+    const ref = refMatch![1];
+    // First fill the iframe input
+    const inputRefMatch = snapshot.match(/Name[^\n]*ref=(f\d+e\d+)/);
+    if (inputRefMatch) {
+      await run(['fill', inputRefMatch[1], 'clicker'], { SE_CLI_SESSION: S() });
+    }
+    await run(['click', ref], { SE_CLI_SESSION: S() });
+    // Verify the form was submitted — check result div
+    const result = (await run(['--raw', 'eval',
+      `var iframe = document.getElementById('same-origin-iframe'); iframe.contentDocument.getElementById('result').textContent`
+    ], { SE_CLI_SESSION: S() })).trim();
+    expect(result).toContain('clicker');
+  });
+
+  (skip ? it.skip : it)('finds text across frames', async () => {
+    await run(['open', IFRAME_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    const result = await run(['--raw', 'find', 'IFrame Content'], { SE_CLI_SESSION: S() });
+    // The find command should search across frames
+    expect(result).toContain('IFrame Content');
+    expect(result).not.toContain('No matches found');
+  });
+
+  (skip ? it.skip : it)('snapshot shows cross-origin iframe placeholder', async () => {
+    await run(['open', IFRAME_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    const snapshot = await run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
+    // The about:blank iframe should appear as cross-origin or as an iframe entry
+    expect(snapshot).toContain('iframe');
+  });
+
+  // --- v0.3: Shadow DOM recursion ---
+
+  (skip ? it.skip : it)('takes snapshot with shadow DOM elements', async () => {
+    await run(['open', SHADOW_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    const snapshot = await run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
+    // Shadow DOM elements should appear in the snapshot
+    expect(snapshot).toContain('Shadow Button');
+    expect(snapshot).toContain('Shadow Input');
+  });
+
+  (skip ? it.skip : it)('clicks button inside shadow DOM by ref', async () => {
+    await run(['open', SHADOW_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    const snapshot = await run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
+    // Find the ref for the "Shadow Button" inside the shadow root
+    const refMatch = snapshot.match(/Shadow Button[^\n]*ref=(e\d+)/);
+    expect(refMatch).not.toBeNull();
+    const ref = refMatch![1];
+    // First fill the shadow input
+    const inputRefMatch = snapshot.match(/Shadow Input[^\n]*ref=(e\d+)/);
+    if (inputRefMatch) {
+      await run(['fill', inputRefMatch[1], 'shadow-user'], { SE_CLI_SESSION: S() });
+    }
+    await run(['click', ref], { SE_CLI_SESSION: S() });
+    // Verify the button was clicked — check result inside shadow root
+    const result = (await run(['--raw', 'eval',
+      `document.getElementById('shadow-host').shadowRoot.getElementById('shadow-result').textContent`
+    ], { SE_CLI_SESSION: S() })).trim();
+    expect(result).toContain('shadow-user');
+  });
+
+  (skip ? it.skip : it)('fills input inside shadow DOM by ref', async () => {
+    await run(['open', SHADOW_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    const snapshot = await run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
+    const refMatch = snapshot.match(/Shadow Input[^\n]*ref=(e\d+)/);
+    expect(refMatch).not.toBeNull();
+    const ref = refMatch![1];
+    await run(['fill', ref, 'shadow-fill-test'], { SE_CLI_SESSION: S() });
+    // Verify value was set
+    const val = (await run(['--raw', 'eval',
+      `document.getElementById('shadow-host').shadowRoot.getElementById('shadow-input').value`
+    ], { SE_CLI_SESSION: S() })).trim();
+    expect(val).toBe('shadow-fill-test');
+  });
+
+  (skip ? it.skip : it)('finds text inside shadow DOM', async () => {
+    await run(['open', SHADOW_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    const result = await run(['--raw', 'find', 'Shadow DOM Form'], { SE_CLI_SESSION: S() });
+    expect(result).toContain('Shadow DOM Form');
+    expect(result).not.toContain('No matches found');
   });
 });

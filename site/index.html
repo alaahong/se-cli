@@ -828,8 +828,8 @@ Agent: I'll navigate and test the login flow.
             <tr><td>Ref engine</td><td>Native <code>aria-ref</code></td><td><code>data-se-ref</code> attribute</td></tr>
             <tr><td>Multi-browser</td><td>Chromium only</td><td>Chrome + Edge + Firefox</td></tr>
             <tr><td>Real Safari</td><td>No</td><td>Possible via Safari driver</td></tr>
-            <tr><td>iframe support</td><td>Full</td><td>Placeholder (v0.3)</td></tr>
-            <tr><td>Shadow DOM</td><td>Full</td><td>Placeholder (v0.3)</td></tr>
+            <tr><td>iframe support</td><td>Full</td><td>Recursive (same-origin)</td></tr>
+            <tr><td>Shadow DOM</td><td>Full</td><td>Open shadow roots</td></tr>
             <tr><td>Test runner attach</td><td>Yes (Playwright test)</td><td>No (v0.7 exploratory)</td></tr>
             <tr><td>Tracing</td><td>Full</td><td>Not planned</td></tr>
           </tbody>
@@ -898,8 +898,8 @@ Agent: I'll navigate and test the login flow.
             <p>Storage management (cookies, localStorage, sessionStorage), state save/load, tab management, <code>install --skills</code>, <code>--profile</code>, <code>--persistent</code>.</p>
           </div>
         </div>
-        <div class="roadmap-item">
-          <div class="roadmap-version">v0.3</div>
+        <div class="roadmap-item roadmap-item-done">
+          <div class="roadmap-version">v0.3 ✓</div>
           <div class="roadmap-body">
             <h3>iframe &amp; Shadow DOM</h3>
             <p>Recursive iframe snapshots with cross-frame refs (<code>f1e3</code>). Shadow DOM recursion. <code>find</code> searches across frames and shadow roots.</p>

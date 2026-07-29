@@ -15,7 +15,20 @@ export async function callTool(
     return r;
   }
   const response = new Response(responseOpts);
-  await handler(driver, params, response);
+  try {
+    await handler(driver, params, response);
+  } finally {
+    // Always reset to the top-level frame after a tool call so the
+    // next command starts in the main document context. This is
+    // essential for cross-frame refs: after clicking an element
+    // inside an iframe (which calls driver.switchTo().frame()),
+    // subsequent snapshot/find/eval commands must run in the main frame.
+    try {
+      await driver.switchTo().defaultContent();
+    } catch {
+      // Ignore — some drivers throw if there's no frame to switch back from.
+    }
+  }
   return response;
 }
 

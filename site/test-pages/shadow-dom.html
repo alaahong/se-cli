@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shadow DOM Test Page</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #7c3aed; }
+    h2 { color: #6d28d9; margin-top: 2rem; }
+    .nav { display: flex; gap: 1rem; padding: 1rem 0; }
+    .nav a { color: #7c3aed; text-decoration: none; font-weight: 500; }
+    .shadow-container { margin: 1rem 0; padding: 1rem; border: 1px solid #ddd; border-radius: 8px; }
+    #shadow-result { margin-top: 0.5rem; padding: 0.75rem; background: #f5f3ff; border-radius: 4px; min-height: 1.5rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Shadow DOM Test Page</h1>
+    <nav class="nav" aria-label="Main navigation">
+      <a href="#home">Home</a>
+      <a href="#docs">Docs</a>
+      <a href="#api">API</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2>Light DOM Elements</h2>
+    <form id="main-form">
+      <label for="main-input">Username</label>
+      <input type="text" id="main-input" placeholder="Enter username">
+      <button type="button" id="main-button">Submit</button>
+    </form>
+
+    <h2>Shadow DOM Component</h2>
+    <div id="shadow-host" class="shadow-container">
+      <!-- Shadow DOM content is attached via JavaScript below -->
+    </div>
+
+    <h2>Nested Shadow DOM</h2>
+    <div id="nested-host" class="shadow-container">
+      <!-- Nested shadow DOM content is attached via JavaScript below -->
+    </div>
+  </main>
+
+  <footer>
+    <p>Shadow DOM test page footer. <a href="#footer-link">Footer Link</a></p>
+  </footer>
+
+  <script>
+    // Attach open shadow root with interactive elements
+    const host = document.getElementById('shadow-host');
+    const shadow = host.attachShadow({ mode: 'open' });
+    shadow.innerHTML = `
+      <style>
+        :host { display: block; }
+        h3 { color: #7c3aed; margin-top: 0; }
+        input, button { padding: 0.5rem 1rem; font-size: 1rem; margin: 0.25rem 0; }
+        button { background: #7c3aed; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #6d28d9; }
+        #shadow-result { margin-top: 0.5rem; padding: 0.75rem; background: #f5f3ff; border-radius: 4px; min-height: 1.5rem; }
+        a { color: #7c3aed; }
+      </style>
+      <h3>Shadow DOM Form</h3>
+      <form id="shadow-form">
+        <label for="shadow-input">Shadow Input</label>
+        <br>
+        <input type="text" id="shadow-input" placeholder="Type here...">
+        <br>
+        <button type="button" id="shadow-button">Shadow Button</button>
+      </form>
+      <div id="shadow-result"></div>
+      <a href="#shadow-link">Shadow Link</a>
+    `;
+    shadow.getElementById('shadow-button').addEventListener('click', () => {
+      const input = shadow.getElementById('shadow-input');
+      shadow.getElementById('shadow-result').textContent = 'Hello, ' + input.value + '!';
+    });
+
+    // Attach nested shadow root (shadow DOM within shadow DOM)
+    const nestedHost = document.getElementById('nested-host');
+    const nestedShadow = nestedHost.attachShadow({ mode: 'open' });
+    nestedShadow.innerHTML = `
+      <style>
+        :host { display: block; }
+        h3 { color: #6d28d9; }
+        .inner-host { padding: 1rem; border: 1px dashed #c4b5fd; border-radius: 4px; margin-top: 1rem; }
+      </style>
+      <h3>Nested Shadow Container</h3>
+      <p>This contains another shadow root inside.</p>
+      <div class="inner-host" id="inner-shadow-host"></div>
+    `;
+    // Attach a second shadow root inside the first one
+    const innerHost = nestedShadow.getElementById('inner-shadow-host');
+    const innerShadow = innerHost.attachShadow({ mode: 'open' });
+    innerShadow.innerHTML = `
+      <style>
+        button { padding: 0.5rem 1rem; background: #6d28d9; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        #inner-count { font-size: 1.5rem; font-weight: bold; color: #6d28d9; }
+      </style>
+      <button type="button" id="inner-button">Inner Shadow Button</button>
+      <span id="inner-count">0</span>
+    `;
+    let innerCount = 0;
+    innerShadow.getElementById('inner-button').addEventListener('click', () => {
+      innerCount++;
+      innerShadow.getElementById('inner-count').textContent = innerCount;
+    });
+  </script>
+</body>
+</html>

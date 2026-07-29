@@ -260,10 +260,11 @@ async function resolveTarget(driver: WebDriver, target: string) {
 ### 5.7 Key Constraints
 
 1. **Refs are valid only within a single snapshot**: after DOM rebuild, `data-se-ref` is lost; you must snapshot again
-2. **iframe handling (MVP simplification)**: do not recurse into iframes; output `- iframe: <url>` placeholder
-3. **Shadow DOM (MVP simplification)**: do not recurse into open shadow roots; output placeholder
+2. **iframe handling**: same-origin iframes are recursed with cross-frame refs (`f<index>e<ref>`); cross-origin iframes output a placeholder
+3. **Shadow DOM**: open shadow roots are traversed recursively; closed shadow roots are not accessible
 4. **Token control**: long text truncated to 80 chars; `--depth=N` limits depth (default 50); `find` command greps instead of dumping everything
 5. **Performance**: `getComputedStyle` is called only for suspected hidden elements
+6. **Frame reset**: after each tool call, the driver switches back to the default frame so subsequent commands run in the main document context
 
 ### 5.8 Code Generation Replay
 
@@ -279,7 +280,7 @@ response.addCode(`await driver.findElement(By.css('[data-se-ref="e15"]')).click(
 | Aria algorithm | Built-in mature implementation | Self-written simplified version, ~70-80% coverage |
 | Ref engine | Built-in `aria-ref` selector engine | `data-se-ref` attribute + CSS selector |
 | Snapshot stability | High | Medium (needs iteration on real sites) |
-| iframe/shadow | Full support | MVP placeholder |
+| iframe/shadow | Full support | Recursive (same-origin iframes, open shadow roots) |
 
 ## 6. Error Handling
 
@@ -369,9 +370,9 @@ Sorted by priority, delivered incrementally per version.
 
 ### v0.3: iframe & Shadow DOM
 
-- [ ] **iframe recursive snapshot**: cross-frame refs (e.g. `f3e15`), implemented via `driver.switchTo().frame()`
-- [ ] **Shadow DOM recursion**: recursively traverse `el.shadowRoot` for open shadow roots
-- [ ] **find command enhancement**: support cross-frame search
+- [x] **iframe recursive snapshot**: cross-frame refs (e.g. `f3e15`), implemented via `driver.switchTo().frame()`
+- [x] **Shadow DOM recursion**: recursively traverse `el.shadowRoot` for open shadow roots
+- [x] **find command enhancement**: support cross-frame search
 
 ### v0.4: Network & Debugging
 
