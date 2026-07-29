@@ -10,7 +10,7 @@ import * as fs from 'fs';
 export async function main(argv: string[]): Promise<void> {
   const opts = {
     boolean: ['headed', 'raw', 'json', 'persistent', 'help'],
-    string: ['browser', 'filename', 'depth', 's', 'session', 'cdp'],
+    string: ['browser', 'filename', 'depth', 's', 'session', 'cdp', 'profile'],
     alias: { s: 'session' },
   };
   const args = parseArgs(argv, opts);
@@ -33,11 +33,41 @@ export async function main(argv: string[]): Promise<void> {
     if (args.browser) openOpts.browserName = args.browser;
     if (args.headed) openOpts.headed = true;
     if (args.cdp) openOpts.cdpEndpoint = args.cdp;
+    if (args.profile) openOpts.profilePath = args.profile;
+    if (args.persistent) {
+      openOpts.persistent = true;
+      // Auto-assign profile path
+      const wsHash = workspaceHash(workspaceDir);
+      openOpts.profilePath = path.join(baseDaemonDir(), 'profiles', wsHash, sessionName);
+    }
     await session.startDaemon(openOpts);
     if (url) {
       const resp = await session.run(['goto', url], cwd, { raw: args.raw, json: args.json });
       render(resp);
     }
+    return;
+  }
+
+  if (cmd === 'install') {
+    const target = args._[1] || 'claude'; // 默认 claude
+    const targetMap: Record<string, string> = {
+      'claude': path.join('.claude', 'skills', 'se-cli'),
+      'cursor': path.join('.cursor', 'skills', 'se-cli'),
+      'generic': path.join('.agents', 'skills', 'se-cli'),
+    };
+    const skillDir = targetMap[target];
+    if (!skillDir) {
+      console.error(`Unknown target: ${target}. Supported: claude, cursor, generic`);
+      process.exit(1);
+    }
+    const skillSource = path.join(__dirname, '..', 'skill', 'SKILL.md');
+    if (!fs.existsSync(skillSource)) {
+      console.error('SKILL.md not found in package. This may be a development installation.');
+      process.exit(1);
+    }
+    fs.mkdirSync(skillDir, { recursive: true });
+    fs.copyFileSync(skillSource, path.join(skillDir, 'SKILL.md'));
+    console.log(`Skill installed to ${skillDir}`);
     return;
   }
 
@@ -91,7 +121,7 @@ export async function main(argv: string[]): Promise<void> {
   // Strip CLI-level flags (--raw, --json, --headed, --browser, --cdp, -s, --session,
   // --persistent, --help) so the daemon only sees the command and its tool-specific
   // flags (e.g. --filename, --depth, --regex, --submit).
-  const cliFlags = new Set(['raw', 'json', 'headed', 'persistent', 'help', 'browser', 'cdp', 's', 'session']);
+  const cliFlags = new Set(['raw', 'json', 'headed', 'persistent', 'help', 'browser', 'cdp', 's', 'session', 'profile']);
   const forwardArgs = argv.filter(arg => {
     const m = arg.match(/^-{1,2}([\w-]+)(=.*)?$/);
     if (!m) return true; // positional arg — keep
@@ -126,7 +156,8 @@ function printHelp(): void {
   console.log(`se-cli - token-efficient Selenium browser automation
 
 Usage:
-  se-cli open [url] [--browser=chrome|edge|firefox] [--headed] [--cdp=url]
+  se-cli open [url] [--browser=chrome|edge|firefox] [--headed] [--cdp=url] [--profile=path] [--persistent]
+  se-cli install [claude|cursor|generic]
   se-cli close
   se-cli list
   se-cli close-all
@@ -147,6 +178,11 @@ Commands:
   screenshot [ref] [--filename=f]
   eval "<js>" [ref]
   title / url
+  cookie-list / cookie-get <name> / cookie-set <name> <val> / cookie-delete [name]
+  localstorage-get <key> / localstorage-set <key> <val> / localstorage-delete [key] / localstorage-list
+  sessionstorage-get <key> / sessionstorage-set <key> <val> / sessionstorage-delete [key] / sessionstorage-list
+  tab-list / tab-new [url] / tab-close / tab-select <index>
+  state-save [--filename=f] / state-load [--filename=f]
 
 Flags:
   --raw                   output only the result value
@@ -155,5 +191,7 @@ Flags:
   --browser=chrome        browser (default chrome)
   --headed                show browser window (default headless)
   --cdp=<url>             attach to running Chrome via CDP
+  --profile=<path>        use a persistent browser profile directory
+  --persistent            keep browser profile across sessions (auto-assigns profile path)
 `);
 }

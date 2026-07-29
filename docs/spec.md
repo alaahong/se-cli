@@ -91,7 +91,13 @@ se-cli -s=<name> <cmd>         # Named session
 
 **Save & Execute**: `screenshot [ref]` / `screenshot --filename=f` / `eval "<js>"` / `eval "<js>" <ref>` / `title` / `url`
 
-22 commands in total.
+**Storage**: `cookie-list` / `cookie-get <name>` / `cookie-set <name> <value>` / `cookie-delete [name]` / `localstorage-get <key>` / `localstorage-set <key> <value>` / `localstorage-delete [key]` / `localstorage-list` / `sessionstorage-get <key>` / `sessionstorage-set <key> <value>` / `sessionstorage-delete [key]` / `sessionstorage-list`
+
+**Tabs**: `tab-list` / `tab-new [url]` / `tab-close` / `tab-select <index>`
+
+**State**: `state-save [--filename=f]` / `state-load [--filename=f]`
+
+35 commands in total.
 
 ### 3.3 Global Flags
 
@@ -102,6 +108,8 @@ se-cli -s=<name> <cmd>         # Specify session
 se-cli open --browser=chrome   # chrome (default) | edge | firefox
 se-cli open --headed           # Default is headless
 se-cli open --cdp=<url>        # Attach to a running Chrome
+se-cli open --profile=<path>   # Use a persistent browser profile directory
+se-cli open --persistent       # Keep browser profile across sessions
 ```
 
 ## 4. Process Architecture & Communication Protocol
@@ -352,12 +360,12 @@ Sorted by priority, delivered incrementally per version.
 
 ### v0.2: Practical Capability Completion
 
-- [ ] **Storage management**: `cookie-list/get/set/delete/clear`, `localstorage-*`, `sessionstorage-*` (wrapped via `execute_script`)
-- [ ] **State save/load**: export cookies + storage to JSON, restore by loading in reverse
-- [ ] **Tab management**: `tab-list`, `tab-new`, `tab-close`, `tab-select` (based on `window_handles` + `switch_to.window`)
-- [ ] **install --skills**: copy SKILL.md to `.claude/skills/se-cli/` or `.agents/skills/se-cli/`
-- [ ] **--profile=<path>**: persistent user data directory
-- [ ] **--persistent**: auto-assign userDataDir
+- [x] **Storage management**: `cookie-list/get/set/delete/clear`, `localstorage-*`, `sessionstorage-*` (wrapped via `execute_script`)
+- [x] **State save/load**: export cookies + storage to JSON, restore by loading in reverse
+- [x] **Tab management**: `tab-list`, `tab-new`, `tab-close`, `tab-select` (based on `window_handles` + `switch_to.window`)
+- [x] **install --skills**: copy SKILL.md to `.claude/skills/se-cli/` or `.agents/skills/se-cli/`
+- [x] **--profile=<path>**: persistent user data directory
+- [x] **--persistent**: auto-assign userDataDir
 
 ### v0.3: iframe & Shadow DOM
 

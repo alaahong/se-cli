@@ -12,6 +12,11 @@ import { browser_screenshot } from '../../src/daemon/tools/screenshot';
 import { browser_eval } from '../../src/daemon/tools/eval';
 import { resolveTarget, byToString, safeFilename } from '../../src/daemon/tools/shared';
 import { By } from 'selenium-webdriver';
+import { browser_cookie_list, browser_cookie_get, browser_cookie_set, browser_cookie_delete } from '../../src/daemon/tools/storage';
+import { browser_localstorage_get, browser_localstorage_set, browser_localstorage_delete, browser_localstorage_list } from '../../src/daemon/tools/storage';
+import { browser_sessionstorage_get, browser_sessionstorage_set, browser_sessionstorage_delete, browser_sessionstorage_list } from '../../src/daemon/tools/storage';
+import { browser_tab_list, browser_tab_new, browser_tab_close, browser_tab_select } from '../../src/daemon/tools/tab';
+import { browser_state_save, browser_state_load } from '../../src/daemon/tools/state';
 
 function makeMockDriver(opts: any = {}): any {
   const calls: any[] = [];
@@ -35,7 +40,20 @@ function makeMockDriver(opts: any = {}): any {
       forward: vi.fn(async () => {}),
       refresh: vi.fn(async () => {}),
     })),
-    switchTo: vi.fn(() => ({})),
+    switchTo: vi.fn(() => ({
+      window: vi.fn(async (handle: string) => { calls.push({ method: 'switchTo.window', handle }); }),
+      newWindow: vi.fn(async (type: string) => { calls.push({ method: 'newWindow', type }); }),
+    })),
+    manage: vi.fn(() => ({
+      getCookies: vi.fn(async () => opts.cookies ?? []),
+      getCookie: vi.fn(async (name: string) => (opts.cookies ?? []).find((c: any) => c.name === name) ?? null),
+      addCookie: vi.fn(async (cookie: any) => { calls.push({ method: 'addCookie', cookie }); }),
+      deleteCookie: vi.fn(async (name: string) => { calls.push({ method: 'deleteCookie', name }); }),
+      deleteAllCookies: vi.fn(async () => { calls.push({ method: 'deleteAllCookies' }); }),
+    })),
+    getAllWindowHandles: vi.fn(async () => opts.windowHandles ?? ['w1', 'w2']),
+    getWindowHandle: vi.fn(async () => 'w1'),
+    close: vi.fn(async () => { calls.push({ method: 'close' }); }),
     quit: vi.fn(async () => {}),
     _calls: calls,
   };
@@ -306,6 +324,208 @@ describe('tool handlers', () => {
       const callArgs = driver.executeScript.mock.calls[0];
       expect(callArgs[0]).toBe('arguments[0].click()');
       expect(callArgs[1]).toBeTruthy();
+    });
+  });
+
+  // --- v0.2: Storage management ---
+  describe('browser_cookie_list', () => {
+    it('calls manage().getCookies() and returns JSON', async () => {
+      const driver = makeMockDriver({ cookies: [{ name: 'session', value: 'abc' }] });
+      const response = new Response({ raw: false, json: false });
+      await browser_cookie_list(driver, {}, response);
+      const out = response.serialize();
+      expect(out).toContain('session');
+      expect(out).toContain('abc');
+    });
+  });
+
+  describe('browser_cookie_get', () => {
+    it('calls manage().getCookie(name) and returns value', async () => {
+      const driver = makeMockDriver({ cookies: [{ name: 'token', value: 'xyz' }] });
+      const response = new Response({ raw: false, json: false });
+      await browser_cookie_get(driver, { name: 'token' }, response);
+      const out = response.serialize();
+      expect(out).toContain('token');
+      expect(out).toContain('xyz');
+    });
+  });
+
+  describe('browser_cookie_set', () => {
+    it('calls manage().addCookie()', async () => {
+      const driver = makeMockDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_cookie_set(driver, { name: 'foo', value: 'bar' }, response);
+      expect(driver.manage).toHaveBeenCalled();
+      const out = response.serialize();
+      expect(out).toContain('addCookie');
+    });
+  });
+
+  describe('browser_cookie_delete', () => {
+    it('calls deleteCookie when name is given', async () => {
+      const driver = makeMockDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_cookie_delete(driver, { name: 'foo' }, response);
+      const out = response.serialize();
+      expect(out).toContain('deleteCookie');
+    });
+
+    it('calls deleteAllCookies when name is omitted', async () => {
+      const driver = makeMockDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_cookie_delete(driver, {}, response);
+      const out = response.serialize();
+      expect(out).toContain('deleteAllCookies');
+    });
+  });
+
+  describe('browser_localstorage_get', () => {
+    it('calls executeScript to get item', async () => {
+      const driver = makeMockDriver({ scriptResult: 'dark' });
+      const response = new Response({ raw: false, json: false });
+      await browser_localstorage_get(driver, { key: 'theme' }, response);
+      expect(driver.executeScript).toHaveBeenCalled();
+      const out = response.serialize();
+      expect(out).toContain('dark');
+    });
+  });
+
+  describe('browser_localstorage_set', () => {
+    it('calls executeScript to set item', async () => {
+      const driver = makeMockDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_localstorage_set(driver, { key: 'theme', value: 'dark' }, response);
+      expect(driver.executeScript).toHaveBeenCalled();
+      const out = response.serialize();
+      expect(out).toContain('localStorage');
+    });
+  });
+
+  describe('browser_localstorage_delete', () => {
+    it('calls executeScript to remove item', async () => {
+      const driver = makeMockDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_localstorage_delete(driver, { key: 'theme' }, response);
+      expect(driver.executeScript).toHaveBeenCalled();
+    });
+
+    it('calls executeScript to clear all when no key', async () => {
+      const driver = makeMockDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_localstorage_delete(driver, {}, response);
+      expect(driver.executeScript).toHaveBeenCalled();
+      const out = response.serialize();
+      expect(out).toContain('clear');
+    });
+  });
+
+  describe('browser_localstorage_list', () => {
+    it('calls executeScript to list keys', async () => {
+      const driver = makeMockDriver({ scriptResult: { theme: 'dark', lang: 'en' } });
+      const response = new Response({ raw: false, json: false });
+      await browser_localstorage_list(driver, {}, response);
+      expect(driver.executeScript).toHaveBeenCalled();
+      const out = response.serialize();
+      expect(out).toContain('theme');
+      expect(out).toContain('dark');
+    });
+  });
+
+  describe('browser_sessionstorage_get', () => {
+    it('calls executeScript to get item', async () => {
+      const driver = makeMockDriver({ scriptResult: 'tempval' });
+      const response = new Response({ raw: false, json: false });
+      await browser_sessionstorage_get(driver, { key: 'temp' }, response);
+      expect(driver.executeScript).toHaveBeenCalled();
+    });
+  });
+
+  describe('browser_sessionstorage_set', () => {
+    it('calls executeScript to set item', async () => {
+      const driver = makeMockDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_sessionstorage_set(driver, { key: 'temp', value: 'val' }, response);
+      expect(driver.executeScript).toHaveBeenCalled();
+    });
+  });
+
+  // --- v0.2: Tab management ---
+  describe('browser_tab_list', () => {
+    it('calls getAllWindowHandles and returns tab info', async () => {
+      const driver = makeMockDriver({ windowHandles: ['w1', 'w2'], title: 'Tab1', url: 'https://example.com' });
+      const response = new Response({ raw: false, json: false });
+      await browser_tab_list(driver, {}, response);
+      expect(driver.getAllWindowHandles).toHaveBeenCalled();
+      const out = response.serialize();
+      expect(out).toContain('w1');
+      expect(out).toContain('w2');
+    });
+  });
+
+  describe('browser_tab_new', () => {
+    it('calls switchTo().newWindow', async () => {
+      const driver = makeMockDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_tab_new(driver, {}, response);
+      expect(driver.switchTo).toHaveBeenCalled();
+      const out = response.serialize();
+      expect(out).toContain('newWindow');
+    });
+
+    it('navigates to url when provided', async () => {
+      const driver = makeMockDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_tab_new(driver, { url: 'https://example.com' }, response);
+      expect(driver.get).toHaveBeenCalledWith('https://example.com');
+    });
+  });
+
+  describe('browser_tab_close', () => {
+    it('calls driver.close() and switches to remaining handle', async () => {
+      const driver = makeMockDriver({ windowHandles: ['w2'] });
+      const response = new Response({ raw: false, json: false });
+      await browser_tab_close(driver, {}, response);
+      expect(driver.close).toHaveBeenCalled();
+    });
+  });
+
+  describe('browser_tab_select', () => {
+    it('calls getAllWindowHandles and switchTo() for tab selection', async () => {
+      const driver = makeMockDriver({ windowHandles: ['w1', 'w2', 'w3'] });
+      const response = new Response({ raw: false, json: false });
+      await browser_tab_select(driver, { index: 1 }, response);
+      expect(driver.getAllWindowHandles).toHaveBeenCalled();
+      expect(driver.switchTo).toHaveBeenCalled();
+      const out = response.serialize();
+      expect(out).toContain('handles[1]');
+    });
+  });
+
+  // --- v0.2: State save/load ---
+  describe('browser_state_save', () => {
+    it('saves cookies and storage to JSON file', async () => {
+      const driver = makeMockDriver({ cookies: [{ name: 'session', value: 'abc' }] });
+      const response = new Response({ raw: false, json: false });
+      await browser_state_save(driver, { filename: 'state.json' }, response);
+      const file = path.join(tmpCwd, '.se-cli', 'state.json');
+      expect(fs.existsSync(file)).toBe(true);
+      const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+      expect(data.cookies).toBeInstanceOf(Array);
+      expect(data.url).toBe('https://example.com');
+    });
+  });
+
+  describe('browser_state_load', () => {
+    it('loads state from JSON file', async () => {
+      // First save
+      const driver = makeMockDriver({ cookies: [{ name: 'session', value: 'abc', domain: 'example.com', path: '/' }] });
+      await browser_state_save(driver, { filename: 'state.json' }, new Response({ raw: false, json: false }));
+      // Then load
+      const driver2 = makeMockDriver({ cookies: [{ name: 'session', value: 'abc', domain: 'example.com', path: '/' }] });
+      const response = new Response({ raw: false, json: false });
+      await browser_state_load(driver2, { filename: 'state.json' }, response);
+      const out = response.serialize();
+      expect(out).toContain('cookies');
     });
   });
 });

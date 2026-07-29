@@ -12,6 +12,30 @@ import { browser_snapshot } from './snapshot';
 import { browser_find } from './find';
 import { browser_screenshot } from './screenshot';
 import { browser_eval } from './eval';
+import {
+  browser_cookie_list,
+  browser_cookie_get,
+  browser_cookie_set,
+  browser_cookie_delete,
+  browser_localstorage_get,
+  browser_localstorage_set,
+  browser_localstorage_delete,
+  browser_localstorage_list,
+  browser_sessionstorage_get,
+  browser_sessionstorage_set,
+  browser_sessionstorage_delete,
+  browser_sessionstorage_list,
+} from './storage';
+import {
+  browser_tab_list,
+  browser_tab_new,
+  browser_tab_close,
+  browser_tab_select,
+} from './tab';
+import {
+  browser_state_save,
+  browser_state_load,
+} from './state';
 
 export const tools: Record<string, (driver: any, params: any, response: any) => Promise<void>> = {
   browser_goto,
@@ -31,4 +55,22 @@ export const tools: Record<string, (driver: any, params: any, response: any) => 
   browser_find,
   browser_screenshot,
   browser_eval,
+  browser_cookie_list,
+  browser_cookie_get,
+  browser_cookie_set,
+  browser_cookie_delete,
+  browser_localstorage_get,
+  browser_localstorage_set,
+  browser_localstorage_delete,
+  browser_localstorage_list,
+  browser_sessionstorage_get,
+  browser_sessionstorage_set,
+  browser_sessionstorage_delete,
+  browser_sessionstorage_list,
+  browser_tab_list,
+  browser_tab_new,
+  browser_tab_close,
+  browser_tab_select,
+  browser_state_save,
+  browser_state_load,
 };

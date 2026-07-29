@@ -40,6 +40,8 @@ const FORMS_URL    = () => server.url('forms.html');       // form elements: fil
 const LINKS_URL    = () => server.url('links.html');       // navigation: click links, go-back/forward
 const SNAPSHOT_URL = () => server.url('snapshot.html');    // rich ARIA: snapshot, find, find --regex
 const BUTTONS_URL  = () => server.url('buttons.html');     // buttons: click by ref, verify action
+const STORAGE_URL  = () => server.url('storage.html');     // storage: cookies, localStorage, sessionStorage
+const TABS_URL     = () => server.url('tabs.html');        // tabs: open, list, close, select
 
 describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   const skip = !process.env.SE_CLI_E2E || !process.env[`SE_CLI_TEST_${browser.toUpperCase()}`];
@@ -260,5 +262,159 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
     const result = await run(['--json', 'title'], { SE_CLI_SESSION: S() });
     const parsed = JSON.parse(result);
     expect(parsed.result).toBe('Example Domain');
+  });
+
+  // --- Storage: cookies ---
+
+  (skip ? it.skip : it)('sets and gets a cookie', async () => {
+    await run(['open', EXAMPLE_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    await run(['cookie-set', 'testcookie', 'cookievalue'], { SE_CLI_SESSION: S() });
+    const result = await run(['--raw', 'cookie-get', 'testcookie'], { SE_CLI_SESSION: S() });
+    expect(result).toContain('testcookie');
+    expect(result).toContain('cookievalue');
+  });
+
+  (skip ? it.skip : it)('lists cookies', async () => {
+    await run(['open', EXAMPLE_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    await run(['cookie-set', 'listcookie', 'val123'], { SE_CLI_SESSION: S() });
+    const result = await run(['--raw', 'cookie-list'], { SE_CLI_SESSION: S() });
+    expect(result).toContain('listcookie');
+    expect(result).toContain('val123');
+  });
+
+  (skip ? it.skip : it)('deletes a specific cookie', async () => {
+    await run(['open', EXAMPLE_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    await run(['cookie-set', 'deletecookie', 'tobedeleted'], { SE_CLI_SESSION: S() });
+    await run(['cookie-delete', 'deletecookie'], { SE_CLI_SESSION: S() });
+    const result = await run(['--raw', 'cookie-list'], { SE_CLI_SESSION: S() });
+    expect(result).not.toContain('deletecookie');
+  });
+
+  (skip ? it.skip : it)('deletes all cookies', async () => {
+    await run(['open', EXAMPLE_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    await run(['cookie-set', 'cookie1', 'val1'], { SE_CLI_SESSION: S() });
+    await run(['cookie-set', 'cookie2', 'val2'], { SE_CLI_SESSION: S() });
+    await run(['cookie-delete'], { SE_CLI_SESSION: S() });
+    const result = await run(['--raw', 'cookie-list'], { SE_CLI_SESSION: S() });
+    expect(result).not.toContain('cookie1');
+    expect(result).not.toContain('cookie2');
+  });
+
+  // --- Storage: localStorage ---
+
+  (skip ? it.skip : it)('sets and gets localStorage', async () => {
+    await run(['open', STORAGE_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    // storage.html auto-sets localStorage: theme=dark, lang=en
+    const result = await run(['--raw', 'localstorage-get', 'theme'], { SE_CLI_SESSION: S() });
+    expect(result.trim()).toBe('dark');
+  });
+
+  (skip ? it.skip : it)('lists localStorage items', async () => {
+    await run(['open', STORAGE_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    const result = await run(['--raw', 'localstorage-list'], { SE_CLI_SESSION: S() });
+    expect(result).toContain('theme');
+    expect(result).toContain('dark');
+    expect(result).toContain('lang');
+    expect(result).toContain('en');
+  });
+
+  (skip ? it.skip : it)('sets and deletes localStorage item', async () => {
+    await run(['open', STORAGE_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    await run(['localstorage-set', 'customkey', 'customval'], { SE_CLI_SESSION: S() });
+    let result = await run(['--raw', 'localstorage-get', 'customkey'], { SE_CLI_SESSION: S() });
+    expect(result.trim()).toBe('customval');
+    await run(['localstorage-delete', 'customkey'], { SE_CLI_SESSION: S() });
+    result = await run(['--raw', 'localstorage-get', 'customkey'], { SE_CLI_SESSION: S() });
+    expect(result.trim()).toBe('null');
+  });
+
+  // --- Storage: sessionStorage ---
+
+  (skip ? it.skip : it)('sets and gets sessionStorage', async () => {
+    await run(['open', STORAGE_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    // storage.html auto-sets sessionStorage: temp=value123
+    const result = await run(['--raw', 'sessionstorage-get', 'temp'], { SE_CLI_SESSION: S() });
+    expect(result.trim()).toBe('value123');
+  });
+
+  (skip ? it.skip : it)('lists sessionStorage items', async () => {
+    await run(['open', STORAGE_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    const result = await run(['--raw', 'sessionstorage-list'], { SE_CLI_SESSION: S() });
+    expect(result).toContain('temp');
+    expect(result).toContain('value123');
+  });
+
+  (skip ? it.skip : it)('deletes sessionStorage item', async () => {
+    await run(['open', STORAGE_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    await run(['sessionstorage-delete', 'temp'], { SE_CLI_SESSION: S() });
+    const result = await run(['--raw', 'sessionstorage-get', 'temp'], { SE_CLI_SESSION: S() });
+    expect(result.trim()).toBe('null');
+  });
+
+  // --- Tab management ---
+
+  (skip ? it.skip : it)('opens new tab and lists tabs', async () => {
+    await run(['open', TABS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    await run(['tab-new', EXAMPLE_URL()], { SE_CLI_SESSION: S() });
+    const result = await run(['--raw', 'tab-list'], { SE_CLI_SESSION: S() });
+    // Should have at least 2 tabs
+    expect(result).toContain('Tabs Test Page');
+    expect(result).toContain('Example Domain');
+  });
+
+  (skip ? it.skip : it)('selects tab by index', async () => {
+    await run(['open', TABS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    await run(['tab-new', EXAMPLE_URL()], { SE_CLI_SESSION: S() });
+    // Switch to tab 0 (original)
+    await run(['tab-select', '0'], { SE_CLI_SESSION: S() });
+    const title = (await run(['--raw', 'title'], { SE_CLI_SESSION: S() })).trim();
+    expect(title).toBe('Tabs Test Page');
+    // Switch to tab 1 (new tab)
+    await run(['tab-select', '1'], { SE_CLI_SESSION: S() });
+    const title2 = (await run(['--raw', 'title'], { SE_CLI_SESSION: S() })).trim();
+    expect(title2).toBe('Example Domain');
+  });
+
+  (skip ? it.skip : it)('closes tab and switches to remaining', async () => {
+    await run(['open', TABS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    await run(['tab-new', EXAMPLE_URL()], { SE_CLI_SESSION: S() });
+    // Verify we have 2 tabs
+    let tabs = await run(['--raw', 'tab-list'], { SE_CLI_SESSION: S() });
+    expect(tabs).toContain('Example Domain');
+    // Close current tab (the new one with example.com)
+    await run(['tab-close'], { SE_CLI_SESSION: S() });
+    // Should switch back to remaining tab
+    const title = (await run(['--raw', 'title'], { SE_CLI_SESSION: S() })).trim();
+    expect(title).toBe('Tabs Test Page');
+  });
+
+  // --- State save/load ---
+
+  (skip ? it.skip : it)('saves and loads browser state', async () => {
+    await run(['open', STORAGE_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    // Set a cookie
+    await run(['cookie-set', 'statecookie', 'stateval'], { SE_CLI_SESSION: S() });
+    // Save state
+    await run(['state-save', '--filename=test-state.json'], { SE_CLI_SESSION: S() });
+    // Verify file was created
+    const stateFile = path.join(process.cwd(), '.se-cli', 'test-state.json');
+    expect(fs.existsSync(stateFile)).toBe(true);
+    // Verify file content has cookies and storage
+    const state = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+    expect(state.cookies).toBeInstanceOf(Array);
+    expect(state.cookies.length).toBeGreaterThan(0);
+    expect(state.localStorage).toHaveProperty('theme');
+    expect(state.sessionStorage).toHaveProperty('temp');
+    // Load state (navigates to saved URL, restores cookies and storage)
+    await run(['state-load', '--filename=test-state.json'], { SE_CLI_SESSION: S() });
+    // Verify cookie was restored
+    const cookieResult = await run(['--raw', 'cookie-get', 'statecookie'], { SE_CLI_SESSION: S() });
+    expect(cookieResult).toContain('statecookie');
+    expect(cookieResult).toContain('stateval');
+    // Verify localStorage was restored
+    const lsResult = await run(['--raw', 'localstorage-get', 'theme'], { SE_CLI_SESSION: S() });
+    expect(lsResult.trim()).toBe('dark');
+    // Cleanup
+    fs.unlinkSync(stateFile);
   });
 });

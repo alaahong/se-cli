@@ -32,7 +32,7 @@ export class Session {
     });
   }
 
-  async startDaemon(opts: { browserName?: string; headed?: boolean; cdpEndpoint?: string } = {}): Promise<void> {
+  async startDaemon(opts: { browserName?: string; headed?: boolean; cdpEndpoint?: string; profilePath?: string; persistent?: boolean } = {}): Promise<void> {
     // If a daemon is already running on this socket, verify it's responsive.
     if (await this.canConnect()) {
       try {
@@ -54,6 +54,8 @@ export class Session {
     const args = [daemonScript, this.sessionName, this.socketPath, this.workspaceDir, browserName];
     if (opts.headed) args.push('--headed');
     if (opts.cdpEndpoint) args.push(`--cdp=${opts.cdpEndpoint}`);
+    if (opts.profilePath) args.push(`--profile=${opts.profilePath}`);
+    if (opts.persistent) args.push('--persistent');
 
     const child: ChildProcess = spawn(process.execPath, args, {
       detached: true,
