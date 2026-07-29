@@ -68,13 +68,13 @@ jobs:
       - name: Install Firefox (Linux)
         if: runner.os == 'Linux' && matrix.browser == 'firefox'
         id: firefox-linux
-        uses: browser-actions/setup-firefox@v0
+        uses: browser-actions/setup-firefox@v1.7.2
         with:
           firefox-version: latest
       - name: Install Firefox (Windows)
         if: runner.os == 'Windows' && matrix.browser == 'firefox'
         id: firefox-win
-        uses: browser-actions/setup-firefox@v0
+        uses: browser-actions/setup-firefox@v1.7.2
         with:
           firefox-version: latest
 
