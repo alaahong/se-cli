@@ -9,6 +9,7 @@ Guidelines for AI agents and human contributors working on the se-cli codebase.
 - **GitHub URL**: `https://github.com/se-cli/se-cli`
 - **GitHub Pages**: `https://se-cli.github.io/se-cli/`
 - **npm package**: `@browsers-cli/se-cli`
+- **npm URL**: `https://www.npmjs.com/package/@browsers-cli/se-cli`
 
 ### URL Reference Rules (CRITICAL)
 
@@ -21,6 +22,7 @@ https://github.com/se-cli/se-cli
 https://github.com/se-cli/se-cli/issues
 https://github.com/se-cli/se-cli/blob/main/docs/spec.md
 https://se-cli.github.io/se-cli/
+https://www.npmjs.com/package/@browsers-cli/se-cli
 ```
 
 **Incorrect patterns (NEVER commit these):**
@@ -123,6 +125,8 @@ src/
 ### npm Package
 
 - Published as `@browsers-cli/se-cli` with provenance enabled
+- **npm URL**: `https://www.npmjs.com/package/@browsers-cli/se-cli`
+- Install: `npm install -g @browsers-cli/se-cli`
 - `package.json` `files` array must include `skill/` directory (ensures `SKILL.md` is available after npm install)
 - Binary names: `se-cli`, `se`, `selenium-cli` (all point to `dist/cli.js`)
 
