@@ -10,7 +10,7 @@ import { browser_fill } from '../../src/daemon/tools/fill';
 import { browser_snapshot } from '../../src/daemon/tools/snapshot';
 import { browser_screenshot } from '../../src/daemon/tools/screenshot';
 import { browser_eval } from '../../src/daemon/tools/eval';
-import { resolveTarget, byToString, safeFilename } from '../../src/daemon/tools/shared';
+import { resolveTarget, findElement, byToString, safeFilename } from '../../src/daemon/tools/shared';
 import { By } from 'selenium-webdriver';
 import { browser_cookie_list, browser_cookie_get, browser_cookie_set, browser_cookie_delete } from '../../src/daemon/tools/storage';
 import { browser_localstorage_get, browser_localstorage_set, browser_localstorage_delete, browser_localstorage_list } from '../../src/daemon/tools/storage';
@@ -43,6 +43,8 @@ function makeMockDriver(opts: any = {}): any {
     switchTo: vi.fn(() => ({
       window: vi.fn(async (handle: string) => { calls.push({ method: 'switchTo.window', handle }); }),
       newWindow: vi.fn(async (type: string) => { calls.push({ method: 'newWindow', type }); }),
+      frame: vi.fn(async (el: any) => { calls.push({ method: 'switchTo.frame', el }); }),
+      defaultContent: vi.fn(async () => { calls.push({ method: 'switchTo.defaultContent' }); }),
     })),
     manage: vi.fn(() => ({
       getCookies: vi.fn(async () => opts.cookies ?? []),
@@ -100,6 +102,52 @@ describe('shared.ts', () => {
 
     it('multi-digit ref works', () => {
       expect(byToString('e42')).toBe(`By.css('[data-se-ref="e42"]')`);
+    });
+
+    it('cross-frame ref produces frame comment and By.css', () => {
+      const result = byToString('f0e1');
+      expect(result).toContain('switchTo().frame(0)');
+      expect(result).toContain(`By.css('[data-se-ref="e1"]')`);
+    });
+
+    it('cross-frame ref with multi-digit frame and ref', () => {
+      const result = byToString('f3e15');
+      expect(result).toContain('switchTo().frame(3)');
+      expect(result).toContain(`By.css('[data-se-ref="e15"]')`);
+    });
+  });
+
+  // --- v0.3: Cross-frame ref resolution ---
+
+  describe('findElement with cross-frame refs', () => {
+    it('switches to iframe and finds element by ref', async () => {
+      const mockIframe = { tagName: 'IFRAME' };
+      const driver = makeMockDriver({ scriptResult: mockIframe });
+      const el = await findElement(driver, 'f0e1');
+      expect(el).toBeTruthy();
+      // executeScript called to find the iframe
+      expect(driver.executeScript).toHaveBeenCalled();
+      // switchTo().frame() called with the iframe element
+      expect(driver.switchTo).toHaveBeenCalled();
+      // findElement called with By.css for the ref
+      expect(driver.findElement).toHaveBeenCalled();
+    });
+
+    it('throws when iframe not found', async () => {
+      const driver = makeMockDriver();
+      driver.executeScript = vi.fn(async () => null);
+      await expect(findElement(driver, 'f99e1')).rejects.toThrow('Frame f99 not found');
+    });
+
+    it('falls back to shadow root search when element not in light DOM', async () => {
+      // Mock findElement to throw for the first call, then executeScript returns element
+      const mockEl = { click: vi.fn() };
+      const driver = makeMockDriver({ scriptResult: mockEl });
+      driver.findElement = vi.fn(async () => { throw new Error('NoSuchElementError'); });
+      const el = await findElement(driver, 'e1');
+      expect(el).toBe(mockEl);
+      // executeScript should have been called for shadow root search
+      expect(driver.executeScript).toHaveBeenCalled();
     });
   });
 

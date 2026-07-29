@@ -400,10 +400,13 @@ npm install
 npx tsc
 
 # Run unit tests
-npx vitest run tests/unit/
+npm run test:unit
 
-# Run integration tests (requires browsers installed)
-SE_CLI_E2E=1 SE_CLI_TEST_CHROME=1 npx vitest run tests/integration/
+# Run integration tests (auto-detects installed browsers: Edge → Chrome → Firefox)
+npm run test:integration
+
+# Or explicitly select browsers (same syntax CI uses)
+SE_CLI_E2E=1 SE_CLI_TEST_CHROME=1 SE_CLI_TEST_EDGE=1 npx vitest run tests/integration/
 ```
 
 ### Project Structure
@@ -441,8 +444,8 @@ src/
 |---------|---------------|--------------|
 | Aria snapshot | Built-in mature | Self-written ~80% coverage |
 | Ref engine | Native `aria-ref` selector | `data-se-ref` attribute |
-| iframe support | Full | Placeholder (v0.3) |
-| Shadow DOM | Full | Placeholder (v0.3) |
+| iframe support | Full | Recursive (same-origin) |
+| Shadow DOM | Full | Open shadow roots |
 | Test runner attach | Yes (Playwright test) | No (v0.7 exploratory) |
 | Tracing | Full | Not planned |
 | Multi-browser | Chromium only | Chrome + Edge + Firefox |
@@ -451,7 +454,7 @@ src/
 ## Roadmap
 
 - **v0.2** ✓: Storage management, tab management, state save/load, `install --skills`, `--profile`, `--persistent`
-- **v0.3**: iframe recursive snapshot, Shadow DOM recursion
+- **v0.3** ✓: iframe recursive snapshot, Shadow DOM recursion, cross-frame `find`
 - **v0.4**: Network route mock, console logs, highlight
 - **v0.5**: Code recording mode, role-based locators
 - **v0.6**: Dashboard, browser extension attach

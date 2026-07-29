@@ -45,6 +45,7 @@ export function generateAriaSnapshotScript(): string {
   };
 
   let refCounter = 0;
+  let frameCounter = 0;
   const lines = [];
 
   function getRole(el) {
@@ -56,37 +57,43 @@ export function generateAriaSnapshotScript(): string {
   }
 
   function getLabel(el, role) {
-    const ariaLabel = el.getAttribute('aria-label');
+    // getRootNode() returns the ShadowRoot for elements inside
+    // shadow DOM, or the Document for light-DOM elements. This
+    // ensures label[for] and aria-labelledby lookups search the
+    // correct root (shadow root or document), not just the main
+    // document.
+    var root = el.getRootNode ? el.getRootNode() : (el.ownerDocument || document);
+    var ariaLabel = el.getAttribute('aria-label');
     if (ariaLabel) return ariaLabel;
 
-    const labelledby = el.getAttribute('aria-labelledby');
+    var labelledby = el.getAttribute('aria-labelledby');
     if (labelledby) {
-      const labelEl = document.getElementById(labelledby);
+      var labelEl = root.querySelector('#' + CSS.escape(labelledby));
       if (labelEl) return labelEl.textContent.trim();
     }
 
-    const tag = el.tagName.toLowerCase();
+    var tag = el.tagName.toLowerCase();
     if (tag === 'input' || tag === 'textarea') {
-      const type = (el.type || '').toLowerCase();
-      if (type === 'checkbox' || type === 'radio') {
-        if (el.id) {
-          const label = document.querySelector('label[for="' + CSS.escape(el.id) + '"]');
-          if (label) return label.textContent.trim();
-        }
-        const parentLabel = el.closest('label');
-        if (parentLabel) return parentLabel.textContent.trim();
+      // Per HTML spec, label[for] applies to ALL form controls,
+      // not just checkbox/radio. Resolve it first so inputs
+      // associated with <label> elements get proper accessible names.
+      if (el.id) {
+        var label = root.querySelector('label[for="' + CSS.escape(el.id) + '"]');
+        if (label) return label.textContent.trim();
       }
+      var parentLabel = el.closest('label');
+      if (parentLabel) return parentLabel.textContent.trim();
       return el.placeholder || el.name || '';
     }
 
     if (tag === 'img') return el.alt || el.title || '';
 
-    const text = (el.textContent || '').trim();
+    var text = (el.textContent || '').trim();
     return text ? text.slice(0, 80) : '';
   }
 
   function isInteractive(el, role) {
-    const tag = el.tagName.toLowerCase();
+    var tag = el.tagName.toLowerCase();
     if (INTERACTIVE_TAGS.has(tag)) return true;
     if (role && INTERACTIVE_ROLES.has(role)) return true;
     return false;
@@ -96,17 +103,16 @@ export function generateAriaSnapshotScript(): string {
     if (el.hidden) return true;
     if (el.getAttribute('aria-hidden') === 'true') return true;
     if (el.style && (el.style.display === 'none' || el.style.visibility === 'hidden')) return true;
-    // getComputedStyle for elements that may be hidden via CSS classes
     try {
-      const style = window.getComputedStyle(el);
+      var style = window.getComputedStyle(el);
       if (style.display === 'none' || style.visibility === 'hidden') return true;
     } catch (e) {}
     return false;
   }
 
   function getAttrs(el, role) {
-    const attrs = [];
-    const tag = el.tagName.toLowerCase();
+    var attrs = [];
+    var tag = el.tagName.toLowerCase();
     if (tag.match(/^h[1-6]$/)) {
       attrs.push('level=' + tag[1]);
     }
@@ -114,7 +120,7 @@ export function generateAriaSnapshotScript(): string {
       attrs.push('level=' + el.getAttribute('aria-level'));
     }
     if (el.tagName === 'INPUT') {
-      const type = (el.type || '').toLowerCase();
+      var type = (el.type || '').toLowerCase();
       if (type === 'checkbox' && el.checked) attrs.push('checked');
       if (type === 'radio' && el.checked) attrs.push('checked');
       if (el.disabled) attrs.push('disabled');
@@ -122,61 +128,97 @@ export function generateAriaSnapshotScript(): string {
     return attrs.length ? ' [' + attrs.join(' ') + ']' : '';
   }
 
-  function walk(el, level, depth) {
+  function walk(el, level, depth, framePrefix) {
+    framePrefix = framePrefix || '';
     if (level > depth) return;
     if (isHidden(el)) return;
 
-    const role = getRole(el);
+    var role = getRole(el);
     if (role === 'none' || role === 'presentation') {
-      for (const child of el.children) walk(child, level, depth);
+      for (var i = 0; i < el.children.length; i++) {
+        walk(el.children[i], level, depth, framePrefix);
+      }
       return;
     }
 
-    const label = getLabel(el, role);
-    const interactive = isInteractive(el, role);
+    var label = getLabel(el, role);
+    var interactive = isInteractive(el, role);
 
-    let refAttr = '';
+    var refAttr = '';
     if (interactive) {
-      const ref = 'e' + (++refCounter);
+      var ref = 'e' + (++refCounter);
       el.setAttribute('data-se-ref', ref);
-      refAttr = ' [ref=' + ref + ']';
+      refAttr = ' [ref=' + framePrefix + ref + ']';
     }
 
-    const attrs = getAttrs(el, role);
-    const indent = '  '.repeat(level);
+    var attrs = getAttrs(el, role);
+    var indent = '  '.repeat(level);
 
     if (role) {
-      const labelPart = label ? ' "' + label + '"' : '';
+      var labelPart = label ? ' "' + label + '"' : '';
       lines.push(indent + '- ' + role + labelPart + attrs + refAttr);
     }
 
-    // Detect iframes and output placeholder
-    for (const child of el.children) {
+    // Walk children — detect iframes and recurse into same-origin frames
+    for (var i = 0; i < el.children.length; i++) {
+      var child = el.children[i];
       if (child.tagName === 'IFRAME') {
-        const src = child.src || child.getAttribute('src') || '';
-        const indent2 = '  '.repeat(level + 1);
-        lines.push(indent2 + '- iframe: ' + src);
+        walkIframe(child, level, depth);
         continue;
       }
-      walk(child, level + 1, depth);
+      walk(child, level + 1, depth, framePrefix);
     }
-    // Detect open shadow roots
+
+    // Traverse open shadow roots (no placeholder — just walk children)
     if (el.shadowRoot) {
-      const indent2 = '  '.repeat(level + 1);
-      lines.push(indent2 + '- shadowroot:');
-      for (const child of el.shadowRoot.children) {
-        walk(child, level + 2, depth);
+      for (var j = 0; j < el.shadowRoot.children.length; j++) {
+        walk(el.shadowRoot.children[j], level + 1, depth, framePrefix);
       }
+    }
+  }
+
+  function walkIframe(iframeEl, level, depth) {
+    var indent = '  '.repeat(level + 1);
+    var src = iframeEl.src || iframeEl.getAttribute('src') || '';
+
+    // Try to access same-origin iframe content
+    var iframeDoc = null;
+    try {
+      iframeDoc = iframeEl.contentDocument || (iframeEl.contentWindow && iframeEl.contentWindow.document);
+    } catch (e) {
+      // Cross-origin — cannot access
+    }
+
+    if (iframeDoc && iframeDoc.body) {
+      var fIdx = frameCounter++;
+      var fPrefix = 'f' + fIdx;
+      var title = iframeEl.title || iframeEl.getAttribute('title') || iframeDoc.title || '';
+      lines.push(indent + '- iframe' + (title ? ' "' + title + '"' : '') + ':');
+
+      // Save and reset refCounter for this frame
+      var savedRefCounter = refCounter;
+      refCounter = 0;
+
+      for (var i = 0; i < iframeDoc.body.children.length; i++) {
+        walk(iframeDoc.body.children[i], level + 2, depth, fPrefix);
+      }
+
+      // Restore refCounter for the parent frame
+      refCounter = savedRefCounter;
+    } else {
+      // Cross-origin iframe — output placeholder
+      lines.push(indent + '- iframe: ' + src + ' (cross-origin)');
     }
   }
 
   return function generateAriaSnapshot(options) {
     options = options || {};
-    const depth = options.depth || 50;
+    var depth = options.depth || 50;
     refCounter = 0;
+    frameCounter = 0;
     lines.length = 0;
 
-    const root = options.target
+    var root = options.target
       ? document.querySelector('[data-se-ref="' + options.target + '"]') || document.querySelector(options.target)
       : document.body;
 
@@ -184,9 +226,11 @@ export function generateAriaSnapshotScript(): string {
 
     if (root === document.body) {
       lines.push('- document:');
-      for (const child of root.children) walk(child, 1, depth);
+      for (var i = 0; i < root.children.length; i++) {
+        walk(root.children[i], 1, depth, '');
+      }
     } else {
-      walk(root, 0, depth);
+      walk(root, 0, depth, '');
     }
 
     return lines.join('\\n');

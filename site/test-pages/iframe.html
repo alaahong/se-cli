@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IFrame Test Page</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #1e40af; }
+    h2 { color: #2563eb; margin-top: 2rem; }
+    .nav { display: flex; gap: 1rem; padding: 1rem 0; }
+    .nav a { color: #2563eb; text-decoration: none; font-weight: 500; }
+    iframe { width: 100%; height: 300px; border: 2px solid #2563eb; border-radius: 8px; margin: 1rem 0; }
+    .cross-origin { width: 100%; height: 100px; border: 2px dashed #f59e0b; border-radius: 8px; margin: 1rem 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>IFrame Test Page</h1>
+    <nav class="nav" aria-label="Main navigation">
+      <a href="#home">Home</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2>Main Page Content</h2>
+    <p>This page contains same-origin and cross-origin iframes for testing.</p>
+
+    <form id="main-form">
+      <label for="main-input">Search</label>
+      <input type="text" id="main-input" placeholder="Search...">
+      <button type="button" id="main-button">Search Button</button>
+    </form>
+
+    <h2>Same-Origin Iframe</h2>
+    <p>This iframe loads content from the same origin:</p>
+    <iframe id="same-origin-iframe" src="iframe-content.html" title="Same Origin Iframe"></iframe>
+
+    <h2>Cross-Origin Iframe</h2>
+    <p>This iframe loads from a different origin (placeholder):</p>
+    <iframe id="cross-origin-iframe" src="about:blank" title="Cross Origin Iframe" class="cross-origin"></iframe>
+
+    <h2>Second Same-Origin Iframe</h2>
+    <iframe id="second-iframe" src="iframe-content.html" title="Second Iframe"></iframe>
+  </main>
+
+  <footer>
+    <p>IFrame test page footer. <a href="#footer-link">Footer Link</a></p>
+  </footer>
+</body>
+</html>

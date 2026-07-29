@@ -95,6 +95,35 @@ se-cli click e1
 
 Refs are valid only until the page changes. Re-run `snapshot` after navigation or DOM updates.
 
+### iframe Elements
+
+The snapshot recurses into same-origin iframes. Elements inside an iframe get cross-frame refs in the format `f<index>e<ref>`:
+```bash
+se-cli snapshot
+# Output:
+# - iframe "Content":
+#   - textbox "Name" [ref=f0e1]
+#   - button "Submit" [ref=f0e2]
+
+se-cli fill f0e1 "hello"
+se-cli click f0e2
+```
+
+Cross-origin iframes appear as placeholders and cannot be interacted with.
+
+### Shadow DOM
+
+The snapshot traverses open shadow roots. Elements inside shadow DOM use regular refs (`e1`, `e2`) — se-cli automatically searches shadow roots when resolving refs:
+```bash
+se-cli snapshot
+# Output:
+# - textbox "Shadow Input" [ref=e5]
+# - button "Shadow Button" [ref=e6]
+
+se-cli fill e5 "test"
+se-cli click e6
+```
+
 ## Example: Form submission
 
 ```bash
