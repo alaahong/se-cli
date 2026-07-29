@@ -1,0 +1,84 @@
+name: Dependency Update
+
+on:
+  schedule:
+    # Run daily at 08:00 UTC (16:00 Beijing time)
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-selenium-webdriver:
+    name: Update selenium-webdriver
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Check latest version
+        id: check
+        run: |
+          LATEST=$(npm view selenium-webdriver version)
+          CURRENT=$(node -p "require('./package.json').dependencies['selenium-webdriver'].replace(/[\^~]/, '')")
+          echo "latest=$LATEST" >> $GITHUB_OUTPUT
+          echo "current=$CURRENT" >> $GITHUB_OUTPUT
+          echo "Latest on npm: $LATEST"
+          echo "Current in package.json: $CURRENT"
+          if [ "$LATEST" = "$CURRENT" ]; then
+            echo "updated=false" >> $GITHUB_OUTPUT
+            echo "Already up to date."
+          else
+            echo "updated=true" >> $GITHUB_OUTPUT
+            echo "Update available: $CURRENT -> $LATEST"
+          fi
+
+      - name: Update dependency
+        if: steps.check.outputs.updated == 'true'
+        run: |
+          npm install selenium-webdriver@^${{ steps.check.outputs.latest }}
+          npm run build
+
+      - name: Run unit tests
+        if: steps.check.outputs.updated == 'true'
+        run: npx vitest run tests/unit
+
+      - name: Create Pull Request
+        if: steps.check.outputs.updated == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            chore(deps): bump selenium-webdriver to ${{ steps.check.outputs.latest }}
+
+            Update selenium-webdriver from ${{ steps.check.outputs.current }} to ${{ steps.check.outputs.latest }}.
+
+            Automated by the Dependency Update workflow.
+          branch: deps/selenium-webdriver-${{ steps.check.outputs.latest }}
+          delete-branch: true
+          title: 'chore(deps): bump selenium-webdriver to ${{ steps.check.outputs.latest }}'
+          body: |
+            ## What
+
+            Bumps [selenium-webdriver](https://www.npmjs.com/package/selenium-webdriver) from `${{ steps.check.outputs.current }}` to `${{ steps.check.outputs.latest }}`.
+
+            ## Verification
+
+            - [x] `npm run build` passes
+            - [x] `npx vitest run tests/unit` passes
+
+            ## Release notes
+
+            See https://www.npmjs.com/package/selenium-webdriver for the changelog.
+
+            ---
+            This PR was created automatically by the `Dependency Update` GitHub Actions workflow.
+          labels: |
+            dependencies
+            automated-pr
