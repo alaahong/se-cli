@@ -64,7 +64,7 @@ export class Session {
       const timeout = setTimeout(() => {
         child.kill();
         reject(new Error('daemon start timeout'));
-      }, 60000);
+      }, 120000);
       const onStdout = (data: Buffer) => {
         const line = data.toString().trim();
         if (line.startsWith('Daemon listening on')) {
@@ -175,7 +175,7 @@ export class Session {
       const timeout = setTimeout(() => {
         sock.destroy();
         reject(new Error('daemon connection timeout'));
-      }, 30000);
+      }, 60000);
 
       let settled = false;
       const cleanup = () => {

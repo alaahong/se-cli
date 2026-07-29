@@ -140,8 +140,6 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
 
 async function shutdown() {
   // Close the server first so no new connections are accepted.
-  // This lets the next `canConnect()` check fail immediately,
-  // rather than connecting to a daemon that's stuck in driver.quit().
   server.close();
   if (process.platform !== 'win32') {
     try { fs.unlinkSync(socketPath); } catch {}
@@ -156,7 +154,11 @@ async function shutdown() {
   } catch (e: any) {
     process.stderr.write(`driver quit failed: ${e.message}\n`);
   }
-  registry.deleteSession(wsHash, sessionName);
+  // NOTE: Do NOT delete the session file here.  The CLI's stop() method
+  // handles session file cleanup AFTER the daemon has exited.  If the
+  // daemon deletes the file during shutdown(), it may race with a new
+  // daemon that has already written its own session file, causing the
+  // "list" command to return empty results.
   process.exit(0);
 }
 
@@ -266,6 +268,20 @@ if (process.platform !== 'win32') {
   try { fs.unlinkSync(socketPath); } catch {}
 }
 
-server.listen(socketPath, () => {
-  console.log(`Daemon listening on ${socketPath}`);
-});
+// Pre-build the driver BEFORE listening so the first client command doesn't
+// have to wait for driver initialization.  On Windows CI, the first Chrome
+// driver build can take >30s (Selenium Manager downloads the driver), which
+// exceeds the client's sendAndClose timeout and causes spurious failures.
+// If the build fails, we still start listening — the error is reported to
+// the client on their first command via driverInitError.
+(async () => {
+  try {
+    await buildDriver();
+  } catch (e: any) {
+    driverInitError = `Failed to build ${browserName} driver: ${e.message}`;
+    process.stderr.write(driverInitError + '\n' + (e.stack || '') + '\n');
+  }
+  server.listen(socketPath, () => {
+    console.log(`Daemon listening on ${socketPath}`);
+  });
+})();
