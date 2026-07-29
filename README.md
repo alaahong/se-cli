@@ -446,22 +446,27 @@ src/
 | Ref engine | Native `aria-ref` selector | `data-se-ref` attribute |
 | iframe support | Full | Recursive (same-origin) |
 | Shadow DOM | Full | Open shadow roots |
-| Test runner attach | Yes (Playwright test) | No (v0.7 exploratory) |
+| Test runner attach | Yes (Playwright test) | No (long-term goal) |
 | Tracing | Full | Not planned |
 | Multi-browser | Chromium only | Chrome + Edge + Firefox |
 | Real Safari | No | Possible via Safari driver |
 
 ## Roadmap
 
-- **v0.2** ✓: Storage management, tab management, state save/load, `install --skills`, `--profile`, `--persistent`
-- **v0.3** ✓: iframe recursive snapshot, Shadow DOM recursion, cross-frame `find`
-- **v0.4**: Network route mock, console logs, highlight
-- **v0.5**: Code recording mode, role-based locators
-- **v0.6**: Dashboard, browser extension attach
-- **v0.7**: Test runner integration (exploratory)
+Based on competitive analysis with Playwright CLI and Selenium BiDi. Features classified as **Must-Have**, **Core**, or **Marginal**.
+
+- **v0.1** ✅: CLI + Daemon architecture, aria snapshot + ref mechanism, basic commands, multi-browser support
+- **v0.2** ✅: Storage management, tab management, state save/load, `install --skills`, `--profile`, `--persistent`
+- **v0.3** ✅: iframe recursive snapshot, Shadow DOM recursion, cross-frame `find`
+- **v0.4** (Must-Have): `hover`, `dblclick`, `drag`, `dialog-accept/dismiss`, `upload`, `resize`, fine-grained keyboard/mouse control
+- **v0.5** (Core): BiDi network interception (`route`/`unroute`), console logs, request inspection, JS error monitoring, `highlight`
+- **v0.6** (Must-Have): MCP Server via `@modelcontextprotocol/sdk`, `run-code`, `generate-locator`, Agent Skills frontmatter compliance
+- **v0.7** (Core): `--browser=safari`, `--endpoint` for Selenium Grid, cloud browser integration, PDF export
+- **v0.8** (Marginal): `record` mode, tracing, video recording, `show` dashboard, page annotation
+- **v0.9** (Marginal): VSCode extension — Task Provider, Webview, MCP auto-registration
 
 See [docs/spec.md](docs/spec.md) for full roadmap.
 
 ## License
 
-[Apache License 2.0](LICENSE) - Copyright 2024 alaahong
+[Apache License 2.0](LICENSE) - Copyright 2024 se-cli
