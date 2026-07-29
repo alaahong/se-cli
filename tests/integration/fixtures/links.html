@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Navigation Links</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #2c3e50; }
+    .link-list { list-style: none; padding: 0; }
+    .link-list li { padding: 0.75rem; border-bottom: 1px solid #eee; }
+    .link-list a { color: #22C55E; text-decoration: none; font-weight: 500; }
+    .link-list a:hover { text-decoration: underline; }
+    .visit-count { color: #666; font-size: 0.875rem; margin-left: 0.5rem; }
+    .back-link { margin-top: 2rem; }
+    .back-link a { color: #666; text-decoration: none; }
+    .back-link a:hover { color: #22C55E; }
+  </style>
+</head>
+<body>
+  <h1>Navigation Links Page</h1>
+
+  <p>This page contains links to other test pages. Use these links to test
+  browser navigation commands: <code>click</code>, <code>go-back</code>,
+  <code>go-forward</code>, <code>reload</code>.</p>
+
+  <ul class="link-list">
+    <li>
+      <a href="example.html" id="link-example">Go to Example Page</a>
+      <span class="visit-count">Simple page with heading and link</span>
+    </li>
+    <li>
+      <a href="todo.html" id="link-todo">Go to Todo Page</a>
+      <span class="visit-count">Interactive todo application</span>
+    </li>
+    <li>
+      <a href="forms.html" id="link-forms">Go to Forms Page</a>
+      <span class="visit-count">Form elements: inputs, selects, checkboxes</span>
+    </li>
+    <li>
+      <a href="snapshot.html" id="link-snapshot">Go to Snapshot Page</a>
+      <span class="visit-count">Rich ARIA structure for snapshot testing</span>
+    </li>
+    <li>
+      <a href="buttons.html" id="link-buttons">Go to Buttons Page</a>
+      <span class="visit-count">Buttons with click handlers</span>
+    </li>
+    <li>
+      <a href="#section1" id="link-anchor">Jump to Section 1</a>
+      <span class="visit-count">Same-page anchor navigation</span>
+    </li>
+  </ul>
+
+  <div id="section1" style="margin-top: 5rem; padding-top: 1rem;">
+    <h2>Section 1</h2>
+    <p>This is section 1. You navigated here via an anchor link.</p>
+    <a href="#top" id="link-back-top">Back to top</a>
+  </div>
+
+  <div id="section2" style="margin-top: 5rem; padding-top: 1rem;">
+    <h2>Section 2</h2>
+    <p>This is section 2. Reachable via anchor: <a href="#section2">#section2</a></p>
+  </div>
+
+  <div class="back-link">
+    <a href="links.html" id="link-reload">Reload this page</a>
+  </div>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Snapshot Test Page</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #2c3e50; }
+    h2 { color: #34495e; margin-top: 2rem; }
+    .nav-bar { display: flex; gap: 1rem; padding: 1rem 0; border-bottom: 2px solid #22C55E; }
+    .nav-bar a { color: #22C55E; text-decoration: none; font-weight: 500; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+    .card h3 { margin-top: 0; }
+    .menu-bar { display: flex; gap: 0.5rem; list-style: none; padding: 0; margin: 1rem 0; }
+    .menu-bar li { padding: 0.5rem 1rem; background: #f0f9ff; border-radius: 4px; cursor: pointer; }
+    .menu-bar li[aria-selected="true"] { background: #22C55E; color: white; }
+    .tab-panel { padding: 1rem; border: 1px solid #ddd; border-radius: 4px; }
+    .alert-box { padding: 0.75rem 1rem; border-radius: 4px; background: #fef3c7; border: 1px solid #f59e0b; margin: 1rem 0; }
+    .search-box { width: 100%; padding: 0.5rem; font-size: 1rem; box-sizing: border-box; margin: 1rem 0; }
+    .tree-view { margin: 1rem 0; }
+    .tree-node { margin-left: 1.5rem; }
+    .tree-toggle { cursor: pointer; font-weight: 500; }
+    .data-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    .data-table th, .data-table td { border: 1px solid #ddd; padding: 0.5rem 1rem; text-align: left; }
+    .data-table th { background: #f9fafb; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Snapshot Test Page</h1>
+    <nav class="nav-bar" aria-label="Main navigation">
+      <a href="#home">Home</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <div role="alert" class="alert-box">
+      Welcome to the snapshot test page. This alert has role="alert".
+    </div>
+
+    <h2>Search</h2>
+    <input type="search" class="search-box" placeholder="Search this page..." aria-label="Search">
+
+    <h2>Navigation Menu</h2>
+    <ul class="menu-bar" role="menubar" aria-label="Tab menu">
+      <li role="menuitem" tabindex="0" aria-selected="true" id="tab1">Tab 1</li>
+      <li role="menuitem" tabindex="0" aria-selected="false" id="tab2">Tab 2</li>
+      <li role="menuitem" tabindex="0" aria-selected="false" id="tab3">Tab 3</li>
+    </ul>
+    <div class="tab-panel" role="tabpanel" id="panel1">
+      <p>This is the content of Tab 1. It contains a <a href="#link1">sample link</a>.</p>
+      <button type="button">Action Button</button>
+    </div>
+
+    <h2>Form Section</h2>
+    <form aria-label="Test form">
+      <div class="card">
+        <h3>User Info</h3>
+        <p>
+          <label for="snap-name">Name</label>
+          <input type="text" id="snap-name" placeholder="Your name">
+        </p>
+        <p>
+          <label for="snap-email">Email</label>
+          <input type="email" id="snap-email" placeholder="Your email">
+        </p>
+        <p>
+          <label for="snap-role">Role</label>
+          <select id="snap-role">
+            <option value="">Choose a role</option>
+            <option value="admin">Admin</option>
+            <option value="user">User</option>
+            <option value="guest">Guest</option>
+          </select>
+        </p>
+        <p>
+          <label>
+            <input type="checkbox" id="snap-agree">
+            I agree to the terms
+          </label>
+        </p>
+      </div>
+    </form>
+
+    <h2>Cards</h2>
+    <div class="card">
+      <h3>Card One</h3>
+      <p>This card has some text content for find testing.</p>
+      <button type="button">Card Button One</button>
+    </div>
+    <div class="card">
+      <h3>Card Two</h3>
+      <p>Another card with different text content.</p>
+      <a href="#card2-link">Card Two Link</a>
+    </div>
+
+    <h2>Data Table</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>Alpha</td>
+          <td>Active</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Beta</td>
+          <td>Inactive</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>Gamma</td>
+          <td>Pending</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Tree View</h2>
+    <div class="tree-view">
+      <div class="tree-node">
+        <span class="tree-toggle" role="button" tabindex="0">Root Node</span>
+        <div class="tree-node">
+          <span class="tree-toggle" role="button" tabindex="0">Child Node 1</span>
+          <div class="tree-node">
+            <a href="#leaf1">Leaf Item 1</a>
+          </div>
+          <div class="tree-node">
+            <a href="#leaf2">Leaf Item 2</a>
+          </div>
+        </div>
+        <div class="tree-node">
+          <span class="tree-toggle" role="button" tabindex="0">Child Node 2</span>
+        </div>
+      </div>
+    </div>
+
+    <h2>Details and Summary</h2>
+    <details>
+      <summary>Click to expand details</summary>
+      <p>This content is hidden until the summary is clicked.</p>
+    </details>
+  </main>
+
+  <footer>
+    <p>Snapshot test page footer. Contains a <a href="#footer-link">footer link</a>.</p>
+  </footer>
+</body>
+</html>
