@@ -20,6 +20,38 @@ async function run(args: string[], env?: Record<string, string>): Promise<string
   return stdout;
 }
 
+// Aggressive session cleanup: tries `close` first, then falls back to
+// `kill-all` if close hangs or fails. This prevents a crashed daemon from
+// blocking the entire test suite for the full 120s timeout.
+async function cleanupSession(session: string): Promise<void> {
+  // Try graceful close with a short timeout (15s).
+  try {
+    await execFileAsync('node', [CLI, 'close'], {
+      encoding: 'utf8',
+      timeout: 15000,
+      env: { ...process.env, SE_CLI_SESSION: session },
+      shell: false,
+    });
+    return;
+  } catch {
+    // Close failed or timed out — fall through to kill-all.
+  }
+  // Force-kill all sessions as a last resort.
+  try {
+    await execFileAsync('node', [CLI, 'kill-all'], {
+      encoding: 'utf8',
+      timeout: 10000,
+      env: { ...process.env },
+      shell: false,
+    });
+  } catch {
+    // Even kill-all failed — nothing more we can do.
+  }
+  // Brief pause to let the OS reclaim resources (especially on Windows
+  // where chromedriver processes may linger after browser crash).
+  await new Promise(r => setTimeout(r, 500));
+}
+
 // --- Browser resolution ---
 //
 // CI always sets explicit SE_CLI_TEST_<browser> env vars, so
@@ -75,12 +107,12 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
 
   beforeEach(async () => {
     if (skip) return;
-    try { await run(['close'], { SE_CLI_SESSION: S() }); } catch {}
+    await cleanupSession(S());
   });
 
   afterEach(async () => {
     if (skip) return;
-    try { await run(['close'], { SE_CLI_SESSION: S() }); } catch {}
+    await cleanupSession(S());
   });
 
   // --- Session lifecycle ---
