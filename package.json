@@ -1,8 +1,25 @@
 {
-  "name": "se-cli",
+  "name": "@browsers-cli/se-cli",
   "version": "0.1.0",
   "description": "Selenium CLI with token-efficient browser automation for AI agents",
   "license": "Apache-2.0",
+  "homepage": "https://se-cli.github.io/se-cli/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/se-cli/se-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/se-cli/se-cli/issues"
+  },
+  "keywords": [
+    "selenium",
+    "cli",
+    "webdriver",
+    "browser-automation",
+    "ai-agent",
+    "accessibility",
+    "aria"
+  ],
   "engines": {
     "node": ">=18"
   },
@@ -11,12 +28,21 @@
     "se": "dist/cli.js",
     "selenium-cli": "dist/cli.js"
   },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "tsc --noEmit"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
     "selenium-webdriver": "^4.25.0"
