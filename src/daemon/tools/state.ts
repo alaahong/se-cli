@@ -103,8 +103,14 @@ export async function browser_state_load(
   await driver.manage().deleteAllCookies();
 
   // 5. Restore cookies.
+  //    Firefox enforces that SameSite=None cookies must also be Secure.
+  //    Sanitize cookies before passing to addCookie to avoid driver errors.
   for (const cookie of state.cookies) {
-    await driver.manage().addCookie(cookie);
+    const sanitized = { ...cookie };
+    if (sanitized.sameSite === 'None' && !sanitized.secure) {
+      sanitized.secure = true;
+    }
+    await driver.manage().addCookie(sanitized);
   }
 
   // 6. Restore localStorage.
