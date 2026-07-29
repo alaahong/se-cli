@@ -9,10 +9,10 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/se-cli"><img src="https://img.shields.io/npm/v/se-cli?color=22C55E&label=npm" alt="npm version" /></a>
-  <a href="https://github.com/se-cli/se-cli/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/se-cli/se-cli/ci.yml?branch=main&label=CI&color=22C55E" alt="CI" /></a>
+  <a href="https://github.com/alaahong/se-cli/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/alaahong/se-cli/ci.yml?branch=main&label=CI&color=22C55E" alt="CI" /></a>
   <a href="https://www.npmjs.com/package/se-cli"><img src="https://img.shields.io/node/v/se-cli?color=22C55E" alt="Node.js" /></a>
-  <a href="https://github.com/se-cli/se-cli/blob/main/LICENSE"><img src="https://img.shields.io/github/license/se-cli/se-cli?color=22C55E" alt="License" /></a>
-  <a href="https://github.com/se-cli/se-cli"><img src="https://img.shields.io/github/stars/se-cli/se-cli?style=social" alt="Stars" /></a>
+  <a href="https://github.com/alaahong/se-cli/blob/main/LICENSE"><img src="https://img.shields.io/github/license/alaahong/se-cli?color=22C55E" alt="License" /></a>
+  <a href="https://github.com/alaahong/se-cli"><img src="https://img.shields.io/github/stars/alaahong/se-cli?style=social" alt="Stars" /></a>
 </p>
 
 ---
@@ -305,7 +305,7 @@ Refs are valid only within the current snapshot. After navigation or DOM changes
 
 ```bash
 # Clone
-git clone https://github.com/se-cli/se-cli.git
+git clone https://github.com/alaahong/se-cli.git
 cd se-cli
 
 # Install
