@@ -1,0 +1,63 @@
+name: Publish to npm
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g. 0.1.0, without leading v)'
+        required: true
+        type: string
+      dry-run:
+        description: 'Dry run — pack only, skip actual publish'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  publish:
+    name: Publish @browsers-cli/se-cli
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # required for npm provenance
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Set version from tag or input
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            TAG="${{ github.ref_name }}"
+            VERSION="${TAG#v}"
+          fi
+          npm version "$VERSION" --no-git-tag-version
+          echo "Publishing @browsers-cli/se-cli@$VERSION"
+
+      - name: Dry run — preview package contents
+        if: ${{ inputs.dry-run == true }}
+        run: npm pack --dry-run
+
+      - name: Publish to npm
+        if: ${{ inputs.dry-run != true }}
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
