@@ -1,6 +1,7 @@
 import * as net from 'net';
 import * as path from 'path';
 import { spawn, ChildProcess } from 'child_process';
+import { StringDecoder } from 'string_decoder';
 import { Registry, SessionConfig } from './registry';
 import { makeSocketPath, workspaceHash, baseDaemonDir } from './config';
 import type { ClientMessage, ServerMessage } from './protocol';
@@ -200,9 +201,14 @@ export class Session {
         sock.write(JSON.stringify(msg) + '\n');
       });
 
+      // Use StringDecoder to handle multi-byte UTF-8 characters (e.g.
+      // Chinese) that may be split across TCP socket chunks. Without this,
+      // data.toString() on a partial multi-byte sequence produces
+      // replacement chars (U+FFFD), causing garbled text.
+      const decoder = new StringDecoder('utf8');
       let buffer = '';
       sock.on('data', (data) => {
-        buffer += data.toString();
+        buffer += decoder.write(data);
         if (buffer.includes('\n')) {
           if (settled) return;
           settled = true;
