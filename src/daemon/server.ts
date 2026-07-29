@@ -11,6 +11,8 @@ const workspaceDir = args[2];
 const browserName = (args[3] as 'chrome' | 'edge' | 'firefox') || 'chrome';
 const headed = args.includes('--headed');
 const cdpEndpoint = args.find(a => a.startsWith('--cdp='))?.slice('--cdp='.length);
+const profilePath = args.find(a => a.startsWith('--profile='))?.slice('--profile='.length);
+const persistent = args.includes('--persistent');
 const version = require('../../package.json').version;
 
 const ALLOWED_BROWSERS = new Set(['chrome', 'edge', 'firefox']);
@@ -74,6 +76,7 @@ async function buildDriver(): Promise<void> {
     if (!headed && !cdpEndpoint) {
       chromeArgs.push('--headless=new', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu');
     }
+    if (profilePath) chromeArgs.push(`--user-data-dir=${profilePath}`);
     const chromeOpts: any = { args: chromeArgs };
     if (cdpEndpoint) chromeOpts.debuggerAddress = cdpEndpoint;
     // Allow overriding the Chrome binary path via env var (useful in CI).
@@ -84,6 +87,7 @@ async function buildDriver(): Promise<void> {
     if (!headed) {
       edgeArgs.push('--headless=new', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu');
     }
+    if (profilePath) edgeArgs.push(`--user-data-dir=${profilePath}`);
     const edgeOpts: any = { args: edgeArgs };
     if (cdpEndpoint) edgeOpts.debuggerAddress = cdpEndpoint;
     if (process.env.SE_EDGE_BINARY) edgeOpts.binary = process.env.SE_EDGE_BINARY;
@@ -93,6 +97,7 @@ async function buildDriver(): Promise<void> {
     if (!headed) {
       firefoxOpts.args = ['-headless'];
     }
+    if (profilePath) firefoxOpts.profile = profilePath;
     // Allow overriding the Firefox binary path via env var (useful in CI
     // where browser-actions/setup-firefox installs to a non-standard path).
     if (process.env.SE_FIREFOX_BINARY) firefoxOpts.binary = process.env.SE_FIREFOX_BINARY;
@@ -252,7 +257,7 @@ const config: SessionConfig = {
   timestamp: Date.now(),
   socketPath,
   workspaceDir,
-  persistent: false,
+  persistent,
   browserName,
   pid: process.pid,
 };

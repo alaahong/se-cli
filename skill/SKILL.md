@@ -46,6 +46,36 @@ se-cli go-forward
 se-cli reload
 ```
 
+### Storage
+```bash
+se-cli cookie-list
+se-cli cookie-get <name>
+se-cli cookie-set <name> <value>
+se-cli cookie-delete [name]
+se-cli localstorage-get <key>
+se-cli localstorage-set <key> <value>
+se-cli localstorage-delete [key]
+se-cli localstorage-list
+se-cli sessionstorage-get <key>
+se-cli sessionstorage-set <key> <value>
+se-cli sessionstorage-delete [key]
+se-cli sessionstorage-list
+```
+
+### Tabs
+```bash
+se-cli tab-list
+se-cli tab-new [url]
+se-cli tab-close
+se-cli tab-select <index>
+```
+
+### State
+```bash
+se-cli state-save [--filename=f.json]
+se-cli state-load [--filename=f.json]
+```
+
 ### Sessions
 ```bash
 se-cli -s=<name> <cmd>
@@ -75,4 +105,19 @@ se-cli fill e2 "password"
 se-cli click e3
 se-cli snapshot
 se-cli close
+```
+
+## Example: Save and restore state
+
+```bash
+se-cli open https://example.com
+se-cli cookie-set auth_token secret123
+se-cli localstorage-set theme dark
+se-cli state-save --filename=session.json
+se-cli close
+
+# Later: restore in a new session
+se-cli open
+se-cli state-load --filename=session.json
+se-cli cookie-get auth_token
 ```

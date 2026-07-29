@@ -143,6 +143,141 @@ describe('parseCommand', () => {
     });
   });
 
+  describe('v0.2 commands', () => {
+    it('maps cookie-list to browser_cookie_list', () => {
+      const r = parseCommand(['cookie-list']);
+      expect(r.toolName).toBe('browser_cookie_list');
+      expect(r.toolParams).toEqual({});
+    });
+
+    it('maps cookie-get to browser_cookie_get with name', () => {
+      const r = parseCommand(['cookie-get', 'session']);
+      expect(r.toolName).toBe('browser_cookie_get');
+      expect(r.toolParams).toEqual({ name: 'session' });
+    });
+
+    it('maps cookie-set to browser_cookie_set with name and value', () => {
+      const r = parseCommand(['cookie-set', 'token', 'abc123']);
+      expect(r.toolName).toBe('browser_cookie_set');
+      expect(r.toolParams.name).toBe('token');
+      expect(r.toolParams.value).toBe('abc123');
+    });
+
+    it('maps cookie-delete to browser_cookie_delete with name', () => {
+      const r = parseCommand(['cookie-delete', 'token']);
+      expect(r.toolName).toBe('browser_cookie_delete');
+      expect(r.toolParams).toEqual({ name: 'token' });
+    });
+
+    it('maps cookie-delete without name (delete all)', () => {
+      const r = parseCommand(['cookie-delete']);
+      expect(r.toolName).toBe('browser_cookie_delete');
+      expect(r.toolParams.name).toBeUndefined();
+    });
+
+    it('maps localstorage-get to browser_localstorage_get with key', () => {
+      const r = parseCommand(['localstorage-get', 'theme']);
+      expect(r.toolName).toBe('browser_localstorage_get');
+      expect(r.toolParams).toEqual({ key: 'theme' });
+    });
+
+    it('maps localstorage-set to browser_localstorage_set with key and value', () => {
+      const r = parseCommand(['localstorage-set', 'theme', 'dark']);
+      expect(r.toolName).toBe('browser_localstorage_set');
+      expect(r.toolParams).toEqual({ key: 'theme', value: 'dark' });
+    });
+
+    it('maps localstorage-delete to browser_localstorage_delete', () => {
+      const r = parseCommand(['localstorage-delete', 'theme']);
+      expect(r.toolName).toBe('browser_localstorage_delete');
+      expect(r.toolParams).toEqual({ key: 'theme' });
+    });
+
+    it('maps localstorage-list to browser_localstorage_list', () => {
+      const r = parseCommand(['localstorage-list']);
+      expect(r.toolName).toBe('browser_localstorage_list');
+      expect(r.toolParams).toEqual({});
+    });
+
+    it('maps sessionstorage-get to browser_sessionstorage_get', () => {
+      const r = parseCommand(['sessionstorage-get', 'temp']);
+      expect(r.toolName).toBe('browser_sessionstorage_get');
+      expect(r.toolParams).toEqual({ key: 'temp' });
+    });
+
+    it('maps sessionstorage-set to browser_sessionstorage_set', () => {
+      const r = parseCommand(['sessionstorage-set', 'temp', 'val']);
+      expect(r.toolName).toBe('browser_sessionstorage_set');
+      expect(r.toolParams).toEqual({ key: 'temp', value: 'val' });
+    });
+
+    it('maps sessionstorage-delete to browser_sessionstorage_delete', () => {
+      const r = parseCommand(['sessionstorage-delete', 'temp']);
+      expect(r.toolName).toBe('browser_sessionstorage_delete');
+      expect(r.toolParams).toEqual({ key: 'temp' });
+    });
+
+    it('maps sessionstorage-list to browser_sessionstorage_list', () => {
+      const r = parseCommand(['sessionstorage-list']);
+      expect(r.toolName).toBe('browser_sessionstorage_list');
+      expect(r.toolParams).toEqual({});
+    });
+
+    it('maps tab-list to browser_tab_list', () => {
+      const r = parseCommand(['tab-list']);
+      expect(r.toolName).toBe('browser_tab_list');
+      expect(r.toolParams).toEqual({});
+    });
+
+    it('maps tab-new to browser_tab_new with url', () => {
+      const r = parseCommand(['tab-new', 'https://example.com']);
+      expect(r.toolName).toBe('browser_tab_new');
+      expect(r.toolParams.url).toBe('https://example.com');
+    });
+
+    it('maps tab-new without url', () => {
+      const r = parseCommand(['tab-new']);
+      expect(r.toolName).toBe('browser_tab_new');
+      expect(r.toolParams.url).toBeUndefined();
+    });
+
+    it('maps tab-close to browser_tab_close', () => {
+      const r = parseCommand(['tab-close']);
+      expect(r.toolName).toBe('browser_tab_close');
+      expect(r.toolParams).toEqual({});
+    });
+
+    it('maps tab-select to browser_tab_select with index', () => {
+      const r = parseCommand(['tab-select', '1']);
+      expect(r.toolName).toBe('browser_tab_select');
+      expect(r.toolParams.index).toBe(1);
+    });
+
+    it('maps tab-select without index defaults to 0', () => {
+      const r = parseCommand(['tab-select']);
+      expect(r.toolName).toBe('browser_tab_select');
+      expect(r.toolParams.index).toBe(0);
+    });
+
+    it('maps state-save to browser_state_save with filename', () => {
+      const r = parseCommand(['state-save', '--filename=state.json']);
+      expect(r.toolName).toBe('browser_state_save');
+      expect(r.toolParams.filename).toBe('state.json');
+    });
+
+    it('maps state-save without filename', () => {
+      const r = parseCommand(['state-save']);
+      expect(r.toolName).toBe('browser_state_save');
+      expect(r.toolParams.filename).toBeUndefined();
+    });
+
+    it('maps state-load to browser_state_load with filename', () => {
+      const r = parseCommand(['state-load', '--filename=state.json']);
+      expect(r.toolName).toBe('browser_state_load');
+      expect(r.toolParams.filename).toBe('state.json');
+    });
+  });
+
   it('throws on unknown command', () => {
     expect(() => parseCommand(['unknown-cmd'])).toThrow(/Unknown command/);
   });

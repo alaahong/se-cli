@@ -157,6 +157,39 @@ se-cli close
 | `title` | Get page title |
 | `url` | Get current URL |
 
+### Storage Management
+
+| Command | Description |
+|---------|-------------|
+| `cookie-list` | List all cookies |
+| `cookie-get <name>` | Get a specific cookie |
+| `cookie-set <name> <value>` | Set a cookie |
+| `cookie-delete [name]` | Delete a cookie (or all if name omitted) |
+| `localstorage-get <key>` | Get a localStorage item |
+| `localstorage-set <key> <value>` | Set a localStorage item |
+| `localstorage-delete [key]` | Delete a localStorage item (or clear all) |
+| `localstorage-list` | List all localStorage items |
+| `sessionstorage-get <key>` | Get a sessionStorage item |
+| `sessionstorage-set <key> <value>` | Set a sessionStorage item |
+| `sessionstorage-delete [key]` | Delete a sessionStorage item (or clear all) |
+| `sessionstorage-list` | List all sessionStorage items |
+
+### Tab Management
+
+| Command | Description |
+|---------|-------------|
+| `tab-list` | List all open tabs (handle, title, url) |
+| `tab-new [url]` | Open a new tab (optionally navigate to url) |
+| `tab-close` | Close current tab and switch to remaining |
+| `tab-select <index>` | Switch to tab by index (0-based) |
+
+### State Management
+
+| Command | Description |
+|---------|-------------|
+| `state-save [--filename=f.json]` | Save cookies, localStorage, sessionStorage to file |
+| `state-load [--filename=f.json]` | Load state from file (restores all storage) |
+
 ### Flags
 
 | Flag | Description |
@@ -167,6 +200,8 @@ se-cli close
 | `--browser=chrome\|edge\|firefox` | Browser selection (default: chrome) |
 | `--headed` | Show browser window (default: headless) |
 | `--cdp=<url>` | Attach to running Chrome via CDP |
+| `--profile=<path>` | Use a persistent browser profile directory |
+| `--persistent` | Keep browser profile across sessions (auto-assigns path) |
 
 ## Usage Examples
 
@@ -218,6 +253,56 @@ TITLE=$(se-cli --raw title)
 # Count elements
 COUNT=$(se-cli --raw eval "document.querySelectorAll('.item').length")
 echo "Found $COUNT items"
+```
+
+### Storage Management
+
+```bash
+# Set and verify a cookie
+se-cli open https://example.com
+se-cli cookie-set session_token abc123
+se-cli cookie-get session_token
+
+# Work with localStorage
+se-cli localstorage-set theme dark
+se-cli localstorage-get theme
+se-cli localstorage-list
+
+# Clear all cookies
+se-cli cookie-delete
+```
+
+### Tab Management
+
+```bash
+# Open multiple tabs
+se-cli open https://example.com
+se-cli tab-new https://example.com/login
+
+# List all tabs
+se-cli tab-list
+
+# Switch between tabs
+se-cli tab-select 0
+se-cli tab-select 1
+
+# Close current tab
+se-cli tab-close
+```
+
+### State Save & Restore
+
+```bash
+# Save browser state (cookies + storage)
+se-cli open https://example.com
+se-cli cookie-set auth_token secret123
+se-cli localstorage-set pref_theme dark
+se-cli state-save --filename=session.json
+
+# Later: restore state in a new session
+se-cli open
+se-cli state-load --filename=session.json
+se-cli cookie-get auth_token  # → secret123
 ```
 
 ### Code Generation
@@ -339,7 +424,7 @@ src/
 └── daemon/
     ├── server.ts           # Daemon socket server
     ├── backend.ts          # Tool dispatcher
-    └── tools/              # Tool handlers (17 tools)
+    └── tools/              # Tool handlers (35 tools)
 ```
 
 ## Browser Support
@@ -365,7 +450,7 @@ src/
 
 ## Roadmap
 
-- **v0.2**: Storage management, tab management, `install --skills`
+- **v0.2** ✓: Storage management, tab management, state save/load, `install --skills`, `--profile`, `--persistent`
 - **v0.3**: iframe recursive snapshot, Shadow DOM recursion
 - **v0.4**: Network route mock, console logs, highlight
 - **v0.5**: Code recording mode, role-based locators

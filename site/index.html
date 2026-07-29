@@ -410,13 +410,16 @@ await driver.findElement(
   <section class="section section-alt" id="commands">
     <div class="container">
       <h2 class="section-title">Command Reference</h2>
-      <p class="section-lead">22 commands across sessions, navigation, interaction, snapshots, and execution.</p>
+      <p class="section-lead">35 commands across sessions, navigation, interaction, snapshots, storage, tabs, state, and execution.</p>
 
       <div class="cmd-tabs" role="tablist">
         <button class="cmd-tab active" data-tab="session" role="tab">Session</button>
         <button class="cmd-tab" data-tab="nav" role="tab">Navigation</button>
         <button class="cmd-tab" data-tab="interact" role="tab">Interaction</button>
         <button class="cmd-tab" data-tab="snap" role="tab">Snapshot</button>
+        <button class="cmd-tab" data-tab="storage" role="tab">Storage</button>
+        <button class="cmd-tab" data-tab="tabs" role="tab">Tabs</button>
+        <button class="cmd-tab" data-tab="state" role="tab">State</button>
         <button class="cmd-tab" data-tab="exec" role="tab">Save &amp; Execute</button>
         <button class="cmd-tab" data-tab="flags" role="tab">Flags</button>
       </div>
@@ -470,6 +473,45 @@ await driver.findElement(
           </tbody>
         </table>
       </div>
+      <div class="cmd-panel" data-panel="storage">
+        <table class="cmd-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>cookie-list</code></td><td>List all cookies</td></tr>
+            <tr><td><code>cookie-get &lt;name&gt;</code></td><td>Get a specific cookie</td></tr>
+            <tr><td><code>cookie-set &lt;name&gt; &lt;value&gt;</code></td><td>Set a cookie</td></tr>
+            <tr><td><code>cookie-delete [name]</code></td><td>Delete a cookie (or all if name omitted)</td></tr>
+            <tr><td><code>localstorage-get &lt;key&gt;</code></td><td>Get a localStorage item</td></tr>
+            <tr><td><code>localstorage-set &lt;key&gt; &lt;value&gt;</code></td><td>Set a localStorage item</td></tr>
+            <tr><td><code>localstorage-delete [key]</code></td><td>Delete a localStorage item (or clear all)</td></tr>
+            <tr><td><code>localstorage-list</code></td><td>List all localStorage items</td></tr>
+            <tr><td><code>sessionstorage-get &lt;key&gt;</code></td><td>Get a sessionStorage item</td></tr>
+            <tr><td><code>sessionstorage-set &lt;key&gt; &lt;value&gt;</code></td><td>Set a sessionStorage item</td></tr>
+            <tr><td><code>sessionstorage-delete [key]</code></td><td>Delete a sessionStorage item (or clear all)</td></tr>
+            <tr><td><code>sessionstorage-list</code></td><td>List all sessionStorage items</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cmd-panel" data-panel="tabs">
+        <table class="cmd-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>tab-list</code></td><td>List all open tabs (handle, title, url)</td></tr>
+            <tr><td><code>tab-new [url]</code></td><td>Open a new tab (optionally navigate to url)</td></tr>
+            <tr><td><code>tab-close</code></td><td>Close current tab and switch to remaining</td></tr>
+            <tr><td><code>tab-select &lt;index&gt;</code></td><td>Switch to tab by index (0-based)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cmd-panel" data-panel="state">
+        <table class="cmd-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>state-save [--filename=f.json]</code></td><td>Save cookies, localStorage, sessionStorage to file</td></tr>
+            <tr><td><code>state-load [--filename=f.json]</code></td><td>Load state from file (restores all storage)</td></tr>
+          </tbody>
+        </table>
+      </div>
       <div class="cmd-panel" data-panel="exec">
         <table class="cmd-table">
           <thead><tr><th>Command</th><th>Description</th></tr></thead>
@@ -493,6 +535,8 @@ await driver.findElement(
             <tr><td><code>--browser=chrome|edge|firefox</code></td><td>Browser selection (default: chrome)</td></tr>
             <tr><td><code>--headed</code></td><td>Show browser window (default: headless)</td></tr>
             <tr><td><code>--cdp=&lt;url&gt;</code></td><td>Attach to running Chrome via CDP</td></tr>
+            <tr><td><code>--profile=&lt;path&gt;</code></td><td>Use a persistent browser profile directory</td></tr>
+            <tr><td><code>--persistent</code></td><td>Keep browser profile across sessions (auto-assigns path)</td></tr>
           </tbody>
         </table>
       </div>
@@ -847,8 +891,8 @@ Agent: I'll navigate and test the login flow.
       <h2 class="section-title">Roadmap</h2>
       <p class="section-lead">Incremental delivery, version by version. <a href="https://github.com/se-cli/se-cli/issues?q=is%3Aissue+label%3Av0.2">Track on GitHub →</a></p>
       <div class="roadmap">
-        <div class="roadmap-item">
-          <div class="roadmap-version">v0.2</div>
+        <div class="roadmap-item roadmap-item-done">
+          <div class="roadmap-version">v0.2 ✓</div>
           <div class="roadmap-body">
             <h3>Practical Capability Completion</h3>
             <p>Storage management (cookies, localStorage, sessionStorage), state save/load, tab management, <code>install --skills</code>, <code>--profile</code>, <code>--persistent</code>.</p>

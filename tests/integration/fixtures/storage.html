@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Storage Test Page</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #2c3e50; }
+    .status { margin-top: 1rem; padding: 0.75rem; background: #f0f9ff; border-radius: 4px; min-height: 1.5rem; font-family: monospace; }
+    button { padding: 0.5rem 1.5rem; font-size: 1rem; background: #22C55E; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 0.25rem; }
+    button:hover { background: #16a34a; }
+  </style>
+</head>
+<body>
+  <h1>Storage Test Page</h1>
+  <p>This page sets localStorage and sessionStorage items for testing.</p>
+  <div class="status" id="status" role="status" aria-live="polite">Storage not initialized.</div>
+  <div>
+    <button id="setStorage" onclick="setStorage()">Set Storage Items</button>
+    <button id="clearStorage" onclick="clearStorage()">Clear Storage</button>
+  </div>
+  <script>
+    function setStorage() {
+      localStorage.setItem('theme', 'dark');
+      localStorage.setItem('lang', 'en');
+      sessionStorage.setItem('temp', 'value123');
+      document.getElementById('status').textContent =
+        'localStorage: ' + JSON.stringify({ ...localStorage }) +
+        ' | sessionStorage: ' + JSON.stringify({ ...sessionStorage });
+    }
+    function clearStorage() {
+      localStorage.clear();
+      sessionStorage.clear();
+      document.getElementById('status').textContent = 'Storage cleared.';
+    }
+    // Auto-set on load
+    setStorage();
+  </script>
+</body>
+</html>
