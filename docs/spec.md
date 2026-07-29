@@ -91,13 +91,7 @@ se-cli -s=<name> <cmd>         # Named session
 
 **Save & Execute**: `screenshot [ref]` / `screenshot --filename=f` / `eval "<js>"` / `eval "<js>" <ref>` / `title` / `url`
 
-**Storage**: `cookie-list` / `cookie-get <name>` / `cookie-set <name> <value>` / `cookie-delete [name]` / `localstorage-get <key>` / `localstorage-set <key> <value>` / `localstorage-delete [key]` / `localstorage-list` / `sessionstorage-get <key>` / `sessionstorage-set <key> <value>` / `sessionstorage-delete [key]` / `sessionstorage-list`
-
-**Tabs**: `tab-list` / `tab-new [url]` / `tab-close` / `tab-select <index>`
-
-**State**: `state-save [--filename=f]` / `state-load [--filename=f]`
-
-35 commands in total.
+22 commands in total.
 
 ### 3.3 Global Flags
 
@@ -108,8 +102,6 @@ se-cli -s=<name> <cmd>         # Specify session
 se-cli open --browser=chrome   # chrome (default) | edge | firefox
 se-cli open --headed           # Default is headless
 se-cli open --cdp=<url>        # Attach to a running Chrome
-se-cli open --profile=<path>   # Use a persistent browser profile directory
-se-cli open --persistent       # Keep browser profile across sessions
 ```
 
 ## 4. Process Architecture & Communication Protocol
@@ -260,11 +252,10 @@ async function resolveTarget(driver: WebDriver, target: string) {
 ### 5.7 Key Constraints
 
 1. **Refs are valid only within a single snapshot**: after DOM rebuild, `data-se-ref` is lost; you must snapshot again
-2. **iframe handling**: same-origin iframes are recursed with cross-frame refs (`f<index>e<ref>`); cross-origin iframes output a placeholder
-3. **Shadow DOM**: open shadow roots are traversed recursively; closed shadow roots are not accessible
+2. **iframe handling (MVP simplification)**: do not recurse into iframes; output `- iframe: <url>` placeholder
+3. **Shadow DOM (MVP simplification)**: do not recurse into open shadow roots; output placeholder
 4. **Token control**: long text truncated to 80 chars; `--depth=N` limits depth (default 50); `find` command greps instead of dumping everything
 5. **Performance**: `getComputedStyle` is called only for suspected hidden elements
-6. **Frame reset**: after each tool call, the driver switches back to the default frame so subsequent commands run in the main document context
 
 ### 5.8 Code Generation Replay
 
@@ -280,7 +271,7 @@ response.addCode(`await driver.findElement(By.css('[data-se-ref="e15"]')).click(
 | Aria algorithm | Built-in mature implementation | Self-written simplified version, ~70-80% coverage |
 | Ref engine | Built-in `aria-ref` selector engine | `data-se-ref` attribute + CSS selector |
 | Snapshot stability | High | Medium (needs iteration on real sites) |
-| iframe/shadow | Full support | Recursive (same-origin iframes, open shadow roots) |
+| iframe/shadow | Full support | MVP placeholder |
 
 ## 6. Error Handling
 
@@ -357,56 +348,125 @@ await driver.findElement(By.css('[data-se-ref="e2"]')).click();
 
 ## 8. Roadmap (v0.2+)
 
-Sorted by priority, delivered incrementally per version.
+Based on competitive analysis with Playwright CLI and Selenium WebDriver BiDi.
+Features are classified as **Must-Have** (基础缺失), **Core** (差异化), or **Marginal** (边际).
+Delivered incrementally per version.
 
-### v0.2: Practical Capability Completion
+### v0.1: MVP Architecture ✅
 
-- [x] **Storage management**: `cookie-list/get/set/delete/clear`, `localstorage-*`, `sessionstorage-*` (wrapped via `execute_script`)
+- [x] CLI + Daemon process architecture (short-lived CLI via socket to long-lived daemon)
+- [x] Basic commands: open, close, goto, click, fill, type, press, snapshot, screenshot, eval
+- [x] Aria snapshot injection + ref reference mechanism
+- [x] Named session management, multi-browser support (Chrome/Edge/Firefox)
+- [x] Code generation replay
+
+### v0.2: Practical Capability Completion ✅
+
+- [x] **Storage management**: `cookie-list/get/set/delete`, `localstorage-*`, `sessionstorage-*`
 - [x] **State save/load**: export cookies + storage to JSON, restore by loading in reverse
-- [x] **Tab management**: `tab-list`, `tab-new`, `tab-close`, `tab-select` (based on `window_handles` + `switch_to.window`)
+- [x] **Tab management**: `tab-list`, `tab-new`, `tab-close`, `tab-select`
 - [x] **install --skills**: copy SKILL.md to `.claude/skills/se-cli/` or `.agents/skills/se-cli/`
 - [x] **--profile=<path>**: persistent user data directory
 - [x] **--persistent**: auto-assign userDataDir
 
-### v0.3: iframe & Shadow DOM
+### v0.3: iframe & Shadow DOM ✅
 
-- [x] **iframe recursive snapshot**: cross-frame refs (e.g. `f3e15`), implemented via `driver.switchTo().frame()`
+- [x] **iframe recursive snapshot**: cross-frame refs (e.g. `f3e15`)
 - [x] **Shadow DOM recursion**: recursively traverse `el.shadowRoot` for open shadow roots
-- [x] **find command enhancement**: support cross-frame search
+- [x] **find command enhancement**: support cross-frame and shadow DOM search
 
-### v0.4: Network & Debugging
+### v0.4: Interaction Completion (Must-Have)
 
-- [ ] **Network route mock**: based on Selenium 4 BiDi `add_request_handler` / `add_response_handler`, wrap `route <pattern> --status=404` / `route <pattern> --body='...'` / `route-list` / `unroute`
-- [ ] **Console logs**: `console [min-level]` collects browser console messages (BiDi logging module)
-- [ ] **Requests list**: `requests` lists network requests, `request <index>` shows details
-- [ ] **highlight**: `highlight <ref> [--style=...]` persistent highlight, `highlight --hide` to hide
+Close the gap on basic interaction capabilities missing vs Playwright CLI and Selenium.
+All commands based on Selenium Actions API — low complexity, high impact.
 
-### v0.5: Recording & Replay
+- [ ] **hover <ref>**: mouse hover via `driver.actions().move()`
+- [ ] **dblclick <ref>**: double-click via `driver.actions().doubleClick()`
+- [ ] **drag <start> <end>**: drag and drop via `driver.actions().dragAndDrop()`
+- [ ] **dialog-accept [text]**: handle alert/confirm/prompt via `driver.switchTo().alert()`
+- [ ] **dialog-dismiss**: dismiss dialog
+- [ ] **upload <file>**: file upload via `driver.findElement().sendKeys(path)`
+- [ ] **resize <w> <h>**: viewport control via `driver.manage().window().setSize()`
+- [ ] **keydown / keyup <key>**: fine-grained keyboard control via Actions chain
+- [ ] **mousemove <x> <y>**: mouse position control
+- [ ] **mousedown / mouseup**: mouse button control
+- [ ] **mousewheel <dx> <dy>**: scroll wheel control
 
-- [ ] **run-code**: execute arbitrary Selenium code snippets (`run-code "async driver => ..."`)
-- [ ] **Code generation enhancement**: support role-based locators (`By.role('button', {name: 'Submit'})`) for stability
-- [ ] **generate-locator <ref>**: generate the best locator expression from a ref
-- [ ] **Recording mode**: `se-cli record` enters recording mode; user actions generate a complete test file
+### v0.5: Network & Debugging (Core)
 
-### v0.6: Visualization & Advanced Connections
+Leverage Selenium BiDi protocol (available in selenium-webdriver@4.46.0) for network
+interception, console log capture, and request monitoring. BiDi works on Chrome/Edge/Firefox.
 
-- [ ] **show dashboard**: a separate window showing real-time mirrors of all sessions, click to take over mouse and keyboard (Electron or Playwright-driven UI)
-- [ ] **show --annotate**: user draws boxes on the page to annotate; agent receives annotated screenshot + snapshot + notes
-- [ ] **attach --extension**: control a real Chrome/Edge via a browser extension
-- [ ] **attach to Grid**: `--endpoint=<url>` connect to Selenium Grid 4
+- [ ] **route <pattern> --status= / --body=**: network interception via BiDi `Network.addIntercept`
+- [ ] **route-list**: list active route rules
+- [ ] **unroute [id]**: remove route rule
+- [ ] **console [level]**: capture browser console messages via `driver.script().addConsoleMessageHandler()`
+- [ ] **requests**: list network requests via BiDi `beforeRequestSent`/`responseCompleted` events
+- [ ] **request <index>**: show request details
+- [ ] **js-error**: capture JavaScript errors via `driver.script().addJavaScriptErrorHandler()`
+- [ ] **highlight <ref> [--style=]**: persistent element highlighting via CSS overlay injection
+- [ ] **highlight --hide**: remove highlights
 
-### v0.7: Test Integration (Exploratory)
+### v0.6: MCP Server & AI Ecosystem (Must-Have)
 
-- [ ] **Attach to pytest-selenium pause point**: fork or hook pytest-selenium to expose a "test pause, external takeover of session" mechanism (high difficulty, may be infeasible)
-- [ ] **plan/generate/heal workflow**: mimic the playwright-cli test generation workflow, adapted for pytest-selenium
-- [ ] **trace viewer**: simplified trace based on BiDi event streams (far from Playwright Trace Viewer parity)
+Expose se-cli as an MCP Server for AI agent integration. Playwright already provides
+`@playwright/mcp`; se-cli must follow to stay competitive. Dual-track strategy:
+CLI+SKILLS (token-efficient for coding agents) and MCP Server (persistent state for
+autonomous workflows). Both share the same underlying tool implementation.
+
+- [ ] **se-cli mcp**: start MCP Server using `@modelcontextprotocol/sdk`
+- [ ] **MCP tool exposure**: all CLI tools wrapped as `registerTool` calls
+- [ ] **stdio transport** (default): local agent communication
+- [ ] **Streamable HTTP transport** (optional): remote agent communication
+- [ ] **run-code "async driver => ..."**: execute arbitrary Selenium code snippets
+- [ ] **generate-locator <ref>**: generate best locator expression (By.role/By.css)
+- [ ] **Role-based locator code generation**: enhance codegen with `By.role()` output
+- [ ] **SKILL.md frontmatter compliance**: add `name`, `description`, `license`, `compatibility` metadata per Agent Skills spec
+- [ ] **install --skills enhancement**: multi-target discovery (Claude Code, Cursor, generic)
+
+### v0.7: Remote Connections & Safari (Core)
+
+Extend browser coverage and connection capabilities.
+
+- [ ] **--browser=safari**: Safari support via `safaridriver` (macOS only, no headless/BiDi/CDP)
+- [ ] **--endpoint=<url>**: connect to Selenium Grid 4 or remote WebDriver
+- [ ] **Cloud browser integration**: Browserbase and other SaaS browser backends
+- [ ] **PDF export**: `pdf --filename=f` via CDP `Page.printToPDF` (Chromium only)
+
+> **Safari limitations**: safaridriver has no headless mode, no BiDi/CDP support, macOS only.
+> Basic navigation/interaction/screenshot/storage commands work; network interception,
+> console logs, and BiDi features are unavailable.
+
+### v0.8: Recording & Visualization (Marginal)
+
+Recording and visualization capabilities for development and debugging workflows.
+High implementation complexity but significant differentiation potential.
+
+- [ ] **se-cli record**: recording mode — user actions generate a complete test file
+- [ ] **tracing-start / tracing-stop**: operation tracing and storage
+- [ ] **video-start / video-stop**: video recording via CDP or ffmpeg frame capture
+- [ ] **video-chapter <title>**: mark chapters in recordings
+- [ ] **show**: visualization dashboard for multi-session monitoring
+- [ ] **show --annotate**: page annotation for design feedback
+
+### v0.9: VSCode Extension (Marginal)
+
+Develop VSCode extension as a separate npm package (`@browsers-cli/se-cli-vscode`).
+Depends on se-cli CLI being globally installed.
+
+- [ ] **Task Provider**: register se-cli commands as VSCode custom tasks
+- [ ] **Webview**: browser screenshot and aria snapshot preview via postMessage
+- [ ] **MCP Server auto-registration**: write `.vscode/mcp.json` on install
+- [ ] **attach --extension**: connect to real browser via extension
 
 ### Long-term Goals (no version commitment)
 
-- [ ] **Multi-language bindings**: Python/Java client SDK (CLI stays Node)
-- [ ] **Cloud browser integration**: Browserbase and other SaaS browser backends
-- [ ] **MCP compatibility layer**: expose the daemon as an MCP server; CLI and MCP share tool handles (mimicking playwright-cli architecture)
-- [ ] **AI agent ecosystem adaptation**: optimize SKILL.md for Claude Code/Cursor/Copilot individually
+- [ ] **Multi-language SDK**: Python/Java client bindings (CLI stays Node)
+- [ ] **Trace Viewer**: GUI playback for recorded traces
+- [ ] **DOM mutation listener**: via BiDi DOM mutation events
+- [ ] **Script preload**: BiDi script pinning and preloading
+- [ ] **Multi-language SKILL.md**: localized skill files
+- [ ] **pytest-selenium hooks**: test framework integration
 
 ### Will Never Implement (explicitly abandoned)
 
