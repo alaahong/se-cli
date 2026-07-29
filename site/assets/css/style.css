@@ -215,10 +215,14 @@ code, pre { font-family: var(--font-mono); font-size: 0.9em; }
 }
 .roadmap-version-long { border-color: var(--accent); color: var(--accent); font-size: 0.62rem; padding: 0 4px; text-align: center; }
 .roadmap-body { flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; }
-.roadmap-body h3 { font-size: 1rem; margin-bottom: 4px; }
+.roadmap-body h3 { font-size: 1rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .roadmap-body p { color: var(--text-dim); font-size: 0.9rem; }
 .roadmap-body code { color: var(--brand-bright); background: var(--bg-code); padding: 1px 6px; border-radius: 4px; font-size: 0.85em; }
 .roadmap-item-long .roadmap-body { border-style: dashed; }
+.badge { display: inline-block; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.03em; text-transform: uppercase; }
+.badge-must { background: rgba(239, 68, 68, 0.12); color: #DC2626; }
+.badge-core { background: rgba(59, 130, 246, 0.12); color: var(--brand); }
+.badge-marginal { background: rgba(100, 116, 139, 0.12); color: var(--text-mute); }
 
 /* === FAQ === */
 .faq-list { max-width: 760px; margin: 0 auto; }

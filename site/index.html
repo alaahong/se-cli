@@ -76,7 +76,7 @@
         <a href="#quickstart" class="btn btn-primary">Get Started</a>
         <div class="hero-install">
           <span class="hero-install-prompt">$</span>
-          <code id="install-cmd">npm install -g @browsers-cli/se-cli</code>
+          <code id="install-cmd">npm install -g se-cli</code>
           <button class="copy-btn" data-copy="install-cmd" aria-label="Copy install command">
             <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25z"/></svg>
           </button>
@@ -226,7 +226,7 @@
               <span class="code-lang">bash</span>
               <button class="copy-btn" data-copy="qs1" aria-label="Copy"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25z"/></svg></button>
             </div>
-            <pre><code id="qs1">npm install -g @browsers-cli/se-cli</code></pre>
+            <pre><code id="qs1">npm install -g se-cli</code></pre>
           </div>
         </div>
 
@@ -410,16 +410,13 @@ await driver.findElement(
   <section class="section section-alt" id="commands">
     <div class="container">
       <h2 class="section-title">Command Reference</h2>
-      <p class="section-lead">35 commands across sessions, navigation, interaction, snapshots, storage, tabs, state, and execution.</p>
+      <p class="section-lead">22 commands across sessions, navigation, interaction, snapshots, and execution.</p>
 
       <div class="cmd-tabs" role="tablist">
         <button class="cmd-tab active" data-tab="session" role="tab">Session</button>
         <button class="cmd-tab" data-tab="nav" role="tab">Navigation</button>
         <button class="cmd-tab" data-tab="interact" role="tab">Interaction</button>
         <button class="cmd-tab" data-tab="snap" role="tab">Snapshot</button>
-        <button class="cmd-tab" data-tab="storage" role="tab">Storage</button>
-        <button class="cmd-tab" data-tab="tabs" role="tab">Tabs</button>
-        <button class="cmd-tab" data-tab="state" role="tab">State</button>
         <button class="cmd-tab" data-tab="exec" role="tab">Save &amp; Execute</button>
         <button class="cmd-tab" data-tab="flags" role="tab">Flags</button>
       </div>
@@ -473,45 +470,6 @@ await driver.findElement(
           </tbody>
         </table>
       </div>
-      <div class="cmd-panel" data-panel="storage">
-        <table class="cmd-table">
-          <thead><tr><th>Command</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td><code>cookie-list</code></td><td>List all cookies</td></tr>
-            <tr><td><code>cookie-get &lt;name&gt;</code></td><td>Get a specific cookie</td></tr>
-            <tr><td><code>cookie-set &lt;name&gt; &lt;value&gt;</code></td><td>Set a cookie</td></tr>
-            <tr><td><code>cookie-delete [name]</code></td><td>Delete a cookie (or all if name omitted)</td></tr>
-            <tr><td><code>localstorage-get &lt;key&gt;</code></td><td>Get a localStorage item</td></tr>
-            <tr><td><code>localstorage-set &lt;key&gt; &lt;value&gt;</code></td><td>Set a localStorage item</td></tr>
-            <tr><td><code>localstorage-delete [key]</code></td><td>Delete a localStorage item (or clear all)</td></tr>
-            <tr><td><code>localstorage-list</code></td><td>List all localStorage items</td></tr>
-            <tr><td><code>sessionstorage-get &lt;key&gt;</code></td><td>Get a sessionStorage item</td></tr>
-            <tr><td><code>sessionstorage-set &lt;key&gt; &lt;value&gt;</code></td><td>Set a sessionStorage item</td></tr>
-            <tr><td><code>sessionstorage-delete [key]</code></td><td>Delete a sessionStorage item (or clear all)</td></tr>
-            <tr><td><code>sessionstorage-list</code></td><td>List all sessionStorage items</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="cmd-panel" data-panel="tabs">
-        <table class="cmd-table">
-          <thead><tr><th>Command</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td><code>tab-list</code></td><td>List all open tabs (handle, title, url)</td></tr>
-            <tr><td><code>tab-new [url]</code></td><td>Open a new tab (optionally navigate to url)</td></tr>
-            <tr><td><code>tab-close</code></td><td>Close current tab and switch to remaining</td></tr>
-            <tr><td><code>tab-select &lt;index&gt;</code></td><td>Switch to tab by index (0-based)</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="cmd-panel" data-panel="state">
-        <table class="cmd-table">
-          <thead><tr><th>Command</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td><code>state-save [--filename=f.json]</code></td><td>Save cookies, localStorage, sessionStorage to file</td></tr>
-            <tr><td><code>state-load [--filename=f.json]</code></td><td>Load state from file (restores all storage)</td></tr>
-          </tbody>
-        </table>
-      </div>
       <div class="cmd-panel" data-panel="exec">
         <table class="cmd-table">
           <thead><tr><th>Command</th><th>Description</th></tr></thead>
@@ -535,8 +493,6 @@ await driver.findElement(
             <tr><td><code>--browser=chrome|edge|firefox</code></td><td>Browser selection (default: chrome)</td></tr>
             <tr><td><code>--headed</code></td><td>Show browser window (default: headless)</td></tr>
             <tr><td><code>--cdp=&lt;url&gt;</code></td><td>Attach to running Chrome via CDP</td></tr>
-            <tr><td><code>--profile=&lt;path&gt;</code></td><td>Use a persistent browser profile directory</td></tr>
-            <tr><td><code>--persistent</code></td><td>Keep browser profile across sessions (auto-assigns path)</td></tr>
           </tbody>
         </table>
       </div>
@@ -765,7 +721,7 @@ await driver.findElement(
             <p>One global install — no per-agent setup or MCP server configuration needed.</p>
             <div class="code-block">
               <div class="code-header"><span class="code-lang">bash</span></div>
-<pre><code>npm install -g @browsers-cli/se-cli</code></pre>
+<pre><code>npm install -g se-cli</code></pre>
             </div>
           </div>
         </div>
@@ -828,8 +784,8 @@ Agent: I'll navigate and test the login flow.
             <tr><td>Ref engine</td><td>Native <code>aria-ref</code></td><td><code>data-se-ref</code> attribute</td></tr>
             <tr><td>Multi-browser</td><td>Chromium only</td><td>Chrome + Edge + Firefox</td></tr>
             <tr><td>Real Safari</td><td>No</td><td>Possible via Safari driver</td></tr>
-            <tr><td>iframe support</td><td>Full</td><td>Recursive (same-origin)</td></tr>
-            <tr><td>Shadow DOM</td><td>Full</td><td>Open shadow roots</td></tr>
+            <tr><td>iframe support</td><td>Full</td><td>Placeholder (v0.3)</td></tr>
+            <tr><td>Shadow DOM</td><td>Full</td><td>Placeholder (v0.3)</td></tr>
             <tr><td>Test runner attach</td><td>Yes (Playwright test)</td><td>No (v0.7 exploratory)</td></tr>
             <tr><td>Tracing</td><td>Full</td><td>Not planned</td></tr>
           </tbody>
@@ -889,17 +845,24 @@ Agent: I'll navigate and test the login flow.
   <section class="section section-alt" id="roadmap">
     <div class="container">
       <h2 class="section-title">Roadmap</h2>
-      <p class="section-lead">Incremental delivery, version by version. <a href="https://github.com/se-cli/se-cli/issues?q=is%3Aissue+label%3Av0.2">Track on GitHub →</a></p>
+      <p class="section-lead">Based on competitive analysis with Playwright CLI and Selenium BiDi. Features classified as Must-Have, Core, or Marginal. <a href="https://github.com/se-cli/se-cli/issues?q=is%3Aissue+label%3Aroadmap">Track on GitHub →</a></p>
       <div class="roadmap">
-        <div class="roadmap-item roadmap-item-done">
-          <div class="roadmap-version">v0.2 ✓</div>
+        <div class="roadmap-item">
+          <div class="roadmap-version">v0.1 ✅</div>
+          <div class="roadmap-body">
+            <h3>MVP Architecture</h3>
+            <p>CLI + Daemon architecture, aria snapshot + ref mechanism, basic commands (click, fill, type, press, snapshot, screenshot, eval), named sessions, multi-browser support.</p>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-version">v0.2 ✅</div>
           <div class="roadmap-body">
             <h3>Practical Capability Completion</h3>
             <p>Storage management (cookies, localStorage, sessionStorage), state save/load, tab management, <code>install --skills</code>, <code>--profile</code>, <code>--persistent</code>.</p>
           </div>
         </div>
-        <div class="roadmap-item roadmap-item-done">
-          <div class="roadmap-version">v0.3 ✓</div>
+        <div class="roadmap-item">
+          <div class="roadmap-version">v0.3 ✅</div>
           <div class="roadmap-body">
             <h3>iframe &amp; Shadow DOM</h3>
             <p>Recursive iframe snapshots with cross-frame refs (<code>f1e3</code>). Shadow DOM recursion. <code>find</code> searches across frames and shadow roots.</p>
@@ -908,36 +871,50 @@ Agent: I'll navigate and test the login flow.
         <div class="roadmap-item">
           <div class="roadmap-version">v0.4</div>
           <div class="roadmap-body">
-            <h3>Network &amp; Debugging</h3>
-            <p>Network route mocking (BiDi/CDP), browser console log capture, network requests inspection, persistent element highlighting.</p>
+            <h3>Interaction Completion <span class="badge badge-must">Must-Have</span></h3>
+            <p><code>hover</code>, <code>dblclick</code>, <code>drag</code>, <code>dialog-accept/dismiss</code>, <code>upload</code>, <code>resize</code>, fine-grained keyboard/mouse control (<code>keydown</code>, <code>mousemove</code>, <code>mousewheel</code>). All via Selenium Actions API.</p>
           </div>
         </div>
         <div class="roadmap-item">
           <div class="roadmap-version">v0.5</div>
           <div class="roadmap-body">
-            <h3>Recording &amp; Replay</h3>
-            <p><code>run-code</code> for arbitrary snippets, role-based locator code generation, <code>generate-locator</code>, recording mode for test files.</p>
+            <h3>Network &amp; Debugging <span class="badge badge-core">Core</span></h3>
+            <p>BiDi network interception (<code>route</code>/<code>unroute</code>), console log capture, network request inspection, JS error monitoring, persistent element highlighting.</p>
           </div>
         </div>
         <div class="roadmap-item">
           <div class="roadmap-version">v0.6</div>
           <div class="roadmap-body">
-            <h3>Visualization &amp; Connections</h3>
-            <p>Live session dashboard, page annotation, browser extension attach, Selenium Grid 4 endpoint attach.</p>
+            <h3>MCP Server &amp; AI Ecosystem <span class="badge badge-must">Must-Have</span></h3>
+            <p>MCP Server via <code>@modelcontextprotocol/sdk</code> (stdio + HTTP transport), <code>run-code</code>, <code>generate-locator</code>, role-based codegen, Agent Skills frontmatter compliance.</p>
           </div>
         </div>
         <div class="roadmap-item">
           <div class="roadmap-version">v0.7</div>
           <div class="roadmap-body">
-            <h3>Test Integration (exploratory)</h3>
-            <p>Attach to pytest-selenium pause points, plan/generate/heal workflow, simplified trace viewer.</p>
+            <h3>Remote Connections &amp; Safari <span class="badge badge-core">Core</span></h3>
+            <p><code>--browser=safari</code> (macOS only), <code>--endpoint</code> for Selenium Grid, cloud browser integration (Browserbase), PDF export.</p>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-version">v0.8</div>
+          <div class="roadmap-body">
+            <h3>Recording &amp; Visualization <span class="badge badge-marginal">Marginal</span></h3>
+            <p><code>record</code> mode, tracing, video recording, <code>show</code> dashboard, page annotation.</p>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-version">v0.9</div>
+          <div class="roadmap-body">
+            <h3>VSCode Extension <span class="badge badge-marginal">Marginal</span></h3>
+            <p>Task Provider, Webview screenshot/snapshot preview, MCP Server auto-registration. Separate npm package.</p>
           </div>
         </div>
         <div class="roadmap-item roadmap-item-long">
           <div class="roadmap-version roadmap-version-long">long-term</div>
           <div class="roadmap-body">
             <h3>Future Exploration</h3>
-            <p>Python/Java client SDKs, cloud browser providers (Browserbase), MCP compatibility layer, per-agent SKILL.md optimization.</p>
+            <p>Python/Java client SDKs, trace viewer, DOM mutation listener, script preload, multi-language SKILL.md, pytest-selenium hooks.</p>
           </div>
         </div>
       </div>
@@ -1068,7 +1045,7 @@ npx vitest run tests/integration/</code></pre>
         <a href="https://github.com/se-cli/se-cli/blob/main/docs/spec.md">Spec</a>
         <a href="https://github.com/se-cli/se-cli/blob/main/README.md">README</a>
         <a href="https://github.com/se-cli/se-cli/blob/main/LICENSE">License</a>
-        <a href="https://www.npmjs.com/package/@browsers-cli/se-cli">npm</a>
+        <a href="https://www.npmjs.com/package/se-cli">npm</a>
       </div>
       <div class="footer-copy">
         Apache-2.0 · Built with inspiration from <a href="https://github.com/microsoft/playwright-cli" target="_blank" rel="noopener">playwright-cli</a>
