@@ -8,13 +8,17 @@ const CLI = path.join(__dirname, '..', '..', 'dist', 'cli.js');
 function run(args: string[], env?: Record<string, string>): string {
   return execFileSync('node', [CLI, ...args], {
     encoding: 'utf8',
-    timeout: 60000,
+    timeout: 120000,
     env: { ...process.env, ...env },
     shell: false,
   });
 }
 
 const BROWSERS = ['chrome', 'edge', 'firefox'];
+
+// Direct TodoMVC React implementation URL — avoids redirect from the
+// framework selection page which doesn't always resolve consistently.
+const TODOMVC_URL = 'https://demo.playwright.dev/todomvc/dist/react/';
 
 describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   const skip = !process.env.SE_CLI_E2E || !process.env[`SE_CLI_TEST_${browser.toUpperCase()}`];
@@ -62,7 +66,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   });
 
   (skip ? it.skip : it)('clicks element by ref', () => {
-    run(['open', 'https://demo.playwright.dev/todomvc/', `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
+    run(['open', TODOMVC_URL, `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
     const snapshot = run(['--raw', 'snapshot'], { SE_CLI_SESSION: `test-${browser}` });
     // Look for a textbox ref specifically — the first ref might be a link or other element.
     const refMatch = snapshot.match(/textbox[^\n]*ref=(e\d+)/);

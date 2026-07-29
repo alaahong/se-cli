@@ -9,12 +9,26 @@ export async function browser_find(
   // Call executeScript directly to get the snapshot YAML, sharing the
   // exact same script generation code as browser_snapshot.
   const script = generateAriaSnapshotScript();
-  const yaml: string = await driver.executeScript(`
-    const options = { target: arguments[0], depth: arguments[1] };
-    return (${script})(options);
-  `, null, 50);
+  let yaml = '';
+  try {
+    const result = await driver.executeScript(
+      `const options = { target: arguments[0], depth: arguments[1] }; return (${script})(options);`,
+      null,
+      50,
+    );
+    yaml = typeof result === 'string' ? result : '';
+  } catch (e: any) {
+    // If executeScript fails, return an error instead of empty results.
+    response.addError(`Failed to generate snapshot for find: ${e.message}`);
+    return;
+  }
 
-  const lines = (yaml || '').split('\n');
+  if (!yaml) {
+    response.addResult('No matches found.');
+    return;
+  }
+
+  const lines = yaml.split('\n');
   const matches: string[] = [];
 
   if (params.regex) {

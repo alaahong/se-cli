@@ -51,7 +51,7 @@ export class Session {
       const timeout = setTimeout(() => {
         child.kill();
         reject(new Error('daemon start timeout'));
-      }, 30000);
+      }, 60000);
       const onStdout = (data: Buffer) => {
         const line = data.toString().trim();
         if (line.startsWith('Daemon listening on')) {
@@ -99,18 +99,28 @@ export class Session {
       method: 'run',
       params: { args, cwd, raw: opts.raw, json: opts.json },
     };
-    // Retry on connection failures — the daemon may have just started
-    // and the browser driver isn't ready yet.
+    // Retry on connection failures — the daemon may have crashed and
+    // needs to be restarted from the saved session config.
     let lastErr: Error | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         return await this.sendAndClose(msg);
       } catch (e: any) {
         lastErr = e;
-        // Only retry on connection errors, not on legitimate error responses.
-        const msg = e.message || '';
-        if (msg.includes('daemon closed connection') || msg.includes('ECONNREFUSED') || msg.includes('connect ENOENT')) {
-          await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+        const errMsg = e.message || '';
+        if (errMsg.includes('daemon closed connection') || errMsg.includes('ECONNREFUSED') || errMsg.includes('connect ENOENT')) {
+          // Try to restart the daemon on the first connection failure.
+          if (attempt === 0) {
+            try {
+              const config = this.registry.loadSession(this.wsHash, this.sessionName);
+              if (config && config.browserName) {
+                await this.startDaemon({ browserName: config.browserName });
+              }
+            } catch {
+              // startDaemon may fail — that's OK, we'll retry the connection
+            }
+          }
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
           continue;
         }
         throw e;

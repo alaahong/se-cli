@@ -10,10 +10,23 @@ export async function browser_snapshot(
   response: Response
 ): Promise<void> {
   const script = generateAriaSnapshotScript();
-  const yaml: string = await driver.executeScript(`
-    const options = { target: arguments[0], depth: arguments[1] };
-    return (${script})(options);
-  `, params.target || null, params.depth || 50);
+  let yaml = '';
+  try {
+    const result = await driver.executeScript(
+      `const options = { target: arguments[0], depth: arguments[1] }; return (${script})(options);`,
+      params.target || null,
+      params.depth || 50,
+    );
+    yaml = typeof result === 'string' ? result : '';
+  } catch (e: any) {
+    response.addError(`Failed to generate snapshot: ${e.message}`);
+    return;
+  }
+
+  if (!yaml) {
+    response.addError('Snapshot returned empty result — the page may not have loaded yet.');
+    return;
+  }
 
   if (params.filename) {
     const outDir = path.join(process.cwd(), '.se-cli');

@@ -19,6 +19,7 @@ if (!ALLOWED_BROWSERS.has(browserName)) {
 }
 
 let driver: any = null;
+let driverInitError: string | null = null;
 let lastActivity = Date.now();
 const crypto = require('crypto');
 const wsHash = crypto.createHash('sha1').update(workspaceDir).digest('hex').slice(0, 16);
@@ -62,37 +63,62 @@ const server = net.createServer((socket) => {
   });
 });
 
+async function buildDriver(): Promise<void> {
+  const { Builder } = require('selenium-webdriver');
+  // selenium-webdriver expects 'MicrosoftEdge' for Edge, not 'edge'.
+  const seleniumBrowserName = browserName === 'edge' ? 'MicrosoftEdge' : browserName;
+  const builder = new Builder().forBrowser(seleniumBrowserName);
+
+  if (browserName === 'chrome') {
+    const chromeArgs: string[] = [];
+    if (!headed && !cdpEndpoint) {
+      chromeArgs.push('--headless=new', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu');
+    }
+    const chromeOpts: any = { args: chromeArgs };
+    if (cdpEndpoint) chromeOpts.debuggerAddress = cdpEndpoint;
+    builder.getCapabilities().set('goog:chromeOptions', chromeOpts);
+  } else if (browserName === 'edge') {
+    const edgeArgs: string[] = [];
+    if (!headed) {
+      edgeArgs.push('--headless=new', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu');
+    }
+    const edgeOpts: any = { args: edgeArgs };
+    if (cdpEndpoint) edgeOpts.debuggerAddress = cdpEndpoint;
+    builder.getCapabilities().set('ms:edgeOptions', edgeOpts);
+  } else if (browserName === 'firefox') {
+    const firefoxOpts: any = {};
+    if (!headed) {
+      firefoxOpts.args = ['-headless'];
+    }
+    builder.getCapabilities().set('moz:firefoxOptions', firefoxOpts);
+  }
+
+  // Add a timeout so builder.build() doesn't hang indefinitely if
+  // the browser driver process stalls.
+  const buildPromise = builder.build();
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error(`Timed out building ${browserName} driver after 60s`)), 60000);
+  });
+  driver = await Promise.race([buildPromise, timeoutPromise]);
+  driverInitError = null;
+}
+
 async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
   if (msg.method === 'ping') return { ok: true, text: 'pong' };
   // method === 'run' — dispatch to backend
   const { callTool, parseCommand } = require('./backend');
   try {
     if (!driver) {
-      const { Builder } = require('selenium-webdriver');
-      // selenium-webdriver expects 'MicrosoftEdge' for Edge, not 'edge'.
-      const seleniumBrowserName = browserName === 'edge' ? 'MicrosoftEdge' : browserName;
-      const builder = new Builder().forBrowser(seleniumBrowserName);
-
-      if (browserName === 'chrome') {
-        const chromeArgs: string[] = [];
-        if (!headed && !cdpEndpoint) chromeArgs.push('--headless=new', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu');
-        const chromeOpts: any = { args: chromeArgs };
-        if (cdpEndpoint) chromeOpts.debuggerAddress = cdpEndpoint;
-        builder.getCapabilities().set('goog:chromeOptions', chromeOpts);
-      } else if (browserName === 'edge') {
-        const edgeArgs: string[] = [];
-        if (!headed) edgeArgs.push('--headless=new', '--disable-gpu');
-        const edgeOpts: any = { args: edgeArgs };
-        if (cdpEndpoint) edgeOpts.debuggerAddress = cdpEndpoint;
-        builder.getCapabilities().set('ms:edgeOptions', edgeOpts);
-      } else if (browserName === 'firefox') {
-        const firefoxOpts: any = {};
-        if (!headed) {
-          firefoxOpts.args = ['-headless', '--no-remote'];
-        }
-        builder.getCapabilities().set('moz:firefoxOptions', firefoxOpts);
+      if (driverInitError) {
+        return { ok: false, error: driverInitError, code: 'DRIVER_ERROR' };
       }
-      driver = await builder.build();
+      try {
+        await buildDriver();
+      } catch (e: any) {
+        driverInitError = `Failed to build ${browserName} driver: ${e.message}`;
+        process.stderr.write(driverInitError + '\n' + (e.stack || '') + '\n');
+        return { ok: false, error: driverInitError, code: 'DRIVER_ERROR' };
+      }
     }
     const { toolName, toolParams } = parseCommand(msg.params.args);
     const response = await callTool(driver, toolName, toolParams, { raw: !!msg.params.raw, json: !!msg.params.json });
@@ -134,6 +160,20 @@ process.on('uncaughtException', (err: Error) => {
   shutdown();
 });
 
+// Catch unhandled promise rejections — same as uncaught exceptions.
+process.on('unhandledRejection', (err: any) => {
+  const msg = err instanceof Error ? err.message : String(err);
+  process.stderr.write(`Unhandled rejection: ${msg}\n${err instanceof Error ? err.stack || '' : ''}\n`);
+  if (activeSocket && !activeSocket.destroyed) {
+    try {
+      const errResp: ServerMessage = { ok: false, error: `daemon rejection: ${msg}`, code: 'DRIVER_ERROR' };
+      activeSocket.write(JSON.stringify(errResp) + '\n');
+      activeSocket.end();
+    } catch {}
+  }
+  shutdown();
+});
+
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
 
@@ -148,7 +188,10 @@ setInterval(async () => {
     await driver.getTitle();
   } catch (e: any) {
     process.stderr.write('heartbeat failed: ' + e.message + '\n');
-    await shutdown();
+    // Don't immediately shut down on heartbeat failure — the error might
+    // be transient (e.g. page navigation in progress). Just log it.
+    // The next client command will fail with a proper error if the
+    // driver is truly dead.
   }
 }, 60 * 1000);
 

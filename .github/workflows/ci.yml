@@ -62,19 +62,40 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx tsc
-      - name: Install Firefox driver (Linux)
+
+      # Install Firefox browser when needed.
+      # Selenium Manager (bundled with selenium-webdriver 4.25+) handles
+      # driver downloads automatically — no manual geckodriver install.
+      - name: Install Firefox (Linux)
         if: runner.os == 'Linux' && matrix.browser == 'firefox'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y firefox geckodriver
-          which firefox
-          which geckodriver
-      - name: Install Firefox driver (Windows)
+        uses: browser-actions/setup-firefox@latest
+        with:
+          firefox-version: latest
+      - name: Install Firefox (Windows)
         if: runner.os == 'Windows' && matrix.browser == 'firefox'
+        uses: browser-actions/setup-firefox@latest
+        with:
+          firefox-version: latest
+
+      # Chrome and Edge are pre-installed on GitHub Actions runners.
+      # Selenium Manager auto-downloads chromedriver and msedgedriver.
+
+      - name: Verify browser availability
+        shell: bash
         run: |
-          choco install -y firefox geckodriver
-          where firefox
-          where geckodriver
+          echo "Browser: ${{ matrix.browser }}"
+          if [ "${{ matrix.browser }}" = "firefox" ]; then
+            firefox --version || echo "Firefox not found in PATH"
+          elif [ "${{ matrix.browser }}" = "chrome" ]; then
+            if [ "$RUNNER_OS" = "Linux" ]; then
+              google-chrome --version || echo "Chrome not found"
+            else
+              echo "Chrome should be pre-installed on $RUNNER_OS"
+            fi
+          elif [ "${{ matrix.browser }}" = "edge" ]; then
+            echo "Edge should be pre-installed on Windows"
+          fi
+
       - name: Run integration tests
         env:
           SE_CLI_E2E: '1'
