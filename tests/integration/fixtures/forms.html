@@ -106,7 +106,7 @@
     // Visual feedback for select changes
     document.getElementById('country').addEventListener('change', function() {
       var status = document.getElementById('status');
-      status.textContent = 'Country selected: ' + this.value;
+      status.textContent = 'Country selected: ' + this.options[this.selectedIndex].text;
     });
   </script>
 </body>
