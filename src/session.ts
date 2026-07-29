@@ -130,7 +130,17 @@ export class Session {
     let lastErr: Error | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        return await this.sendAndClose(msg);
+        const resp = await this.sendAndClose(msg);
+        // Retry on DRIVER_ERROR — the daemon has already reset the driver
+        // (see server.ts handleMessage), so the next attempt will trigger a
+        // fresh driver build. This handles transient browser crashes (e.g.
+        // Windows chromedriver 0xC0000142) without retrying application-
+        // level errors like "element not found".
+        if (!resp.ok && resp.code === 'DRIVER_ERROR' && attempt < 2) {
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+          continue;
+        }
+        return resp;
       } catch (e: any) {
         lastErr = e;
         const errMsg = e.message || '';

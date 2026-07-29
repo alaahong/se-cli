@@ -79,6 +79,19 @@ jobs:
           firefox-version: latest
 
       - name: Run integration tests
+        id: integration-test
+        env:
+          SE_CLI_E2E: '1'
+          SE_CLI_TEST_CHROME: ${{ matrix.browser == 'chrome' && '1' || '' }}
+          SE_CLI_TEST_EDGE: ${{ matrix.browser == 'edge' && '1' || '' }}
+          SE_CLI_TEST_FIREFOX: ${{ matrix.browser == 'firefox' && '1' || '' }}
+          SE_FIREFOX_BINARY: ${{ matrix.browser == 'firefox' && (runner.os == 'Linux' && steps.firefox-linux.outputs.firefox-path || steps.firefox-win.outputs.firefox-path) || '' }}
+        run: npx vitest run tests/integration/lifecycle.test.ts
+
+      # Retry integration tests once on failure — browser driver crashes
+      # (e.g. Windows chromedriver 0xC0000142) are often transient.
+      - name: Retry integration tests on failure
+        if: failure() && steps.integration-test.outcome == 'failure'
         env:
           SE_CLI_E2E: '1'
           SE_CLI_TEST_CHROME: ${{ matrix.browser == 'chrome' && '1' || '' }}

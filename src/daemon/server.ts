@@ -115,14 +115,24 @@ async function buildDriver(): Promise<void> {
 }
 
 async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
-  if (msg.method === 'ping') return { ok: true, text: 'pong' };
+  if (msg.method === 'ping') {
+    // If the driver previously crashed, report it so the client can
+    // restart the daemon rather than sending commands to a dead session.
+    if (driverInitError) {
+      return { ok: false, error: driverInitError, code: 'DRIVER_ERROR' };
+    }
+    return { ok: true, text: 'pong' };
+  }
   // method === 'run' — dispatch to backend
   const { callTool, parseCommand } = require('./backend');
   try {
     if (!driver) {
-      if (driverInitError) {
-        return { ok: false, error: driverInitError, code: 'DRIVER_ERROR' };
-      }
+      // Clear any previous init error and attempt a fresh build.
+      // The initial build might have failed due to a transient issue
+      // (e.g. chromedriver DLL init failure 0xC0000142 on Windows CI),
+      // but subsequent commands deserve a retry rather than being
+      // permanently blocked by the cached error.
+      driverInitError = null;
       try {
         await buildDriver();
       } catch (e: any) {
@@ -139,6 +149,17 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
     const name = e.name || '';
     if (name === 'NoSuchElementError' || name === 'StaleElementReferenceError') code = 'ELEMENT_NOT_FOUND';
     else if (name === 'TimeoutError') code = 'TIMEOUT';
+    // Reset the driver on fatal errors so the next command can rebuild
+    // a fresh driver instead of reusing a crashed/stale session. This is
+    // the primary fix for Chrome flaky tests: when the browser crashes
+    // mid-command (e.g. 0xC0000142, WebDriver session not found), the
+    // stale driver object would cause ALL subsequent commands to fail.
+    if (code === 'DRIVER_ERROR' || code === 'TIMEOUT') {
+      process.stderr.write(`Resetting driver after ${code}: ${e.message}\n`);
+      try { if (driver) driver.quit(); } catch {}
+      driver = null;
+      driverInitError = null;
+    }
     return { ok: false, error: e.message, code };
   }
 }
@@ -237,19 +258,29 @@ setInterval(() => {
   if (Date.now() - lastActivity > 30 * 60 * 1000) shutdown();
 }, 60 * 1000);
 
-// Heartbeat: periodically check driver health via getTitle()
+// Heartbeat: periodically check driver health via getTitle().
+// If the driver is dead (browser crash, session expired), reset it so
+// the next client command can rebuild rather than using a stale driver.
+// Uses a 2-strike policy to avoid false positives from transient issues
+// like page navigation or slow script execution.
+let heartbeatFailures = 0;
 setInterval(async () => {
   if (!driver) return;
   try {
     await driver.getTitle();
+    heartbeatFailures = 0;
   } catch (e: any) {
-    process.stderr.write('heartbeat failed: ' + e.message + '\n');
-    // Don't immediately shut down on heartbeat failure — the error might
-    // be transient (e.g. page navigation in progress). Just log it.
-    // The next client command will fail with a proper error if the
-    // driver is truly dead.
+    heartbeatFailures++;
+    process.stderr.write(`heartbeat failed (${heartbeatFailures}): ${e.message}\n`);
+    if (heartbeatFailures >= 2) {
+      process.stderr.write('driver appears dead — resetting for rebuild\n');
+      try { if (driver) driver.quit(); } catch {}
+      driver = null;
+      driverInitError = null;
+      heartbeatFailures = 0;
+    }
   }
-}, 60 * 1000);
+}, 30 * 1000);
 
 const config: SessionConfig = {
   name: sessionName,
