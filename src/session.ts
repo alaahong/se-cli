@@ -33,8 +33,21 @@ export class Session {
   }
 
   async startDaemon(opts: { browserName?: string; headed?: boolean; cdpEndpoint?: string } = {}): Promise<void> {
-    // If a daemon is already running on this socket, reuse it.
-    if (await this.canConnect()) return;
+    // If a daemon is already running on this socket, verify it's responsive.
+    if (await this.canConnect()) {
+      try {
+        await this.sendAndClose({ method: 'ping', params: { args: [], cwd: '' } });
+        return; // Daemon is alive and responsive
+      } catch {
+        // Daemon is listening but not responsive — force kill it.
+        const config = this.registry.loadSession(this.wsHash, this.sessionName);
+        if (config && config.pid) {
+          try { process.kill(config.pid, 'SIGKILL'); } catch {}
+        }
+        this.registry.deleteSession(this.wsHash, this.sessionName);
+        await new Promise(r => setTimeout(r, 500));
+      }
+    }
 
     const browserName = opts.browserName || 'chrome';
     const daemonScript = path.join(__dirname, 'daemon', 'server.js');
@@ -47,7 +60,7 @@ export class Session {
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
-    return new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
         child.kill();
         reject(new Error('daemon start timeout'));
@@ -58,21 +71,20 @@ export class Session {
           clearTimeout(timeout);
           // Detach from the child so it survives the parent's exit.
           child.unref();
-          // Remove listeners and unref+destroy stdio pipes so they don't
-          // keep the parent's event loop alive (which would cause
-          // execSync-based callers to hang until their timeout).
+          // Remove listeners so we don't interfere with the child's lifecycle.
           child.stdout?.removeListener('data', onStdout);
           child.stderr?.removeListener('data', onStderr);
           child.removeListener('error', onError);
           child.removeListener('exit', onExit);
-          // stdio pipes are net.Socket at runtime; unref to remove from
-          // the event loop's ref count, then destroy to close the handle.
+          // Unref the stdio pipes so they don't keep the parent's event
+          // loop alive (which would cause execSync-based callers to hang
+          // until their timeout).  Do NOT destroy the pipes — destroying
+          // them breaks the child's stdout/stderr fd and causes the daemon
+          // to crash with EPIPE the next time it tries to log an error.
           const stdoutSock = child.stdout as unknown as { unref?: () => void };
           const stderrSock = child.stderr as unknown as { unref?: () => void };
           stdoutSock.unref?.();
           stderrSock.unref?.();
-          child.stdout?.destroy();
-          child.stderr?.destroy();
           resolve();
         }
       };
@@ -92,6 +104,18 @@ export class Session {
       child.on('error', onError);
       child.on('exit', onExit);
     });
+
+    // Health check: verify the daemon is actually responsive by sending a ping.
+    // The daemon might crash shortly after listening (e.g., during module
+    // loading), so we confirm it can handle at least one request.
+    try {
+      await this.sendAndClose({ method: 'ping', params: { args: [], cwd: '' } });
+    } catch {
+      // Ping failed — the daemon may have crashed. Try one more time with
+      // a short delay to give it a chance to fully initialize.
+      await new Promise(r => setTimeout(r, 500));
+      await this.sendAndClose({ method: 'ping', params: { args: [], cwd: '' } });
+    }
   }
 
   async run(args: string[], cwd: string, opts: { raw?: boolean; json?: boolean } = {}): Promise<ServerMessage> {
@@ -108,7 +132,7 @@ export class Session {
       } catch (e: any) {
         lastErr = e;
         const errMsg = e.message || '';
-        if (errMsg.includes('daemon closed connection') || errMsg.includes('ECONNREFUSED') || errMsg.includes('connect ENOENT')) {
+        if (errMsg.includes('daemon closed connection') || errMsg.includes('ECONNREFUSED') || errMsg.includes('connect ENOENT') || errMsg.includes('ECONNRESET') || errMsg.includes('EPIPE')) {
           // Try to restart the daemon on the first connection failure.
           if (attempt === 0) {
             try {
@@ -136,6 +160,13 @@ export class Session {
       // daemon may already be dead
     }
     this.registry.deleteSession(this.wsHash, this.sessionName);
+
+    // Wait for the daemon to actually exit — the 'stop' response is sent
+    // before shutdown() completes, so the socket might still be alive briefly.
+    for (let i = 0; i < 10; i++) {
+      if (!(await this.canConnect())) break;
+      await new Promise(r => setTimeout(r, 200));
+    }
   }
 
   private sendAndClose(msg: ClientMessage): Promise<ServerMessage> {

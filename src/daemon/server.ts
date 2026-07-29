@@ -139,16 +139,24 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
 }
 
 async function shutdown() {
-  try {
-    if (driver) await driver.quit();
-  } catch (e: any) {
-    process.stderr.write(`driver quit failed: ${e.message}\n`);
-  }
-  registry.deleteSession(wsHash, sessionName);
+  // Close the server first so no new connections are accepted.
+  // This lets the next `canConnect()` check fail immediately,
+  // rather than connecting to a daemon that's stuck in driver.quit().
   server.close();
   if (process.platform !== 'win32') {
     try { fs.unlinkSync(socketPath); } catch {}
   }
+  // Quit the driver with a timeout — if it hangs, we still exit.
+  try {
+    await Promise.race([
+      driver ? driver.quit() : Promise.resolve(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('driver quit timeout')), 5000)),
+    ]);
+  } catch (e: any) {
+    process.stderr.write(`driver quit failed: ${e.message}\n`);
+  }
+  registry.deleteSession(wsHash, sessionName);
   process.exit(0);
 }
 
@@ -157,6 +165,12 @@ async function shutdown() {
 // during driver operations, reset the driver so the next command can
 // attempt to rebuild it rather than killing the daemon entirely.
 process.on('uncaughtException', (err: Error) => {
+  // Silently ignore EPIPE/ECONNRESET — these happen when the parent
+  // process closes its end of the stdio pipe after the daemon starts.
+  const msg = err.message || '';
+  if (msg.includes('EPIPE') || msg.includes('ECONNRESET') || msg.includes('write EPIPE')) {
+    return;
+  }
   process.stderr.write(`Uncaught exception: ${err.message}\n${err.stack || ''}\n`);
   if (activeSocket && !activeSocket.destroyed) {
     try {
@@ -167,7 +181,6 @@ process.on('uncaughtException', (err: Error) => {
   }
   // Reset driver state so subsequent commands can try to rebuild.
   // Only exit if the error is not driver-related (e.g. out of memory).
-  const msg = err.message || '';
   const isDriverError = msg.includes('driver') || msg.includes('WebDriver') ||
     msg.includes('Session') || msg.includes('geckodriver') || msg.includes('chromedriver');
   if (isDriverError) {
@@ -182,6 +195,9 @@ process.on('uncaughtException', (err: Error) => {
 // Catch unhandled promise rejections — same strategy as uncaught exceptions.
 process.on('unhandledRejection', (err: any) => {
   const msg = err instanceof Error ? err.message : String(err);
+  if (msg.includes('EPIPE') || msg.includes('ECONNRESET') || msg.includes('write EPIPE')) {
+    return;
+  }
   process.stderr.write(`Unhandled rejection: ${msg}\n${err instanceof Error ? err.stack || '' : ''}\n`);
   if (activeSocket && !activeSocket.destroyed) {
     try {
@@ -200,6 +216,12 @@ process.on('unhandledRejection', (err: any) => {
     shutdown();
   }
 });
+
+// Prevent broken-pipe errors on stdout/stderr from crashing the daemon.
+// After the parent process unrefs the stdio pipes, writes may fail with
+// EPIPE.  Swallow these errors so the daemon stays alive.
+process.stdout?.on?.('error', () => {});
+process.stderr?.on?.('error', () => {});
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
