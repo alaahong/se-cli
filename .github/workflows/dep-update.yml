@@ -54,24 +54,44 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b deps/selenium-webdriver-${{ steps.check.outputs.latest }}
+          BRANCH="deps/selenium-webdriver-${{ steps.check.outputs.latest }}"
+          git checkout -B "$BRANCH"
           git add package.json package-lock.json
           git commit -m "chore(deps): bump selenium-webdriver to ${{ steps.check.outputs.latest }}
 
           Update selenium-webdriver from ${{ steps.check.outputs.current }} to ${{ steps.check.outputs.latest }}.
 
           Automated by the Dependency Update workflow."
-          git push origin deps/selenium-webdriver-${{ steps.check.outputs.latest }}
+          # Force push to overwrite any stale branch from a previous run.
+          git push --force origin "$BRANCH"
 
       - name: Create issue for manual PR
         if: steps.check.outputs.updated == 'true'
         uses: actions/github-script@v7
         with:
           script: |
+            const title = `chore(deps): bump selenium-webdriver to ${{ steps.check.outputs.latest }}`;
+
+            // Check if an issue with the same title already exists
+            // to avoid duplicates across repeated workflow runs.
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'dependencies',
+              per_page: 100,
+            });
+
+            const existing = issues.find(i => i.title === title);
+            if (existing) {
+              console.log(`Issue already exists: ${existing.html_url}`);
+              return;
+            }
+
             const { data: issue } = await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `chore(deps): bump selenium-webdriver to ${{ steps.check.outputs.latest }}`,
+              title: title,
               body: [
                 `## What`,
                 '',
