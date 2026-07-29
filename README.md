@@ -400,10 +400,13 @@ npm install
 npx tsc
 
 # Run unit tests
-npx vitest run tests/unit/
+npm run test:unit
 
-# Run integration tests (requires browsers installed)
-SE_CLI_E2E=1 SE_CLI_TEST_CHROME=1 npx vitest run tests/integration/
+# Run integration tests (auto-detects installed browsers: Edge → Chrome → Firefox)
+npm run test:integration
+
+# Or explicitly select browsers (same syntax CI uses)
+SE_CLI_E2E=1 SE_CLI_TEST_CHROME=1 SE_CLI_TEST_EDGE=1 npx vitest run tests/integration/
 ```
 
 ### Project Structure

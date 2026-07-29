@@ -4,6 +4,7 @@ import { promisify } from 'util';
 import * as path from 'path';
 import * as fs from 'fs';
 import { startTestServer, type TestServer } from './test-server';
+import { resolveTestBrowsers, shouldRunE2E, type BrowserName } from './detect-browsers';
 
 const execFileAsync = promisify(execFile);
 const CLI = path.join(__dirname, '..', '..', 'dist', 'cli.js');
@@ -19,7 +20,28 @@ async function run(args: string[], env?: Record<string, string>): Promise<string
   return stdout;
 }
 
-const BROWSERS = ['chrome', 'edge', 'firefox'];
+// --- Browser resolution ---
+//
+// CI always sets explicit SE_CLI_TEST_<browser> env vars, so
+// resolveTestBrowsers() returns those directly.
+//
+// For local development, when SE_CLI_E2E=1 is set but no specific
+// SE_CLI_TEST_* vars are provided, browsers are auto-detected by
+// probing common installation paths. Priority: Edge → Chrome → Firefox.
+const E2E_ENABLED = shouldRunE2E();
+const RESOLVED_BROWSERS = resolveTestBrowsers();
+
+// Use the full list for describe.each so that skipped browsers still
+// appear in the test report. Each suite checks `skip` individually.
+const BROWSERS: string[] =
+  RESOLVED_BROWSERS.length > 0 ? RESOLVED_BROWSERS : ['chrome', 'edge', 'firefox'];
+
+if (E2E_ENABLED) {
+  // eslint-disable-next-line no-console
+  console.log(
+    `\n[integration] E2E enabled. Testing browsers: ${RESOLVED_BROWSERS.join(', ') || '(none detected)'}\n`
+  );
+}
 
 // HTTP test server — started once for all browser suites.
 // Supports static fixture files and extensible dynamic routes.
@@ -46,7 +68,9 @@ const IFRAME_URL   = () => server.url('iframe.html');       // iframes: recursiv
 const SHADOW_URL   = () => server.url('shadow-dom.html');   // shadow DOM: open shadow roots with interactive elements
 
 describe.each(BROWSERS)('lifecycle with %s', (browser) => {
-  const skip = !process.env.SE_CLI_E2E || !process.env[`SE_CLI_TEST_${browser.toUpperCase()}`];
+  // Skip if E2E is not enabled, or if this browser wasn't resolved
+  // (either explicitly selected via env vars or auto-detected locally).
+  const skip = !E2E_ENABLED || !RESOLVED_BROWSERS.includes(browser as BrowserName);
   const S = () => `test-${browser}`;
 
   beforeEach(async () => {
