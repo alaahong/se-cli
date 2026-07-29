@@ -57,29 +57,32 @@ export function generateAriaSnapshotScript(): string {
   }
 
   function getLabel(el, role) {
-    // Use el.ownerDocument so labels are resolved within the
-    // correct frame context (main document or iframe document).
-    var doc = el.ownerDocument || document;
+    // getRootNode() returns the ShadowRoot for elements inside
+    // shadow DOM, or the Document for light-DOM elements. This
+    // ensures label[for] and aria-labelledby lookups search the
+    // correct root (shadow root or document), not just the main
+    // document.
+    var root = el.getRootNode ? el.getRootNode() : (el.ownerDocument || document);
     var ariaLabel = el.getAttribute('aria-label');
     if (ariaLabel) return ariaLabel;
 
     var labelledby = el.getAttribute('aria-labelledby');
     if (labelledby) {
-      var labelEl = doc.getElementById(labelledby);
+      var labelEl = root.querySelector('#' + CSS.escape(labelledby));
       if (labelEl) return labelEl.textContent.trim();
     }
 
     var tag = el.tagName.toLowerCase();
     if (tag === 'input' || tag === 'textarea') {
-      var type = (el.type || '').toLowerCase();
-      if (type === 'checkbox' || type === 'radio') {
-        if (el.id) {
-          var label = doc.querySelector('label[for="' + CSS.escape(el.id) + '"]');
-          if (label) return label.textContent.trim();
-        }
-        var parentLabel = el.closest('label');
-        if (parentLabel) return parentLabel.textContent.trim();
+      // Per HTML spec, label[for] applies to ALL form controls,
+      // not just checkbox/radio. Resolve it first so inputs
+      // associated with <label> elements get proper accessible names.
+      if (el.id) {
+        var label = root.querySelector('label[for="' + CSS.escape(el.id) + '"]');
+        if (label) return label.textContent.trim();
       }
+      var parentLabel = el.closest('label');
+      if (parentLabel) return parentLabel.textContent.trim();
       return el.placeholder || el.name || '';
     }
 

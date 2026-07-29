@@ -442,7 +442,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
     // Verify the value was set — use eval with the iframe element
     // After fill, the frame is reset to default by backend.ts
     const val = (await run(['--raw', 'eval',
-      `var iframe = document.getElementById('same-origin-iframe'); iframe.contentDocument.getElementById('iframe-input').value`
+      `document.getElementById('same-origin-iframe').contentDocument.getElementById('iframe-input').value`
     ], { SE_CLI_SESSION: S() })).trim();
     expect(val).toBe('iframe-test-value');
   });
@@ -462,7 +462,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
     await run(['click', ref], { SE_CLI_SESSION: S() });
     // Verify the form was submitted — check result div
     const result = (await run(['--raw', 'eval',
-      `var iframe = document.getElementById('same-origin-iframe'); iframe.contentDocument.getElementById('result').textContent`
+      `document.getElementById('same-origin-iframe').contentDocument.getElementById('result').textContent`
     ], { SE_CLI_SESSION: S() })).trim();
     expect(result).toContain('clicker');
   });
