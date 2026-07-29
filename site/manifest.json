@@ -11,6 +11,6 @@
   "theme_color": "#22C55E",
   "background_color": "#0b0f17",
   "display": "standalone",
-  "start_url": "/",
+  "start_url": "/se-cli/",
   "categories": ["developer", "productivity", "utilities"]
 }
