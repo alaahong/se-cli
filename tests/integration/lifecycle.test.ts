@@ -16,9 +16,10 @@ function run(args: string[], env?: Record<string, string>): string {
 
 const BROWSERS = ['chrome', 'edge', 'firefox'];
 
-// Direct TodoMVC React implementation URL — avoids redirect from the
-// framework selection page which doesn't always resolve consistently.
-const TODOMVC_URL = 'https://demo.playwright.dev/todomvc/dist/react/';
+// Local fixture files — no external network dependency.
+const FIXTURES_DIR = path.join(__dirname, 'fixtures');
+const EXAMPLE_URL = 'file://' + path.join(FIXTURES_DIR, 'example.html').replace(/\\/g, '/');
+const TODO_URL = 'file://' + path.join(FIXTURES_DIR, 'todo.html').replace(/\\/g, '/');
 
 describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   const skip = !process.env.SE_CLI_E2E || !process.env[`SE_CLI_TEST_${browser.toUpperCase()}`];
@@ -40,24 +41,25 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   });
 
   (skip ? it.skip : it)('navigates to URL', () => {
-    run(['open', 'https://example.com', `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
+    run(['open', EXAMPLE_URL, `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
     const title = run(['--raw', 'title'], { SE_CLI_SESSION: `test-${browser}` }).trim();
     expect(title).toBe('Example Domain');
     const url = run(['--raw', 'url'], { SE_CLI_SESSION: `test-${browser}` }).trim();
-    expect(url).toContain('example.com');
+    expect(url).toContain('example.html');
   });
 
   (skip ? it.skip : it)('takes snapshot with refs', () => {
-    run(['open', 'https://example.com', `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
+    run(['open', EXAMPLE_URL, `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
     const snapshot = run(['--raw', 'snapshot'], { SE_CLI_SESSION: `test-${browser}` });
     expect(snapshot).toContain('link');
     expect(snapshot).toMatch(/ref=e\d+/);
   });
 
   (skip ? it.skip : it)('navigates back/forward/reload', () => {
-    run(['open', 'https://example.com', `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
-    run(['goto', 'https://www.iana.org/domains/reserved'], { SE_CLI_SESSION: `test-${browser}` });
+    run(['open', EXAMPLE_URL, `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
+    run(['goto', TODO_URL], { SE_CLI_SESSION: `test-${browser}` });
     const title1 = run(['--raw', 'title'], { SE_CLI_SESSION: `test-${browser}` }).trim();
+    expect(title1).toBe('TodoMVC');
     run(['go-back'], { SE_CLI_SESSION: `test-${browser}` });
     const title2 = run(['--raw', 'title'], { SE_CLI_SESSION: `test-${browser}` }).trim();
     expect(title2).toBe('Example Domain');
@@ -66,9 +68,9 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   });
 
   (skip ? it.skip : it)('clicks element by ref', () => {
-    run(['open', TODOMVC_URL, `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
+    run(['open', TODO_URL, `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
     const snapshot = run(['--raw', 'snapshot'], { SE_CLI_SESSION: `test-${browser}` });
-    // Look for a textbox ref specifically — the first ref might be a link or other element.
+    // Look for a textbox ref specifically.
     const refMatch = snapshot.match(/textbox[^\n]*ref=(e\d+)/);
     expect(refMatch).not.toBeNull();
     const ref = refMatch![1];
@@ -79,7 +81,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   });
 
   (skip ? it.skip : it)('takes screenshot', () => {
-    run(['open', 'https://example.com', `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
+    run(['open', EXAMPLE_URL, `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
     const result = run(['screenshot', '--filename=test.png'], { SE_CLI_SESSION: `test-${browser}` });
     expect(result).toContain('test.png');
     const file = path.join(process.cwd(), '.se-cli', 'test.png');
@@ -88,25 +90,25 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   });
 
   (skip ? it.skip : it)('evaluates JavaScript', () => {
-    run(['open', 'https://example.com', `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
+    run(['open', EXAMPLE_URL, `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
     const result = run(['--raw', 'eval', 'document.title'], { SE_CLI_SESSION: `test-${browser}` }).trim();
     expect(result).toBe('Example Domain');
   });
 
   (skip ? it.skip : it)('finds text in snapshot', () => {
-    run(['open', 'https://example.com', `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
+    run(['open', EXAMPLE_URL, `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
     const result = run(['--raw', 'find', 'More information'], { SE_CLI_SESSION: `test-${browser}` });
     expect(result).toContain('More information');
   });
 
   (skip ? it.skip : it)('lists sessions', () => {
-    run(['open', 'https://example.com', `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
+    run(['open', EXAMPLE_URL, `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
     const result = run(['list']);
     expect(result).toContain(`test-${browser}`);
   });
 
   (skip ? it.skip : it)('json output mode', () => {
-    run(['open', 'https://example.com', `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
+    run(['open', EXAMPLE_URL, `--browser=${browser}`], { SE_CLI_SESSION: `test-${browser}` });
     const result = run(['--json', 'title'], { SE_CLI_SESSION: `test-${browser}` });
     const parsed = JSON.parse(result);
     expect(parsed.result).toBe('Example Domain');

@@ -64,8 +64,6 @@ jobs:
       - run: npx tsc
 
       # Install Firefox browser when needed.
-      # Selenium Manager (bundled with selenium-webdriver 4.25+) handles
-      # driver downloads automatically — no manual geckodriver install.
       - name: Install Firefox (Linux)
         if: runner.os == 'Linux' && matrix.browser == 'firefox'
         uses: browser-actions/setup-firefox@latest
@@ -77,8 +75,14 @@ jobs:
         with:
           firefox-version: latest
 
-      # Chrome and Edge are pre-installed on GitHub Actions runners.
-      # Selenium Manager auto-downloads chromedriver and msedgedriver.
+      # Install geckodriver for Firefox tests.
+      # Selenium Manager (bundled with selenium-webdriver) handles this
+      # automatically in most cases, but in CI it can be unreliable.
+      - name: Install geckodriver
+        if: matrix.browser == 'firefox'
+        uses: browser-actions/setup-geckodriver@latest
+        with:
+          geckodriver-version: latest
 
       - name: Verify browser availability
         shell: bash
@@ -86,6 +90,7 @@ jobs:
           echo "Browser: ${{ matrix.browser }}"
           if [ "${{ matrix.browser }}" = "firefox" ]; then
             firefox --version || echo "Firefox not found in PATH"
+            geckodriver --version || echo "geckodriver not found in PATH"
           elif [ "${{ matrix.browser }}" = "chrome" ]; then
             if [ "$RUNNER_OS" = "Linux" ]; then
               google-chrome --version || echo "Chrome not found"

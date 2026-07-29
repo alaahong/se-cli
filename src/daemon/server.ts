@@ -76,6 +76,8 @@ async function buildDriver(): Promise<void> {
     }
     const chromeOpts: any = { args: chromeArgs };
     if (cdpEndpoint) chromeOpts.debuggerAddress = cdpEndpoint;
+    // Allow overriding the Chrome binary path via env var (useful in CI).
+    if (process.env.SE_CHROME_BINARY) chromeOpts.binary = process.env.SE_CHROME_BINARY;
     builder.getCapabilities().set('goog:chromeOptions', chromeOpts);
   } else if (browserName === 'edge') {
     const edgeArgs: string[] = [];
@@ -84,12 +86,16 @@ async function buildDriver(): Promise<void> {
     }
     const edgeOpts: any = { args: edgeArgs };
     if (cdpEndpoint) edgeOpts.debuggerAddress = cdpEndpoint;
+    if (process.env.SE_EDGE_BINARY) edgeOpts.binary = process.env.SE_EDGE_BINARY;
     builder.getCapabilities().set('ms:edgeOptions', edgeOpts);
   } else if (browserName === 'firefox') {
     const firefoxOpts: any = {};
     if (!headed) {
       firefoxOpts.args = ['-headless'];
     }
+    // Allow overriding the Firefox binary path via env var (useful in CI
+    // where browser-actions/setup-firefox installs to a non-standard path).
+    if (process.env.SE_FIREFOX_BINARY) firefoxOpts.binary = process.env.SE_FIREFOX_BINARY;
     builder.getCapabilities().set('moz:firefoxOptions', firefoxOpts);
   }
 
@@ -147,7 +153,9 @@ async function shutdown() {
 }
 
 // Catch uncaught exceptions so the daemon doesn't silently crash.
-// Try to send an error response to the client before shutting down.
+// Try to send an error response to the client. For errors that occur
+// during driver operations, reset the driver so the next command can
+// attempt to rebuild it rather than killing the daemon entirely.
 process.on('uncaughtException', (err: Error) => {
   process.stderr.write(`Uncaught exception: ${err.message}\n${err.stack || ''}\n`);
   if (activeSocket && !activeSocket.destroyed) {
@@ -157,10 +165,21 @@ process.on('uncaughtException', (err: Error) => {
       activeSocket.end();
     } catch {}
   }
-  shutdown();
+  // Reset driver state so subsequent commands can try to rebuild.
+  // Only exit if the error is not driver-related (e.g. out of memory).
+  const msg = err.message || '';
+  const isDriverError = msg.includes('driver') || msg.includes('WebDriver') ||
+    msg.includes('Session') || msg.includes('geckodriver') || msg.includes('chromedriver');
+  if (isDriverError) {
+    try { if (driver) driver.quit(); } catch {}
+    driver = null;
+    driverInitError = null;
+  } else {
+    shutdown();
+  }
 });
 
-// Catch unhandled promise rejections — same as uncaught exceptions.
+// Catch unhandled promise rejections — same strategy as uncaught exceptions.
 process.on('unhandledRejection', (err: any) => {
   const msg = err instanceof Error ? err.message : String(err);
   process.stderr.write(`Unhandled rejection: ${msg}\n${err instanceof Error ? err.stack || '' : ''}\n`);
@@ -171,7 +190,15 @@ process.on('unhandledRejection', (err: any) => {
       activeSocket.end();
     } catch {}
   }
-  shutdown();
+  const isDriverError = msg.includes('driver') || msg.includes('WebDriver') ||
+    msg.includes('Session') || msg.includes('geckodriver') || msg.includes('chromedriver');
+  if (isDriverError) {
+    try { if (driver) driver.quit(); } catch {}
+    driver = null;
+    driverInitError = null;
+  } else {
+    shutdown();
+  }
 });
 
 process.on('SIGTERM', shutdown);
