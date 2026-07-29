@@ -76,6 +76,8 @@ async function buildDriver(): Promise<void> {
     }
     const chromeOpts: any = { args: chromeArgs };
     if (cdpEndpoint) chromeOpts.debuggerAddress = cdpEndpoint;
+    // Allow overriding the Chrome binary path via env var (useful in CI).
+    if (process.env.SE_CHROME_BINARY) chromeOpts.binary = process.env.SE_CHROME_BINARY;
     builder.getCapabilities().set('goog:chromeOptions', chromeOpts);
   } else if (browserName === 'edge') {
     const edgeArgs: string[] = [];
@@ -84,12 +86,16 @@ async function buildDriver(): Promise<void> {
     }
     const edgeOpts: any = { args: edgeArgs };
     if (cdpEndpoint) edgeOpts.debuggerAddress = cdpEndpoint;
+    if (process.env.SE_EDGE_BINARY) edgeOpts.binary = process.env.SE_EDGE_BINARY;
     builder.getCapabilities().set('ms:edgeOptions', edgeOpts);
   } else if (browserName === 'firefox') {
     const firefoxOpts: any = {};
     if (!headed) {
       firefoxOpts.args = ['-headless'];
     }
+    // Allow overriding the Firefox binary path via env var (useful in CI
+    // where browser-actions/setup-firefox installs to a non-standard path).
+    if (process.env.SE_FIREFOX_BINARY) firefoxOpts.binary = process.env.SE_FIREFOX_BINARY;
     builder.getCapabilities().set('moz:firefoxOptions', firefoxOpts);
   }
 
@@ -133,22 +139,40 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
 }
 
 async function shutdown() {
-  try {
-    if (driver) await driver.quit();
-  } catch (e: any) {
-    process.stderr.write(`driver quit failed: ${e.message}\n`);
-  }
-  registry.deleteSession(wsHash, sessionName);
+  // Close the server first so no new connections are accepted.
   server.close();
   if (process.platform !== 'win32') {
     try { fs.unlinkSync(socketPath); } catch {}
   }
+  // Quit the driver with a timeout — if it hangs, we still exit.
+  try {
+    await Promise.race([
+      driver ? driver.quit() : Promise.resolve(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('driver quit timeout')), 5000)),
+    ]);
+  } catch (e: any) {
+    process.stderr.write(`driver quit failed: ${e.message}\n`);
+  }
+  // NOTE: Do NOT delete the session file here.  The CLI's stop() method
+  // handles session file cleanup AFTER the daemon has exited.  If the
+  // daemon deletes the file during shutdown(), it may race with a new
+  // daemon that has already written its own session file, causing the
+  // "list" command to return empty results.
   process.exit(0);
 }
 
 // Catch uncaught exceptions so the daemon doesn't silently crash.
-// Try to send an error response to the client before shutting down.
+// Try to send an error response to the client. For errors that occur
+// during driver operations, reset the driver so the next command can
+// attempt to rebuild it rather than killing the daemon entirely.
 process.on('uncaughtException', (err: Error) => {
+  // Silently ignore EPIPE/ECONNRESET — these happen when the parent
+  // process closes its end of the stdio pipe after the daemon starts.
+  const msg = err.message || '';
+  if (msg.includes('EPIPE') || msg.includes('ECONNRESET') || msg.includes('write EPIPE')) {
+    return;
+  }
   process.stderr.write(`Uncaught exception: ${err.message}\n${err.stack || ''}\n`);
   if (activeSocket && !activeSocket.destroyed) {
     try {
@@ -157,12 +181,25 @@ process.on('uncaughtException', (err: Error) => {
       activeSocket.end();
     } catch {}
   }
-  shutdown();
+  // Reset driver state so subsequent commands can try to rebuild.
+  // Only exit if the error is not driver-related (e.g. out of memory).
+  const isDriverError = msg.includes('driver') || msg.includes('WebDriver') ||
+    msg.includes('Session') || msg.includes('geckodriver') || msg.includes('chromedriver');
+  if (isDriverError) {
+    try { if (driver) driver.quit(); } catch {}
+    driver = null;
+    driverInitError = null;
+  } else {
+    shutdown();
+  }
 });
 
-// Catch unhandled promise rejections — same as uncaught exceptions.
+// Catch unhandled promise rejections — same strategy as uncaught exceptions.
 process.on('unhandledRejection', (err: any) => {
   const msg = err instanceof Error ? err.message : String(err);
+  if (msg.includes('EPIPE') || msg.includes('ECONNRESET') || msg.includes('write EPIPE')) {
+    return;
+  }
   process.stderr.write(`Unhandled rejection: ${msg}\n${err instanceof Error ? err.stack || '' : ''}\n`);
   if (activeSocket && !activeSocket.destroyed) {
     try {
@@ -171,8 +208,22 @@ process.on('unhandledRejection', (err: any) => {
       activeSocket.end();
     } catch {}
   }
-  shutdown();
+  const isDriverError = msg.includes('driver') || msg.includes('WebDriver') ||
+    msg.includes('Session') || msg.includes('geckodriver') || msg.includes('chromedriver');
+  if (isDriverError) {
+    try { if (driver) driver.quit(); } catch {}
+    driver = null;
+    driverInitError = null;
+  } else {
+    shutdown();
+  }
 });
+
+// Prevent broken-pipe errors on stdout/stderr from crashing the daemon.
+// After the parent process unrefs the stdio pipes, writes may fail with
+// EPIPE.  Swallow these errors so the daemon stays alive.
+process.stdout?.on?.('error', () => {});
+process.stderr?.on?.('error', () => {});
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
@@ -217,6 +268,20 @@ if (process.platform !== 'win32') {
   try { fs.unlinkSync(socketPath); } catch {}
 }
 
-server.listen(socketPath, () => {
-  console.log(`Daemon listening on ${socketPath}`);
-});
+// Pre-build the driver BEFORE listening so the first client command doesn't
+// have to wait for driver initialization.  On Windows CI, the first Chrome
+// driver build can take >30s (Selenium Manager downloads the driver), which
+// exceeds the client's sendAndClose timeout and causes spurious failures.
+// If the build fails, we still start listening — the error is reported to
+// the client on their first command via driverInitError.
+(async () => {
+  try {
+    await buildDriver();
+  } catch (e: any) {
+    driverInitError = `Failed to build ${browserName} driver: ${e.message}`;
+    process.stderr.write(driverInitError + '\n' + (e.stack || '') + '\n');
+  }
+  server.listen(socketPath, () => {
+    console.log(`Daemon listening on ${socketPath}`);
+  });
+})();

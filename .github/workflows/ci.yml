@@ -63,43 +63,28 @@ jobs:
       - run: npm ci
       - run: npx tsc
 
-      # Install Firefox browser when needed.
-      # Selenium Manager (bundled with selenium-webdriver 4.25+) handles
-      # driver downloads automatically — no manual geckodriver install.
+      # Install Firefox browser when needed (geckodriver is handled
+      # by selenium-webdriver's built-in Selenium Manager).
       - name: Install Firefox (Linux)
         if: runner.os == 'Linux' && matrix.browser == 'firefox'
-        uses: browser-actions/setup-firefox@latest
+        id: firefox-linux
+        uses: browser-actions/setup-firefox@v1.7.2
         with:
           firefox-version: latest
       - name: Install Firefox (Windows)
         if: runner.os == 'Windows' && matrix.browser == 'firefox'
-        uses: browser-actions/setup-firefox@latest
+        id: firefox-win
+        uses: browser-actions/setup-firefox@v1.7.2
         with:
           firefox-version: latest
-
-      # Chrome and Edge are pre-installed on GitHub Actions runners.
-      # Selenium Manager auto-downloads chromedriver and msedgedriver.
-
-      - name: Verify browser availability
-        shell: bash
-        run: |
-          echo "Browser: ${{ matrix.browser }}"
-          if [ "${{ matrix.browser }}" = "firefox" ]; then
-            firefox --version || echo "Firefox not found in PATH"
-          elif [ "${{ matrix.browser }}" = "chrome" ]; then
-            if [ "$RUNNER_OS" = "Linux" ]; then
-              google-chrome --version || echo "Chrome not found"
-            else
-              echo "Chrome should be pre-installed on $RUNNER_OS"
-            fi
-          elif [ "${{ matrix.browser }}" = "edge" ]; then
-            echo "Edge should be pre-installed on Windows"
-          fi
 
       - name: Run integration tests
         env:
           SE_CLI_E2E: '1'
-          SE_CLI_TEST_${{ matrix.browser == 'chrome' && 'CHROME' || matrix.browser == 'edge' && 'EDGE' || 'FIREFOX' }}: '1'
+          SE_CLI_TEST_CHROME: ${{ matrix.browser == 'chrome' && '1' || '' }}
+          SE_CLI_TEST_EDGE: ${{ matrix.browser == 'edge' && '1' || '' }}
+          SE_CLI_TEST_FIREFOX: ${{ matrix.browser == 'firefox' && '1' || '' }}
+          SE_FIREFOX_BINARY: ${{ matrix.browser == 'firefox' && (runner.os == 'Linux' && steps.firefox-linux.outputs.firefox-path || steps.firefox-win.outputs.firefox-path) || '' }}
         run: npx vitest run tests/integration/lifecycle.test.ts
       - name: Upload screenshots on failure
         if: failure()
