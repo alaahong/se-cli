@@ -1,13 +1,12 @@
 name: Publish to npm
 
 on:
-  push:
-    tags:
-      - 'v*'
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to publish (e.g. 0.1.0, without leading v)'
+      release_tag:
+        description: 'Release tag to publish (e.g. v0.1.0) — see Releases page for available tags'
         required: true
         type: string
       dry-run:
@@ -24,7 +23,37 @@ jobs:
       contents: read
       id-token: write  # required for npm provenance
     steps:
+      - name: Resolve release tag
+        id: release
+        run: |
+          if [ -n "${{ inputs.release_tag }}" ]; then
+            TAG="${{ inputs.release_tag }}"
+          else
+            TAG="${{ github.event.release.tag_name }}"
+          fi
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing @browsers-cli/se-cli@$VERSION from release $TAG"
+
+      - name: Verify release exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! gh release view '${{ steps.release.outputs.tag }}' --repo '${{ github.repository }}' >/dev/null 2>&1; then
+            echo "::error::Release '${{ steps.release.outputs.tag }}' not found. Check the Releases page for available tags."
+            echo "::notice::Available releases:"
+            gh release list --repo '${{ github.repository }}' --limit 20 || true
+            exit 1
+          fi
+          echo "Release verified:"
+          gh release view '${{ steps.release.outputs.tag }}' --repo '${{ github.repository }}' \
+            --json tagName,name,createdAt,isDraft,isPrerelease \
+            --jq '. | "  tag: \(.tagName)\n  name: \(.name)\n  created: \(.createdAt)\n  prerelease: \(.isPrerelease)"'
+
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.release.outputs.tag }}
 
       - uses: actions/setup-node@v4
         with:
@@ -41,16 +70,9 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Set version from tag or input
+      - name: Set package version
         run: |
-          if [ -n "${{ inputs.version }}" ]; then
-            VERSION="${{ inputs.version }}"
-          else
-            TAG="${{ github.ref_name }}"
-            VERSION="${TAG#v}"
-          fi
-          npm version "$VERSION" --no-git-tag-version --allow-same-version
-          echo "Publishing @browsers-cli/se-cli@$VERSION"
+          npm version '${{ steps.release.outputs.version }}' --no-git-tag-version --allow-same-version
 
       - name: Dry run — preview package contents
         if: ${{ inputs.dry-run == true }}
