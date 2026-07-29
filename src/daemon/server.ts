@@ -1,5 +1,6 @@
 import * as net from 'net';
 import * as fs from 'fs';
+import { StringDecoder } from 'string_decoder';
 import { Registry, SessionConfig } from '../registry';
 import { baseDaemonDir } from '../config';
 import type { ClientMessage, ServerMessage } from '../protocol';
@@ -33,9 +34,14 @@ let activeSocket: net.Socket | null = null;
 
 const server = net.createServer((socket) => {
   activeSocket = socket;
+  // Use StringDecoder to handle multi-byte UTF-8 characters (e.g. Chinese)
+  // that may be split across TCP socket chunks. Without this, data.toString()
+  // on a partial multi-byte sequence produces replacement chars (U+FFFD),
+  // causing garbled text for non-ASCII content (e.g. Baidu snapshots).
+  const decoder = new StringDecoder('utf8');
   let buffer = '';
   socket.on('data', async (data) => {
-    buffer += data.toString();
+    buffer += decoder.write(data);
     const lines = buffer.split('\n');
     buffer = lines.pop() || '';
     for (const line of lines) {
