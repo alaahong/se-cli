@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="se-cli feature matrix — every capability cross-referenced against Chrome, Edge, Firefox, Safari, and Edge IE mode, with version and browser filters." />
+  <meta name="description" content="se-cli feature matrix — every capability cross-referenced against Chrome, Edge, Firefox, Safari, and Edge IE mode, with version and browser filters." data-i18n="matrix.metaDesc" />
   <meta name="theme-color" content="#22C55E" />
-  <title>Feature Matrix — se-cli Roadmap</title>
+  <title data-i18n="matrix.pageTitle">Feature Matrix — se-cli Roadmap</title>
   <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
   <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="../assets/img/apple-touch-icon.png" />
@@ -43,25 +43,25 @@
         <span class="breadcrumb-sep">/</span>
         <a href="index.html">Roadmap</a>
         <span class="breadcrumb-sep">/</span>
-        <span class="breadcrumb-current">Feature Matrix</span>
+        <span class="breadcrumb-current" data-i18n="bc.matrix">Feature Matrix</span>
       </nav>
-      <h1>Feature Matrix</h1>
-      <p>Every capability mapped against the five supported browser targets. Filter by browser or version to scope a release.</p>
+      <h1 data-i18n="matrix.title">Feature Matrix</h1>
+      <p data-i18n="matrix.subtitle">Every capability mapped against the five supported browser targets. Filter by browser or version to scope a release.</p>
     </div>
   </header>
 
   <section class="section">
     <div class="container">
       <div class="roadmap-tabs" style="display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:32px;">
-        <a href="index.html" class="cmd-tab">Timeline</a>
-        <a href="matrix.html" class="cmd-tab active">Feature Matrix</a>
-        <a href="changelog.html" class="cmd-tab">Changelog</a>
+        <a href="index.html" class="cmd-tab" data-i18n="rm.timeline">Timeline</a>
+        <a href="matrix.html" class="cmd-tab active" data-i18n="rm.matrix">Feature Matrix</a>
+        <a href="changelog.html" class="cmd-tab" data-i18n="rm.changelog">Changelog</a>
       </div>
 
       <div class="matrix-filter-group">
-        <span class="matrix-filter-label">Browser</span>
+        <span class="matrix-filter-label" data-i18n="matrix.filterBrowser">Browser</span>
         <div class="matrix-filter">
-          <button class="matrix-btn active" data-matrix-browser="all">All</button>
+          <button class="matrix-btn active" data-matrix-browser="all" data-i18n="matrix.filterAll">All</button>
           <button class="matrix-btn" data-matrix-browser="chrome">Chrome</button>
           <button class="matrix-btn" data-matrix-browser="edge">Edge</button>
           <button class="matrix-btn" data-matrix-browser="firefox">Firefox</button>
@@ -71,29 +71,29 @@
       </div>
 
       <div class="matrix-filter-group">
-        <span class="matrix-filter-label">Version</span>
+        <span class="matrix-filter-label" data-i18n="matrix.filterVersion">Version</span>
         <div class="matrix-filter">
-          <button class="matrix-btn active" data-matrix-version="all">All</button>
-          <button class="matrix-btn" data-matrix-version="1-3">v0.1–0.3 (Shipped)</button>
-          <button class="matrix-btn" data-matrix-version="4-6">v0.4–0.6</button>
-          <button class="matrix-btn" data-matrix-version="7-9">v0.7–0.9</button>
-          <button class="matrix-btn" data-matrix-version="10-12">v0.10–0.12</button>
+          <button class="matrix-btn active" data-matrix-version="all" data-i18n="matrix.filterAll">All</button>
+          <button class="matrix-btn" data-matrix-version="1-3" data-i18n="matrix.filterV13">v0.1–0.3 (Shipped)</button>
+          <button class="matrix-btn" data-matrix-version="4-6" data-i18n="matrix.filterV46">v0.4–0.6</button>
+          <button class="matrix-btn" data-matrix-version="7-9" data-i18n="matrix.filterV79">v0.7–0.9</button>
+          <button class="matrix-btn" data-matrix-version="10-12" data-i18n="matrix.filterV1012">v0.10–0.12</button>
         </div>
       </div>
 
       <div class="matrix-legend">
-        <span><span class="matrix-cell-yes">✓</span> Full support</span>
-        <span><span class="matrix-cell-partial">◐</span> Partial / degraded</span>
-        <span><span class="matrix-cell-planned">○</span> Planned</span>
-        <span><span class="matrix-cell-no">—</span> Not supported</span>
+        <span><span class="matrix-cell-yes">✓</span> <span data-i18n="matrix.legendFull">Full support</span></span>
+        <span><span class="matrix-cell-partial">◐</span> <span data-i18n="matrix.legendPartial">Partial / degraded</span></span>
+        <span><span class="matrix-cell-planned">○</span> <span data-i18n="matrix.legendPlanned">Planned</span></span>
+        <span><span class="matrix-cell-no">—</span> <span data-i18n="matrix.legendNo">Not supported</span></span>
       </div>
 
       <div class="matrix-wrap">
         <table class="matrix-table" id="matrix-table">
           <thead>
             <tr>
-              <th>Capability</th>
-              <th>Since</th>
+              <th data-i18n="matrix.thCapability">Capability</th>
+              <th data-i18n="matrix.thSince">Since</th>
               <th>Chrome</th>
               <th>Edge</th>
               <th>Firefox</th>
@@ -102,251 +102,251 @@
             </tr>
           </thead>
           <tbody>
-            <tr class="group-row"><td colspan="7">Session &amp; Architecture</td></tr>
+            <tr class="group-row"><td colspan="7" data-i18n="matrix.groupSession" data-i18n-html>Session &amp; Architecture</td></tr>
             <tr data-version="1">
-              <td>CLI + Daemon architecture</td><td><code>v0.1</code></td>
+              <td data-i18n="matrix.capCliDaemon">CLI + Daemon architecture</td><td><code>v0.1</code></td>
               <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
             </tr>
             <tr data-version="1">
-              <td>Named sessions / parallel browsers</td><td><code>v0.1</code></td>
+              <td data-i18n="matrix.capNamedSessions">Named sessions / parallel browsers</td><td><code>v0.1</code></td>
               <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
             </tr>
             <tr data-version="1">
-              <td>Multi-browser launch</td><td><code>v0.1</code></td>
+              <td data-i18n="matrix.capMultiBrowser">Multi-browser launch</td><td><code>v0.1</code></td>
               <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
             <tr data-version="1">
-              <td>CDP attach (<code>--cdp</code>)</td><td><code>v0.1</code></td>
+              <td data-i18n="matrix.capCdpAttach" data-i18n-html>CDP attach (<code>--cdp</code>)</td><td><code>v0.1</code></td>
               <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td>
             </tr>
             <tr data-version="2">
-              <td>Persistent profile (<code>--profile</code>)</td><td><code>v0.2</code></td>
+              <td data-i18n="matrix.capPersistentProfile" data-i18n-html>Persistent profile (<code>--profile</code>)</td><td><code>v0.2</code></td>
               <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
             </tr>
 
-            <tr class="group-row"><td colspan="7">Navigation</td></tr>
+            <tr class="group-row"><td colspan="7" data-i18n="matrix.groupNav">Navigation</td></tr>
             <tr data-version="1">
-              <td>goto / go-back / go-forward / reload</td><td><code>v0.1</code></td>
+              <td data-i18n="matrix.capGoto">goto / go-back / go-forward / reload</td><td><code>v0.1</code></td>
               <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
             </tr>
             <tr data-version="1">
-              <td>title / url</td><td><code>v0.1</code></td>
+              <td data-i18n="matrix.capTitleUrl">title / url</td><td><code>v0.1</code></td>
               <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
             </tr>
 
-            <tr class="group-row"><td colspan="7">Interaction</td></tr>
+            <tr class="group-row"><td colspan="7" data-i18n="matrix.groupInteraction">Interaction</td></tr>
             <tr data-version="1">
-              <td>click / fill / type / press</td><td><code>v0.1</code></td>
+              <td data-i18n="matrix.capClickFill">click / fill / type / press</td><td><code>v0.1</code></td>
               <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
             </tr>
             <tr data-version="1">
-              <td>select / check / uncheck</td><td><code>v0.1</code></td>
+              <td data-i18n="matrix.capSelectCheck">select / check / uncheck</td><td><code>v0.1</code></td>
               <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
             </tr>
             <tr data-version="5">
-              <td>hover / dblclick / drag</td><td><code>v0.5</code></td>
+              <td data-i18n="matrix.capHoverDrag">hover / dblclick / drag</td><td><code>v0.5</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-partial">◐</td>
             </tr>
             <tr data-version="5">
-              <td>dialog accept / dismiss</td><td><code>v0.5</code></td>
+              <td data-i18n="matrix.capDialog">dialog accept / dismiss</td><td><code>v0.5</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
             <tr data-version="5">
-              <td>upload / resize viewport</td><td><code>v0.5</code></td>
+              <td data-i18n="matrix.capUploadResize">upload / resize viewport</td><td><code>v0.5</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
             <tr data-version="5">
-              <td>keyboard / mouse fine control</td><td><code>v0.5</code></td>
+              <td data-i18n="matrix.capKeyboardMouse">keyboard / mouse fine control</td><td><code>v0.5</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-partial">◐</td>
             </tr>
             <tr data-version="5">
-              <td><code>--actions-chain</code> batch</td><td><code>v0.5</code></td>
+              <td data-i18n="matrix.capActionsChain" data-i18n-html><code>--actions-chain</code> batch</td><td><code>v0.5</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-partial">◐</td>
             </tr>
 
-            <tr class="group-row"><td colspan="7">Snapshot &amp; Search</td></tr>
+            <tr class="group-row"><td colspan="7" data-i18n="matrix.groupSnapshot" data-i18n-html>Snapshot &amp; Search</td></tr>
             <tr data-version="1">
-              <td>aria snapshot + ref mechanism</td><td><code>v0.1</code></td>
+              <td data-i18n="matrix.capAriaSnapshot">aria snapshot + ref mechanism</td><td><code>v0.1</code></td>
               <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-partial">◐</td>
             </tr>
             <tr data-version="1">
-              <td>find / find --regex</td><td><code>v0.1</code></td>
+              <td data-i18n="matrix.capFind">find / find --regex</td><td><code>v0.1</code></td>
               <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
             </tr>
             <tr data-version="3">
-              <td>iframe recursive snapshot</td><td><code>v0.3</code></td>
+              <td data-i18n="matrix.capIframeSnapshot">iframe recursive snapshot</td><td><code>v0.3</code></td>
               <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
             </tr>
             <tr data-version="3">
-              <td>Shadow DOM recursion</td><td><code>v0.3</code></td>
+              <td data-i18n="matrix.capShadowDom">Shadow DOM recursion</td><td><code>v0.3</code></td>
               <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-no">—</td>
             </tr>
 
-            <tr class="group-row"><td colspan="7">Storage &amp; State</td></tr>
+            <tr class="group-row"><td colspan="7" data-i18n="matrix.groupStorage" data-i18n-html>Storage &amp; State</td></tr>
             <tr data-version="2">
-              <td>cookie / localStorage / sessionStorage</td><td><code>v0.2</code></td>
+              <td data-i18n="matrix.capCookieStorage">cookie / localStorage / sessionStorage</td><td><code>v0.2</code></td>
               <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
             </tr>
             <tr data-version="2">
-              <td>state-save / state-load</td><td><code>v0.2</code></td>
+              <td data-i18n="matrix.capStateSaveLoad">state-save / state-load</td><td><code>v0.2</code></td>
               <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
             </tr>
             <tr data-version="2">
-              <td>tab management</td><td><code>v0.2</code></td>
+              <td data-i18n="matrix.capTabMgmt">tab management</td><td><code>v0.2</code></td>
               <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
             </tr>
 
-            <tr class="group-row"><td colspan="7">Wait &amp; Retry (v0.4)</td></tr>
+            <tr class="group-row"><td colspan="7" data-i18n="matrix.groupWait" data-i18n-html>Wait &amp; Retry (v0.4)</td></tr>
             <tr data-version="4">
-              <td><code>--timeout</code> / <code>--wait</code> / <code>--retry</code></td><td><code>v0.4</code></td>
+              <td data-i18n="matrix.capTimeoutWaitRetry" data-i18n-html><code>--timeout</code> / <code>--wait</code> / <code>--retry</code></td><td><code>v0.4</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
             <tr data-version="4">
-              <td>4-tier config priority</td><td><code>v0.4</code></td>
+              <td data-i18n="matrix.capConfigPriority">4-tier config priority</td><td><code>v0.4</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
             <tr data-version="4">
-              <td>config get / set / list / init</td><td><code>v0.4</code></td>
+              <td data-i18n="matrix.capConfigCmds">config get / set / list / init</td><td><code>v0.4</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
 
-            <tr class="group-row"><td colspan="7">Assertions (v0.6)</td></tr>
+            <tr class="group-row"><td colspan="7" data-i18n="matrix.groupAssertions">Assertions (v0.6)</td></tr>
             <tr data-version="6">
-              <td>expect visible / hidden / enabled / disabled</td><td><code>v0.6</code></td>
+              <td data-i18n="matrix.capExpectVisible">expect visible / hidden / enabled / disabled</td><td><code>v0.6</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
             <tr data-version="6">
-              <td>expect text / value / count / attribute</td><td><code>v0.6</code></td>
+              <td data-i18n="matrix.capExpectText">expect text / value / count / attribute</td><td><code>v0.6</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
             <tr data-version="6">
-              <td><code>--not</code> inversion / exit codes</td><td><code>v0.6</code></td>
+              <td data-i18n="matrix.capNotInversion" data-i18n-html><code>--not</code> inversion / exit codes</td><td><code>v0.6</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
 
-            <tr class="group-row"><td colspan="7">Network &amp; Debugging (v0.7)</td></tr>
+            <tr class="group-row"><td colspan="7" data-i18n="matrix.groupNetwork" data-i18n-html>Network &amp; Debugging (v0.7)</td></tr>
             <tr data-version="7">
-              <td>route / unroute (interception)</td><td><code>v0.7</code></td>
+              <td data-i18n="matrix.capRoute">route / unroute (interception)</td><td><code>v0.7</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td>
             </tr>
             <tr data-version="7">
-              <td>console capture</td><td><code>v0.7</code></td>
+              <td data-i18n="matrix.capConsole">console capture</td><td><code>v0.7</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-no">—</td><td class="matrix-cell-partial">◐</td>
             </tr>
             <tr data-version="7">
-              <td>requests / js-error</td><td><code>v0.7</code></td>
+              <td data-i18n="matrix.capRequests">requests / js-error</td><td><code>v0.7</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-no">—</td><td class="matrix-cell-partial">◐</td>
             </tr>
             <tr data-version="7">
-              <td>highlight / highlight --hide</td><td><code>v0.7</code></td>
+              <td data-i18n="matrix.capHighlight">highlight / highlight --hide</td><td><code>v0.7</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
 
-            <tr class="group-row"><td colspan="7">Device Emulation (v0.8)</td></tr>
+            <tr class="group-row"><td colspan="7" data-i18n="matrix.groupDevice">Device Emulation (v0.8)</td></tr>
             <tr data-version="8">
-              <td>device presets / viewport</td><td><code>v0.8</code></td>
+              <td data-i18n="matrix.capDevicePresets">device presets / viewport</td><td><code>v0.8</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-partial">◐</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td>
             </tr>
             <tr data-version="8">
-              <td>geolocation / timezone / locale</td><td><code>v0.8</code></td>
+              <td data-i18n="matrix.capGeoTz">geolocation / timezone / locale</td><td><code>v0.8</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-partial">◐</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td>
             </tr>
             <tr data-version="8">
-              <td>throttle network / cpu / offline</td><td><code>v0.8</code></td>
+              <td data-i18n="matrix.capThrottle">throttle network / cpu / offline</td><td><code>v0.8</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-partial">◐</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td>
             </tr>
 
-            <tr class="group-row"><td colspan="7">MCP &amp; AI (v0.9)</td></tr>
+            <tr class="group-row"><td colspan="7" data-i18n="matrix.groupMcp" data-i18n-html>MCP &amp; AI (v0.9)</td></tr>
             <tr data-version="9">
-              <td>MCP server (stdio / HTTP)</td><td><code>v0.9</code></td>
+              <td data-i18n="matrix.capMcpServer">MCP server (stdio / HTTP)</td><td><code>v0.9</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
             <tr data-version="9">
-              <td>run-code / generate-locator</td><td><code>v0.9</code></td>
+              <td data-i18n="matrix.capRunCode">run-code / generate-locator</td><td><code>v0.9</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
             <tr data-version="9">
-              <td><code>By.role()</code> codegen</td><td><code>v0.9</code></td>
+              <td data-i18n="matrix.capByRole" data-i18n-html><code>By.role()</code> codegen</td><td><code>v0.9</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-no">—</td>
             </tr>
             <tr data-version="2">
-              <td>install --skills</td><td><code>v0.2</code></td>
+              <td data-i18n="matrix.capInstallSkills">install --skills</td><td><code>v0.2</code></td>
               <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
             </tr>
 
-            <tr class="group-row"><td colspan="7">Remote &amp; Browsers (v0.10)</td></tr>
+            <tr class="group-row"><td colspan="7" data-i18n="matrix.groupRemote" data-i18n-html>Remote &amp; Browsers (v0.10)</td></tr>
             <tr data-version="10">
-              <td>Safari (<code>safaridriver</code>)</td><td><code>v0.10</code></td>
+              <td data-i18n="matrix.capSafari" data-i18n-html>Safari (<code>safaridriver</code>)</td><td><code>v0.10</code></td>
               <td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-no">—</td>
             </tr>
             <tr data-version="10">
-              <td>Selenium Grid (<code>--endpoint</code>)</td><td><code>v0.10</code></td>
+              <td data-i18n="matrix.capGrid" data-i18n-html>Selenium Grid (<code>--endpoint</code>)</td><td><code>v0.10</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
             <tr data-version="10">
-              <td>custom browser / driver binary</td><td><code>v0.10</code></td>
+              <td data-i18n="matrix.capCustomBinary">custom browser / driver binary</td><td><code>v0.10</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
             <tr data-version="10">
-              <td>Edge IE mode</td><td><code>v0.10</code></td>
+              <td data-i18n="matrix.capEdgeIe">Edge IE mode</td><td><code>v0.10</code></td>
               <td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td><td class="matrix-cell-planned">○</td>
             </tr>
             <tr data-version="10">
-              <td>cloud browsers (Browserbase / Sauce / BrowserStack)</td><td><code>v0.10</code></td>
+              <td data-i18n="matrix.capCloudBrowsers">cloud browsers (Browserbase / Sauce / BrowserStack)</td><td><code>v0.10</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
             <tr data-version="10">
-              <td>pdf export</td><td><code>v0.10</code></td>
+              <td data-i18n="matrix.capPdf">pdf export</td><td><code>v0.10</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td>
             </tr>
 
-            <tr class="group-row"><td colspan="7">Recording (v0.11)</td></tr>
+            <tr class="group-row"><td colspan="7" data-i18n="matrix.groupRecording">Recording (v0.11)</td></tr>
             <tr data-version="11">
-              <td>record mode → test file</td><td><code>v0.11</code></td>
+              <td data-i18n="matrix.capRecord">record mode → test file</td><td><code>v0.11</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
             <tr data-version="11">
-              <td>tracing start / stop</td><td><code>v0.11</code></td>
+              <td data-i18n="matrix.capTracing">tracing start / stop</td><td><code>v0.11</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-partial">◐</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td>
             </tr>
             <tr data-version="11">
-              <td>video capture</td><td><code>v0.11</code></td>
+              <td data-i18n="matrix.capVideo">video capture</td><td><code>v0.11</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-partial">◐</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td>
             </tr>
             <tr data-version="11">
-              <td>show dashboard / annotate</td><td><code>v0.11</code></td>
+              <td data-i18n="matrix.capShowDash">show dashboard / annotate</td><td><code>v0.11</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
 
-            <tr class="group-row"><td colspan="7">VSCode Extension (v0.12)</td></tr>
+            <tr class="group-row"><td colspan="7" data-i18n="matrix.groupVscode">VSCode Extension (v0.12)</td></tr>
             <tr data-version="12">
-              <td>task provider / webview</td><td><code>v0.12</code></td>
+              <td data-i18n="matrix.capTaskProvider">task provider / webview</td><td><code>v0.12</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
             <tr data-version="12">
-              <td>MCP auto-registration / attach</td><td><code>v0.12</code></td>
+              <td data-i18n="matrix.capMcpAutoReg">MCP auto-registration / attach</td><td><code>v0.12</code></td>
               <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <div class="env-note" style="max-width: 100%; margin-top: 24px;">
+      <div class="env-note" style="max-width: 100%; margin-top: 24px;" data-i18n="matrix.notes" data-i18n-html>
         <strong>Notes.</strong> Safari has no headless, BiDi, or CDP support — only basic navigation, interaction, screenshot, storage, and iframe work. Edge IE mode is Windows Enterprise only; the IE engine lacks Shadow DOM, emulation, BiDi interception, and recording — capabilities marked <span class="matrix-cell-partial">◐</span> run in a degraded form (Actions chain steps, partial CDP for console/network monitoring). Capabilities marked <span class="matrix-cell-planned">○</span> are scheduled but not yet shipped.
       </div>
 
       <div class="doc-grid" style="max-width: 760px; margin-top: 48px;">
         <a href="index.html" class="doc-card">
           <div class="doc-card-icon">🗺️</div>
-          <h3>Timeline</h3>
-          <p>The version-by-version narrative with classification badges and guiding principles.</p>
-          <span class="doc-card-arrow">View timeline →</span>
+          <h3 data-i18n="rm.timeline">Timeline</h3>
+          <p data-i18n="matrix.timelineCardDesc">The version-by-version narrative with classification badges and guiding principles.</p>
+          <span class="doc-card-arrow" data-i18n="matrix.viewTimeline">View timeline →</span>
         </a>
         <a href="changelog.html" class="doc-card">
           <div class="doc-card-icon">📋</div>
-          <h3>Changelog</h3>
-          <p>Detailed per-release notes with full feature lists and shipped vs. planned status.</p>
-          <span class="doc-card-arrow">Read changelog →</span>
+          <h3 data-i18n="rm.changelog">Changelog</h3>
+          <p data-i18n="matrix.changelogCardDesc">Detailed per-release notes with full feature lists and shipped vs. planned status.</p>
+          <span class="doc-card-arrow" data-i18n="rm.readChangelog">Read changelog →</span>
         </a>
       </div>
     </div>
@@ -371,6 +371,7 @@
   </footer>
 
   <script src="../assets/js/nav.js"></script>
+  <script src="../assets/js/i18n.js"></script>
   <script src="../assets/js/matrix-filter.js"></script>
 </body>
 </html>

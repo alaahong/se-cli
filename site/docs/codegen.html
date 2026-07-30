@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="se-cli code generation — per-action Selenium codegen, By.role() vs By.css() locators, and migrating into Vitest/Jest tests." />
+  <meta name="description" data-i18n="codegen.metaDesc" content="se-cli code generation — per-action Selenium codegen, By.role() vs By.css() locators, and migrating into Vitest/Jest tests." />
   <meta name="theme-color" content="#22C55E" />
-  <title>Code Generation — se-cli Docs</title>
+  <title data-i18n="codegen.title">Code Generation — se-cli Docs</title>
   <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
   <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -37,31 +37,31 @@
 
   <div class="docs-layout">
     <aside class="docs-sidebar">
-      <h4>Get started</h4>
+      <h4 data-i18n="sidebar.getStarted">Get started</h4>
       <a href="getting-started.html">Getting Started</a>
       <a href="commands.html">Command Reference</a>
       <a href="configuration.html">Configuration</a>
-      <h4>Guides</h4>
+      <h4 data-i18n="sidebar.guides">Guides</h4>
       <a href="sessions.html">Sessions &amp; Browsers</a>
       <a href="storage-state.html">Storage &amp; State</a>
       <a href="snapshots-refs.html">Snapshots &amp; Refs</a>
       <a href="codegen.html" class="current">Code Generation</a>
       <a href="ai-agents.html">AI Agents</a>
-      <h4>Reference</h4>
+      <h4 data-i18n="sidebar.reference">Reference</h4>
       <a href="troubleshooting.html">Troubleshooting</a>
     </aside>
 
     <main class="docs-content">
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="../index.html">Home</a>
+        <a href="../index.html" data-i18n="bc.home">Home</a>
         <span class="breadcrumb-sep">/</span>
-        <a href="index.html">Docs</a>
+        <a href="index.html" data-i18n="bc.docs">Docs</a>
         <span class="breadcrumb-sep">/</span>
-        <span class="breadcrumb-current">Code Generation</span>
+        <span class="breadcrumb-current" data-i18n="bc.codegen">Code Generation</span>
       </nav>
 
-      <h2 id="per-action">Per-action code generation</h2>
-      <p>Every interaction command appends a <code>### Ran Selenium code</code> block to its response, showing the exact Selenium call that produced the same effect. Copy it straight into a test file — no translation step.</p>
+      <h2 id="per-action" data-i18n="codegen.perActionTitle">Per-action code generation</h2>
+      <p data-i18n="codegen.perActionDesc" data-i18n-html>Every interaction command appends a <code>### Ran Selenium code</code> block to its response, showing the exact Selenium call that produced the same effect. Copy it straight into a test file — no translation step.</p>
       <div class="example-grid">
         <div class="example-card">
           <div class="example-header"><div class="example-header-icon">👆</div><h3>click</h3></div>
@@ -99,8 +99,8 @@ await new Select(el)
         </div>
       </div>
 
-      <h2 id="generate-locator">generate-locator <span class="badge badge-marginal">Planned · v0.9</span></h2>
-      <p>The planned <code>generate-locator</code> command (v0.9) produces the best available locator expression for a ref, preferring <code>By.role()</code> and falling back to <code>By.css()</code> or <code>By.xpath()</code>. This pairs with role-based code generation to emit production-grade locators instead of the internal <code>data-se-ref</code> selector.</p>
+      <h2 id="generate-locator" data-i18n="codegen.genLocatorTitle" data-i18n-html>generate-locator <span class="badge badge-marginal">Planned · v0.9</span></h2>
+      <p data-i18n="codegen.genLocatorDesc" data-i18n-html>The planned <code>generate-locator</code> command (v0.9) produces the best available locator expression for a ref, preferring <code>By.role()</code> and falling back to <code>By.css()</code> or <code>By.xpath()</code>. This pairs with role-based code generation to emit production-grade locators instead of the internal <code>data-se-ref</code> selector.</p>
       <div class="code-block">
         <div class="code-header"><span class="code-lang">planned · v0.9</span></div>
 <pre><code>$ se-cli generate-locator e2
@@ -110,23 +110,23 @@ $ se-cli generate-locator e5
 # By.css("input[name='email']")</code></pre>
       </div>
 
-      <h2 id="locators">By.role() vs By.css()</h2>
-      <p>se-cli's default codegen emits <code>By.css('[data-se-ref="eN"]')</code> because that attribute is guaranteed present after a snapshot. v0.9 adds role-based codegen that emits <code>By.role(...)</code> for more resilient tests. The comparison below covers the tradeoffs.</p>
+      <h2 id="locators" data-i18n="codegen.locatorsTitle">By.role() vs By.css()</h2>
+      <p data-i18n="codegen.locatorsDesc" data-i18n-html>se-cli's default codegen emits <code>By.css('[data-se-ref="eN"]')</code> because that attribute is guaranteed present after a snapshot. v0.9 adds role-based codegen that emits <code>By.role(...)</code> for more resilient tests. The comparison below covers the tradeoffs.</p>
       <div class="table-wrap">
         <table class="cmp-table">
-          <thead><tr><th>Aspect</th><th>By.role()</th><th>By.css()</th></tr></thead>
+          <thead><tr><th data-i18n="codegen.thAspect">Aspect</th><th>By.role()</th><th>By.css()</th></tr></thead>
           <tbody>
-            <tr><td>Resilience</td><td>Survives DOM/class changes</td><td>Breaks on refactor</td></tr>
-            <tr><td>Readability</td><td>High — intent is explicit</td><td>Low — implementation detail</td></tr>
-            <tr><td>Snapshot parity</td><td>Mirrors the aria tree directly</td><td>Decoupled from roles</td></tr>
-            <tr><td>Availability</td><td>v0.9 (role-based codegen)</td><td>v0.1 (default)</td></tr>
-            <tr><td>Edge IE mode</td><td>Disabled — keep By.css/By.xpath</td><td>Supported</td></tr>
+            <tr><td data-i18n="codegen.cmpResilience">Resilience</td><td data-i18n="codegen.cmpResilienceRole">Survives DOM/class changes</td><td data-i18n="codegen.cmpResilienceCss">Breaks on refactor</td></tr>
+            <tr><td data-i18n="codegen.cmpReadability">Readability</td><td data-i18n="codegen.cmpReadabilityRole">High — intent is explicit</td><td data-i18n="codegen.cmpReadabilityCss">Low — implementation detail</td></tr>
+            <tr><td data-i18n="codegen.cmpSnapParity">Snapshot parity</td><td data-i18n="codegen.cmpSnapParityRole">Mirrors the aria tree directly</td><td data-i18n="codegen.cmpSnapParityCss">Decoupled from roles</td></tr>
+            <tr><td data-i18n="codegen.cmpAvailability">Availability</td><td data-i18n="codegen.cmpAvailabilityRole">v0.9 (role-based codegen)</td><td data-i18n="codegen.cmpAvailabilityCss">v0.1 (default)</td></tr>
+            <tr><td data-i18n="codegen.cmpIeMode">Edge IE mode</td><td data-i18n="codegen.cmpIeModeRole">Disabled — keep By.css/By.xpath</td><td data-i18n="codegen.cmpIeModeCss">Supported</td></tr>
           </tbody>
         </table>
       </div>
 
-      <h2 id="migrate">Migrating into Vitest / Jest</h2>
-      <p>The emitted snippets are plain Selenium WebDriver calls. Drop them into a Vitest or Jest test, set up the driver in a shared beforeAll, and you have a runnable suite.</p>
+      <h2 id="migrate" data-i18n="codegen.migrateTitle">Migrating into Vitest / Jest</h2>
+      <p data-i18n="codegen.migrateDesc">The emitted snippets are plain Selenium WebDriver calls. Drop them into a Vitest or Jest test, set up the driver in a shared beforeAll, and you have a runnable suite.</p>
       <div class="code-block">
         <div class="code-header"><span class="code-lang">ts · login.test.ts</span></div>
 <pre><code>import { describe, it, beforeAll, afterAll } from 'vitest';
@@ -152,7 +152,7 @@ describe('login flow', () => {
   });
 });</code></pre>
       </div>
-      <div class="alert alert-info"><span class="alert-icon">i</span><div><strong>Tip.</strong> <code>data-se-ref</code> attributes are added by se-cli's snapshot script. In a standalone test suite either keep them in the page or swap to <code>By.role()</code> / semantic selectors via the v0.9 <code>generate-locator</code> command.</div></div>
+      <div class="alert alert-info"><span class="alert-icon">i</span><div data-i18n="codegen.tipAlert" data-i18n-html><strong>Tip.</strong> <code>data-se-ref</code> attributes are added by se-cli's snapshot script. In a standalone test suite either keep them in the page or swap to <code>By.role()</code> / semantic selectors via the v0.9 <code>generate-locator</code> command.</div></div>
     </main>
   </div>
 
@@ -175,5 +175,6 @@ describe('login flow', () => {
   </footer>
 
   <script src="../assets/js/nav.js"></script>
+  <script src="../assets/js/i18n.js"></script>
 </body>
 </html>
