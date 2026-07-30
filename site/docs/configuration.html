@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="se-cli configuration — Selenium environment variables, driver paths, the v0.4 four-tier config layer, and the .se-cli.json schema." />
+  <meta name="description" content="se-cli configuration — Selenium environment variables, driver paths, the v0.4 four-tier config layer, and the .se-cli.json schema." data-i18n="cfg.metaDesc" />
   <meta name="theme-color" content="#22C55E" />
-  <title>Configuration — se-cli Docs</title>
+  <title data-i18n="cfg.pageTitle">Configuration — se-cli Docs</title>
   <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
   <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -37,31 +37,31 @@
 
   <div class="docs-layout">
     <aside class="docs-sidebar">
-      <h4>Get started</h4>
-      <a href="getting-started.html">Getting Started</a>
-      <a href="commands.html">Command Reference</a>
-      <a href="configuration.html" class="current">Configuration</a>
-      <h4>Guides</h4>
-      <a href="sessions.html">Sessions &amp; Browsers</a>
-      <a href="storage-state.html">Storage &amp; State</a>
-      <a href="snapshots-refs.html">Snapshots &amp; Refs</a>
-      <a href="codegen.html">Code Generation</a>
-      <a href="ai-agents.html">AI Agents</a>
-      <h4>Reference</h4>
-      <a href="troubleshooting.html">Troubleshooting</a>
+      <h4 data-i18n="sidebar.getStarted">Get started</h4>
+      <a href="getting-started.html" data-i18n="bc.gettingStarted">Getting Started</a>
+      <a href="commands.html" data-i18n="bc.commands">Command Reference</a>
+      <a href="configuration.html" class="current" data-i18n="bc.configuration">Configuration</a>
+      <h4 data-i18n="sidebar.guides">Guides</h4>
+      <a href="sessions.html" data-i18n="bc.sessions">Sessions &amp; Browsers</a>
+      <a href="storage-state.html" data-i18n="bc.storage">Storage &amp; State</a>
+      <a href="snapshots-refs.html" data-i18n="bc.snapshots">Snapshots &amp; Refs</a>
+      <a href="codegen.html" data-i18n="bc.codegen">Code Generation</a>
+      <a href="ai-agents.html" data-i18n="bc.ai">AI Agents</a>
+      <h4 data-i18n="sidebar.reference">Reference</h4>
+      <a href="troubleshooting.html" data-i18n="bc.troubleshooting">Troubleshooting</a>
     </aside>
 
     <main class="docs-content">
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="../index.html">Home</a>
+        <a href="../index.html" data-i18n="bc.home">Home</a>
         <span class="breadcrumb-sep">/</span>
-        <a href="index.html">Docs</a>
+        <a href="index.html" data-i18n="bc.docs">Docs</a>
         <span class="breadcrumb-sep">/</span>
-        <span class="breadcrumb-current">Configuration</span>
+        <span class="breadcrumb-current" data-i18n="bc.configuration">Configuration</span>
       </nav>
 
-      <h2 id="v04-config-layer">v0.4 Wait &amp; Retry Configuration Layer</h2>
-      <p>The v0.4 release surfaces Selenium's implicit/explicit wait, pageLoad/script timeout, and <code>ExpectedConditions</code> as CLI-native configuration. Every capability that previously required code (explicit waits, <code>ExpectedConditions</code>, Actions chains, <code>setScriptTimeout</code>) is exposed through a four-tier priority — there is no "code writing" from the CLI.</p>
+      <h2 id="v04-config-layer" data-i18n="cfg.v04Heading">v0.4 Wait &amp; Retry Configuration Layer</h2>
+      <p data-i18n="cfg.v04Text" data-i18n-html>The v0.4 release surfaces Selenium's implicit/explicit wait, pageLoad/script timeout, and <code>ExpectedConditions</code> as CLI-native configuration. Every capability that previously required code (explicit waits, <code>ExpectedConditions</code>, Actions chains, <code>setScriptTimeout</code>) is exposed through a four-tier priority — there is no "code writing" from the CLI.</p>
 
       <div class="arch-diagram">
 <pre><code>Priority (high → low)
@@ -77,23 +77,23 @@
   └───────────────────────────┘</code></pre>
       </div>
 
-      <h3 id="wait-retry-flags">Wait / retry flags</h3>
+      <h3 id="wait-retry-flags" data-i18n="cfg.waitRetryHeading">Wait / retry flags</h3>
       <table class="env-table">
-        <thead><tr><th>Flag</th><th>Description</th><th>Default</th></tr></thead>
+        <thead><tr><th data-i18n="cfg.col.flag">Flag</th><th data-i18n="cmd.col.description">Description</th><th data-i18n="cfg.col.default">Default</th></tr></thead>
         <tbody>
-          <tr><td><code>--timeout=&lt;ms&gt;</code></td><td class="env-desc">Per-command explicit-wait timeout</td><td class="env-example">5000</td></tr>
-          <tr><td><code>--wait=&lt;state&gt;</code></td><td class="env-desc">visible | hidden | enabled | disabled | stable | attached | none | auto</td><td class="env-example">auto</td></tr>
-          <tr><td><code>--retry=&lt;n&gt;</code></td><td class="env-desc">Failure retry count (<code>-1</code> = until timeout)</td><td class="env-example">0</td></tr>
-          <tr><td><code>--retry-interval=&lt;ms&gt;</code></td><td class="env-desc">Polling interval</td><td class="env-example">100</td></tr>
-          <tr><td><code>--implicit-wait=&lt;ms&gt;</code></td><td class="env-desc">Driver implicit wait (discouraged but compatible)</td><td class="env-example">0</td></tr>
-          <tr><td><code>--page-load-timeout=&lt;ms&gt;</code></td><td class="env-desc"><code>driver.manage().timeouts().pageLoadTimeout()</code></td><td class="env-example">30000</td></tr>
-          <tr><td><code>--script-timeout=&lt;ms&gt;</code></td><td class="env-desc"><code>setScriptTimeout</code> (affects async <code>eval</code>)</td><td class="env-example">30000</td></tr>
-          <tr><td><code>--no-wait</code></td><td class="env-desc">Shorthand for <code>--wait=none --timeout=0</code> (precise-timing scenarios)</td><td class="env-example">—</td></tr>
+          <tr><td><code>--timeout=&lt;ms&gt;</code></td><td class="env-desc" data-i18n="cfg.wait.timeout">Per-command explicit-wait timeout</td><td class="env-example">5000</td></tr>
+          <tr><td><code>--wait=&lt;state&gt;</code></td><td class="env-desc" data-i18n="cfg.wait.wait">visible | hidden | enabled | disabled | stable | attached | none | auto</td><td class="env-example">auto</td></tr>
+          <tr><td><code>--retry=&lt;n&gt;</code></td><td class="env-desc" data-i18n="cfg.wait.retry" data-i18n-html>Failure retry count (<code>-1</code> = until timeout)</td><td class="env-example">0</td></tr>
+          <tr><td><code>--retry-interval=&lt;ms&gt;</code></td><td class="env-desc" data-i18n="cfg.wait.retryInterval">Polling interval</td><td class="env-example">100</td></tr>
+          <tr><td><code>--implicit-wait=&lt;ms&gt;</code></td><td class="env-desc" data-i18n="cfg.wait.implicit">Driver implicit wait (discouraged but compatible)</td><td class="env-example">0</td></tr>
+          <tr><td><code>--page-load-timeout=&lt;ms&gt;</code></td><td class="env-desc" data-i18n="cfg.wait.pageLoad" data-i18n-html><code>driver.manage().timeouts().pageLoadTimeout()</code></td><td class="env-example">30000</td></tr>
+          <tr><td><code>--script-timeout=&lt;ms&gt;</code></td><td class="env-desc" data-i18n="cfg.wait.script" data-i18n-html><code>setScriptTimeout</code> (affects async <code>eval</code>)</td><td class="env-example">30000</td></tr>
+          <tr><td><code>--no-wait</code></td><td class="env-desc" data-i18n="cfg.wait.noWait" data-i18n-html>Shorthand for <code>--wait=none --timeout=0</code> (precise-timing scenarios)</td><td class="env-example">—</td></tr>
         </tbody>
       </table>
 
-      <h3 id="config-schema">Config file schema</h3>
-      <p>The config file lives at <code>.se-cli.json</code> in the project root or <code>~/.config/se-cli/config.json</code> for user-wide settings. The <code>perCommand</code> block applies the wait strategy per command type.</p>
+      <h3 id="config-schema" data-i18n="cfg.schemaHeading">Config file schema</h3>
+      <p data-i18n="cfg.schemaText" data-i18n-html>The config file lives at <code>.se-cli.json</code> in the project root or <code>~/.config/se-cli/config.json</code> for user-wide settings. The <code>perCommand</code> block applies the wait strategy per command type.</p>
       <div class="code-block">
         <div class="code-header"><span class="code-lang">.se-cli.json</span></div>
 <pre><code>{
@@ -108,122 +108,122 @@
 }</code></pre>
       </div>
 
-      <h3 id="config-commands">Config commands</h3>
+      <h3 id="config-commands" data-i18n="cfg.cmdHeading">Config commands</h3>
       <table class="cmd-table">
-        <thead><tr><th>Command</th><th>Description</th></tr></thead>
+        <thead><tr><th data-i18n="cmd.col.command">Command</th><th data-i18n="cmd.col.description">Description</th></tr></thead>
         <tbody>
-          <tr><td><code>config get &lt;key&gt;</code></td><td>Show a config value and its source</td></tr>
-          <tr><td><code>config set &lt;key&gt; &lt;value&gt;</code></td><td>Write a value to the config file</td></tr>
-          <tr><td><code>config list</code></td><td>List every config item with its source (flag / env / file / default)</td></tr>
-          <tr><td><code>config init</code></td><td>Generate a template config file</td></tr>
+          <tr><td><code>config get &lt;key&gt;</code></td><td data-i18n="cfg.cmd.get">Show a config value and its source</td></tr>
+          <tr><td><code>config set &lt;key&gt; &lt;value&gt;</code></td><td data-i18n="cfg.cmd.set">Write a value to the config file</td></tr>
+          <tr><td><code>config list</code></td><td data-i18n="cfg.cmd.list">List every config item with its source (flag / env / file / default)</td></tr>
+          <tr><td><code>config init</code></td><td data-i18n="cfg.cmd.init">Generate a template config file</td></tr>
         </tbody>
       </table>
-      <div class="alert alert-info"><span class="alert-icon">i</span><div><strong>Code generation reflects the strategy.</strong> The emitted Selenium code mirrors the effective wait, e.g. <code>await driver.wait(until.elementIsVisible(el), 5000);</code></div></div>
+      <div class="alert alert-info"><span class="alert-icon">i</span><div data-i18n="cfg.alert.codegen" data-i18n-html><strong>Code generation reflects the strategy.</strong> The emitted Selenium code mirrors the effective wait, e.g. <code>await driver.wait(until.elementIsVisible(el), 5000);</code></div></div>
 
-      <h2 id="env-vars">Environment variables</h2>
-      <p>Selenium ecosystem environment variables, driver paths, and configuration tips for se-cli users.</p>
+      <h2 id="env-vars" data-i18n="cfg.envVarsHeading">Environment variables</h2>
+      <p data-i18n="cfg.envVarsText">Selenium ecosystem environment variables, driver paths, and configuration tips for se-cli users.</p>
 
       <div class="env-group">
-        <div class="env-group-title"><span class="env-group-title-icon">🔧</span> se-cli Environment Variables</div>
+        <div class="env-group-title"><span class="env-group-title-icon">🔧</span> <span data-i18n="cfg.group.seCli">se-cli Environment Variables</span></div>
         <table class="env-table">
-          <thead><tr><th>Variable</th><th>Description</th><th>Example</th></tr></thead>
+          <thead><tr><th data-i18n="cfg.col.variable">Variable</th><th data-i18n="cmd.col.description">Description</th><th data-i18n="cfg.col.example">Example</th></tr></thead>
           <tbody>
-            <tr><td><code>SE_CLI_SESSION</code></td><td class="env-desc">Default session name when <code>-s</code> flag is not provided</td><td class="env-example">my-session</td></tr>
-            <tr><td><code>SE_CLI_E2E</code></td><td class="env-desc">Set to <code>1</code> to run integration tests (requires real browsers)</td><td class="env-example">1</td></tr>
-            <tr><td><code>SE_CLI_TEST_CHROME</code></td><td class="env-desc">Set to <code>1</code> to run Chrome integration test cases</td><td class="env-example">1</td></tr>
-            <tr><td><code>SE_CLI_TEST_EDGE</code></td><td class="env-desc">Set to <code>1</code> to run Edge integration test cases</td><td class="env-example">1</td></tr>
-            <tr><td><code>SE_CLI_TEST_FIREFOX</code></td><td class="env-desc">Set to <code>1</code> to run Firefox integration test cases</td><td class="env-example">1</td></tr>
+            <tr><td><code>SE_CLI_SESSION</code></td><td class="env-desc" data-i18n="cfg.env.session" data-i18n-html>Default session name when <code>-s</code> flag is not provided</td><td class="env-example">my-session</td></tr>
+            <tr><td><code>SE_CLI_E2E</code></td><td class="env-desc" data-i18n="cfg.env.e2e" data-i18n-html>Set to <code>1</code> to run integration tests (requires real browsers)</td><td class="env-example">1</td></tr>
+            <tr><td><code>SE_CLI_TEST_CHROME</code></td><td class="env-desc" data-i18n="cfg.env.testChrome" data-i18n-html>Set to <code>1</code> to run Chrome integration test cases</td><td class="env-example">1</td></tr>
+            <tr><td><code>SE_CLI_TEST_EDGE</code></td><td class="env-desc" data-i18n="cfg.env.testEdge" data-i18n-html>Set to <code>1</code> to run Edge integration test cases</td><td class="env-example">1</td></tr>
+            <tr><td><code>SE_CLI_TEST_FIREFOX</code></td><td class="env-desc" data-i18n="cfg.env.testFirefox" data-i18n-html>Set to <code>1</code> to run Firefox integration test cases</td><td class="env-example">1</td></tr>
           </tbody>
         </table>
       </div>
 
       <div class="env-group">
-        <div class="env-group-title"><span class="env-group-title-icon">⚙️</span> Selenium Manager Variables</div>
-        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;"><code>selenium-manager</code> (bundled with <code>selenium-webdriver</code>) auto-downloads drivers. Priority: CLI args &gt; config file (<code>~/.cache/selenium/se-config.toml</code>) &gt; env vars.</p>
+        <div class="env-group-title"><span class="env-group-title-icon">⚙️</span> <span data-i18n="cfg.group.seleniumMgr">Selenium Manager Variables</span></div>
+        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;" data-i18n="cfg.sm.intro" data-i18n-html><code>selenium-manager</code> (bundled with <code>selenium-webdriver</code>) auto-downloads drivers. Priority: CLI args &gt; config file (<code>~/.cache/selenium/se-config.toml</code>) &gt; env vars.</p>
         <table class="env-table">
-          <thead><tr><th>Variable</th><th>Description</th><th>Example</th></tr></thead>
+          <thead><tr><th data-i18n="cfg.col.variable">Variable</th><th data-i18n="cmd.col.description">Description</th><th data-i18n="cfg.col.example">Example</th></tr></thead>
           <tbody>
-            <tr><td><code>SE_BROWSER</code></td><td class="env-desc">Browser name for driver resolution</td><td class="env-example">chrome</td></tr>
-            <tr><td><code>SE_DRIVER</code></td><td class="env-desc">Driver name to use</td><td class="env-example">chromedriver</td></tr>
-            <tr><td><code>SE_BROWSER_VERSION</code></td><td class="env-desc">Pin browser major version</td><td class="env-example">120, beta, dev</td></tr>
-            <tr><td><code>SE_DRIVER_VERSION</code></td><td class="env-desc">Pin driver version</td><td class="env-example">120.0.6099.71</td></tr>
-            <tr><td><code>SE_BROWSER_PATH</code></td><td class="env-desc">Absolute path to browser binary (for version detection)</td><td class="env-example">/usr/bin/google-chrome</td></tr>
-            <tr><td><code>SE_DRIVER_MIRROR_URL</code></td><td class="env-desc">Mirror URL for driver downloads (useful in China)</td><td class="env-example">https://npmmirror.com/mirrors/chromedriver/</td></tr>
-            <tr><td><code>SE_BROWSER_MIRROR_URL</code></td><td class="env-desc">Mirror URL for browser downloads</td><td class="env-example">https://mirror.example.com/firefox/</td></tr>
-            <tr><td><code>SE_PROXY</code></td><td class="env-desc">HTTP proxy for network requests</td><td class="env-example">user:pass@proxy:8080</td></tr>
-            <tr><td><code>SE_TIMEOUT</code></td><td class="env-desc">Network request timeout in seconds</td><td class="env-example">600</td></tr>
-            <tr><td><code>SE_OFFLINE</code></td><td class="env-desc">Disable network requests and downloads</td><td class="env-example">true</td></tr>
-            <tr><td><code>SE_CACHE_PATH</code></td><td class="env-desc">Local cache path for drivers and browsers</td><td class="env-example">~/.cache/selenium</td></tr>
-            <tr><td><code>SE_SKIP_DRIVER_IN_PATH</code></td><td class="env-desc">Ignore drivers found in system PATH</td><td class="env-example">true</td></tr>
-            <tr><td><code>SE_SKIP_BROWSER_IN_PATH</code></td><td class="env-desc">Ignore browsers found in system PATH</td><td class="env-example">true</td></tr>
-            <tr><td><code>SE_AVOID_STATS</code></td><td class="env-desc">Disable anonymous usage statistics reporting</td><td class="env-example">true</td></tr>
-            <tr><td><code>SE_DEBUG</code></td><td class="env-desc">Enable DEBUG-level Selenium Manager logs</td><td class="env-example">true</td></tr>
+            <tr><td><code>SE_BROWSER</code></td><td class="env-desc" data-i18n="cfg.sm.browser">Browser name for driver resolution</td><td class="env-example">chrome</td></tr>
+            <tr><td><code>SE_DRIVER</code></td><td class="env-desc" data-i18n="cfg.sm.driver">Driver name to use</td><td class="env-example">chromedriver</td></tr>
+            <tr><td><code>SE_BROWSER_VERSION</code></td><td class="env-desc" data-i18n="cfg.sm.browserVersion">Pin browser major version</td><td class="env-example">120, beta, dev</td></tr>
+            <tr><td><code>SE_DRIVER_VERSION</code></td><td class="env-desc" data-i18n="cfg.sm.driverVersion">Pin driver version</td><td class="env-example">120.0.6099.71</td></tr>
+            <tr><td><code>SE_BROWSER_PATH</code></td><td class="env-desc" data-i18n="cfg.sm.browserPath">Absolute path to browser binary (for version detection)</td><td class="env-example">/usr/bin/google-chrome</td></tr>
+            <tr><td><code>SE_DRIVER_MIRROR_URL</code></td><td class="env-desc" data-i18n="cfg.sm.driverMirror">Mirror URL for driver downloads (useful in China)</td><td class="env-example">https://npmmirror.com/mirrors/chromedriver/</td></tr>
+            <tr><td><code>SE_BROWSER_MIRROR_URL</code></td><td class="env-desc" data-i18n="cfg.sm.browserMirror">Mirror URL for browser downloads</td><td class="env-example">https://mirror.example.com/firefox/</td></tr>
+            <tr><td><code>SE_PROXY</code></td><td class="env-desc" data-i18n="cfg.sm.proxy">HTTP proxy for network requests</td><td class="env-example">user:pass@proxy:8080</td></tr>
+            <tr><td><code>SE_TIMEOUT</code></td><td class="env-desc" data-i18n="cfg.sm.timeout">Network request timeout in seconds</td><td class="env-example">600</td></tr>
+            <tr><td><code>SE_OFFLINE</code></td><td class="env-desc" data-i18n="cfg.sm.offline">Disable network requests and downloads</td><td class="env-example">true</td></tr>
+            <tr><td><code>SE_CACHE_PATH</code></td><td class="env-desc" data-i18n="cfg.sm.cachePath">Local cache path for drivers and browsers</td><td class="env-example">~/.cache/selenium</td></tr>
+            <tr><td><code>SE_SKIP_DRIVER_IN_PATH</code></td><td class="env-desc" data-i18n="cfg.sm.skipDriverPath">Ignore drivers found in system PATH</td><td class="env-example">true</td></tr>
+            <tr><td><code>SE_SKIP_BROWSER_IN_PATH</code></td><td class="env-desc" data-i18n="cfg.sm.skipBrowserPath">Ignore browsers found in system PATH</td><td class="env-example">true</td></tr>
+            <tr><td><code>SE_AVOID_STATS</code></td><td class="env-desc" data-i18n="cfg.sm.avoidStats">Disable anonymous usage statistics reporting</td><td class="env-example">true</td></tr>
+            <tr><td><code>SE_DEBUG</code></td><td class="env-desc" data-i18n="cfg.sm.debug">Enable DEBUG-level Selenium Manager logs</td><td class="env-example">true</td></tr>
           </tbody>
         </table>
       </div>
 
       <div class="env-group">
-        <div class="env-group-title"><span class="env-group-title-icon">📁</span> Driver Path System Properties</div>
-        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;">Traditional driver location via JVM system properties. When set, Selenium Manager won't intervene (acts as fallback only). se-cli passes these to the underlying <code>selenium-webdriver</code> Builder.</p>
+        <div class="env-group-title"><span class="env-group-title-icon">📁</span> <span data-i18n="cfg.group.driverPath">Driver Path System Properties</span></div>
+        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;" data-i18n="cfg.dp.intro" data-i18n-html>Traditional driver location via JVM system properties. When set, Selenium Manager won't intervene (acts as fallback only). se-cli passes these to the underlying <code>selenium-webdriver</code> Builder.</p>
         <table class="env-table">
-          <thead><tr><th>Property</th><th>Description</th><th>Example</th></tr></thead>
+          <thead><tr><th data-i18n="cfg.col.property">Property</th><th data-i18n="cmd.col.description">Description</th><th data-i18n="cfg.col.example">Example</th></tr></thead>
           <tbody>
-            <tr><td><code>webdriver.chrome.driver</code></td><td class="env-desc">Path to ChromeDriver binary</td><td class="env-example">/usr/local/bin/chromedriver</td></tr>
-            <tr><td><code>webdriver.gecko.driver</code></td><td class="env-desc">Path to GeckoDriver (Firefox) binary</td><td class="env-example">/usr/local/bin/geckodriver</td></tr>
-            <tr><td><code>webdriver.edge.driver</code></td><td class="env-desc">Path to Microsoft EdgeDriver binary</td><td class="env-example">C:\drivers\msedgedriver.exe</td></tr>
-            <tr><td><code>webdriver.ie.driver</code></td><td class="env-desc">Path to IEDriverServer binary</td><td class="env-example">C:\drivers\IEDriverServer.exe</td></tr>
+            <tr><td><code>webdriver.chrome.driver</code></td><td class="env-desc" data-i18n="cfg.dp.chrome">Path to ChromeDriver binary</td><td class="env-example">/usr/local/bin/chromedriver</td></tr>
+            <tr><td><code>webdriver.gecko.driver</code></td><td class="env-desc" data-i18n="cfg.dp.gecko">Path to GeckoDriver (Firefox) binary</td><td class="env-example">/usr/local/bin/geckodriver</td></tr>
+            <tr><td><code>webdriver.edge.driver</code></td><td class="env-desc" data-i18n="cfg.dp.edge">Path to Microsoft EdgeDriver binary</td><td class="env-example">C:\drivers\msedgedriver.exe</td></tr>
+            <tr><td><code>webdriver.ie.driver</code></td><td class="env-desc" data-i18n="cfg.dp.ie">Path to IEDriverServer binary</td><td class="env-example">C:\drivers\IEDriverServer.exe</td></tr>
           </tbody>
         </table>
-        <div class="env-note"><strong>Tip:</strong> On Node.js, set these before launching se-cli: <code>webdriver.chrome.driver=/path/to/chromedriver se-cli open https://example.com</code>. Or put the driver binary in your system <code>PATH</code> — Selenium Manager will find it automatically.</div>
+        <div class="env-note" data-i18n="cfg.dp.note" data-i18n-html><strong>Tip:</strong> On Node.js, set these before launching se-cli: <code>webdriver.chrome.driver=/path/to/chromedriver se-cli open https://example.com</code>. Or put the driver binary in your system <code>PATH</code> — Selenium Manager will find it automatically.</div>
       </div>
 
       <div class="env-group">
-        <div class="env-group-title"><span class="env-group-title-icon">🌐</span> Browser Binary Path Variables</div>
-        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;">When browsers are installed in non-default locations, use these variables to help Selenium Manager locate them.</p>
+        <div class="env-group-title"><span class="env-group-title-icon">🌐</span> <span data-i18n="cfg.group.browserBin">Browser Binary Path Variables</span></div>
+        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;" data-i18n="cfg.bb.intro">When browsers are installed in non-default locations, use these variables to help Selenium Manager locate them.</p>
         <table class="env-table">
-          <thead><tr><th>Variable</th><th>Description</th><th>Example</th></tr></thead>
+          <thead><tr><th data-i18n="cfg.col.variable">Variable</th><th data-i18n="cmd.col.description">Description</th><th data-i18n="cfg.col.example">Example</th></tr></thead>
           <tbody>
-            <tr><td><code>SE_BROWSER_PATH</code></td><td class="env-desc">Selenium Manager — browser binary absolute path</td><td class="env-example">C:\Program Files\Google\Chrome\Application\chrome.exe</td></tr>
-            <tr><td><code>CHROME_BIN</code></td><td class="env-desc">Chrome/Chromium binary path (recognized by some tools)</td><td class="env-example">/usr/bin/google-chrome-stable</td></tr>
-            <tr><td><code>CHROME_PATH</code></td><td class="env-desc">Alternative Chrome binary path variable</td><td class="env-example">/opt/google/chrome/chrome</td></tr>
-            <tr><td><code>FIREFOX_BIN</code></td><td class="env-desc">Firefox binary path</td><td class="env-example">/usr/bin/firefox</td></tr>
-            <tr><td><code>MOZ_HEADLESS</code></td><td class="env-desc">Firefox headless mode switch (recognized by Firefox itself)</td><td class="env-example">1</td></tr>
+            <tr><td><code>SE_BROWSER_PATH</code></td><td class="env-desc" data-i18n="cfg.bb.seBrowserPath">Selenium Manager — browser binary absolute path</td><td class="env-example">C:\Program Files\Google\Chrome\Application\chrome.exe</td></tr>
+            <tr><td><code>CHROME_BIN</code></td><td class="env-desc" data-i18n="cfg.bb.chromeBin">Chrome/Chromium binary path (recognized by some tools)</td><td class="env-example">/usr/bin/google-chrome-stable</td></tr>
+            <tr><td><code>CHROME_PATH</code></td><td class="env-desc" data-i18n="cfg.bb.chromePath">Alternative Chrome binary path variable</td><td class="env-example">/opt/google/chrome/chrome</td></tr>
+            <tr><td><code>FIREFOX_BIN</code></td><td class="env-desc" data-i18n="cfg.bb.firefoxBin">Firefox binary path</td><td class="env-example">/usr/bin/firefox</td></tr>
+            <tr><td><code>MOZ_HEADLESS</code></td><td class="env-desc" data-i18n="cfg.bb.mozHeadless">Firefox headless mode switch (recognized by Firefox itself)</td><td class="env-example">1</td></tr>
           </tbody>
         </table>
       </div>
 
       <div class="env-group">
-        <div class="env-group-title"><span class="env-group-title-icon">🔗</span> Remote WebDriver &amp; Grid Variables</div>
-        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;">For connecting to Selenium Grid or cloud providers (BrowserStack, Sauce Labs, etc.). se-cli's <code>--endpoint</code> flag for Grid attach is on the v0.10 roadmap.</p>
+        <div class="env-group-title"><span class="env-group-title-icon">🔗</span> <span data-i18n="cfg.group.remote">Remote WebDriver &amp; Grid Variables</span></div>
+        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;" data-i18n="cfg.rg.intro" data-i18n-html>For connecting to Selenium Grid or cloud providers (BrowserStack, Sauce Labs, etc.). se-cli's <code>--endpoint</code> flag for Grid attach is on the v0.10 roadmap.</p>
         <table class="env-table">
-          <thead><tr><th>Variable</th><th>Description</th><th>Example</th></tr></thead>
+          <thead><tr><th data-i18n="cfg.col.variable">Variable</th><th data-i18n="cmd.col.description">Description</th><th data-i18n="cfg.col.example">Example</th></tr></thead>
           <tbody>
-            <tr><td><code>SELENIUM_REMOTE_URL</code></td><td class="env-desc">Remote WebDriver server URL (Grid or SaaS)</td><td class="env-example">http://localhost:4444</td></tr>
-            <tr><td><code>SELENIUM_GRID_URL</code></td><td class="env-desc">Selenium Grid URL (alternative binding)</td><td class="env-example">http://grid.example.com:4444</td></tr>
-            <tr><td><code>SE_HUB_HOST</code></td><td class="env-desc">Grid Hub hostname</td><td class="env-example">grid.example.com</td></tr>
-            <tr><td><code>SE_HUB_PORT</code></td><td class="env-desc">Grid Hub port (default: 4444)</td><td class="env-example">4444</td></tr>
-            <tr><td><code>SE_NODE_MAX_SESSIONS</code></td><td class="env-desc">Max concurrent sessions per node (default: 1)</td><td class="env-example">4</td></tr>
-            <tr><td><code>SE_NODE_SESSION_TIMEOUT</code></td><td class="env-desc">Session idle timeout in seconds (default: 300)</td><td class="env-example">600</td></tr>
+            <tr><td><code>SELENIUM_REMOTE_URL</code></td><td class="env-desc" data-i18n="cfg.rg.remoteUrl">Remote WebDriver server URL (Grid or SaaS)</td><td class="env-example">http://localhost:4444</td></tr>
+            <tr><td><code>SELENIUM_GRID_URL</code></td><td class="env-desc" data-i18n="cfg.rg.gridUrl">Selenium Grid URL (alternative binding)</td><td class="env-example">http://grid.example.com:4444</td></tr>
+            <tr><td><code>SE_HUB_HOST</code></td><td class="env-desc" data-i18n="cfg.rg.hubHost">Grid Hub hostname</td><td class="env-example">grid.example.com</td></tr>
+            <tr><td><code>SE_HUB_PORT</code></td><td class="env-desc" data-i18n="cfg.rg.hubPort">Grid Hub port (default: 4444)</td><td class="env-example">4444</td></tr>
+            <tr><td><code>SE_NODE_MAX_SESSIONS</code></td><td class="env-desc" data-i18n="cfg.rg.maxSessions">Max concurrent sessions per node (default: 1)</td><td class="env-example">4</td></tr>
+            <tr><td><code>SE_NODE_SESSION_TIMEOUT</code></td><td class="env-desc" data-i18n="cfg.rg.sessionTimeout">Session idle timeout in seconds (default: 300)</td><td class="env-example">600</td></tr>
           </tbody>
         </table>
-        <div class="env-note"><strong>Note:</strong> se-cli currently manages local browsers only. Remote Grid attach (<code>--endpoint</code>) is planned for v0.10. The variables above are recognized by the underlying <code>selenium-webdriver</code> library when configuring remote connections manually.</div>
+        <div class="env-note" data-i18n="cfg.rg.note" data-i18n-html><strong>Note:</strong> se-cli currently manages local browsers only. Remote Grid attach (<code>--endpoint</code>) is planned for v0.10. The variables above are recognized by the underlying <code>selenium-webdriver</code> library when configuring remote connections manually.</div>
       </div>
 
       <div class="env-group">
-        <div class="env-group-title"><span class="env-group-title-icon">🐳</span> Docker &amp; CI Tips</div>
-        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;">Common patterns for running se-cli in Docker containers and CI pipelines.</p>
+        <div class="env-group-title"><span class="env-group-title-icon">🐳</span> <span data-i18n="cfg.group.docker">Docker &amp; CI Tips</span></div>
+        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;" data-i18n="cfg.dc.intro">Common patterns for running se-cli in Docker containers and CI pipelines.</p>
         <table class="env-table">
-          <thead><tr><th>Variable</th><th>Description</th><th>Example</th></tr></thead>
+          <thead><tr><th data-i18n="cfg.col.variable">Variable</th><th data-i18n="cmd.col.description">Description</th><th data-i18n="cfg.col.example">Example</th></tr></thead>
           <tbody>
-            <tr><td><code>SE_OFFLINE</code></td><td class="env-desc">Use pre-installed browsers/drivers in Docker image (default: true in Selenium images)</td><td class="env-example">true</td></tr>
-            <tr><td><code>SE_SCREEN_WIDTH</code></td><td class="env-desc">Screen width for headless display (Docker)</td><td class="env-example">1920</td></tr>
-            <tr><td><code>SE_SCREEN_HEIGHT</code></td><td class="env-desc">Screen height for headless display (Docker)</td><td class="env-example">1080</td></tr>
-            <tr><td><code>SE_START_XVFB</code></td><td class="env-desc">Start Xvfb virtual display in container</td><td class="env-example">true</td></tr>
-            <tr><td><code>DISPLAY</code></td><td class="env-desc">X11 display address for Linux headless environments</td><td class="env-example">:99</td></tr>
-            <tr><td><code>SE_JAVA_OPTS</code></td><td class="env-desc">Extra JVM options for Selenium Grid components</td><td class="env-example">-Xmx512m</td></tr>
+            <tr><td><code>SE_OFFLINE</code></td><td class="env-desc" data-i18n="cfg.dc.offline">Use pre-installed browsers/drivers in Docker image (default: true in Selenium images)</td><td class="env-example">true</td></tr>
+            <tr><td><code>SE_SCREEN_WIDTH</code></td><td class="env-desc" data-i18n="cfg.dc.screenWidth">Screen width for headless display (Docker)</td><td class="env-example">1920</td></tr>
+            <tr><td><code>SE_SCREEN_HEIGHT</code></td><td class="env-desc" data-i18n="cfg.dc.screenHeight">Screen height for headless display (Docker)</td><td class="env-example">1080</td></tr>
+            <tr><td><code>SE_START_XVFB</code></td><td class="env-desc" data-i18n="cfg.dc.xvfb">Start Xvfb virtual display in container</td><td class="env-example">true</td></tr>
+            <tr><td><code>DISPLAY</code></td><td class="env-desc" data-i18n="cfg.dc.display">X11 display address for Linux headless environments</td><td class="env-example">:99</td></tr>
+            <tr><td><code>SE_JAVA_OPTS</code></td><td class="env-desc" data-i18n="cfg.dc.javaOpts">Extra JVM options for Selenium Grid components</td><td class="env-example">-Xmx512m</td></tr>
           </tbody>
         </table>
-        <div class="env-note"><strong>CI tip:</strong> In GitHub Actions, Chrome is pre-installed on <code>ubuntu-latest</code> runners. For other browsers, use <code>npx @puppeteer/browsers install chrome@stable</code> before running se-cli. Set <code>SE_AVOID_STATS=true</code> to disable telemetry in CI.</div>
+        <div class="env-note" data-i18n="cfg.dc.note" data-i18n-html><strong>CI tip:</strong> In GitHub Actions, Chrome is pre-installed on <code>ubuntu-latest</code> runners. For other browsers, use <code>npx @puppeteer/browsers install chrome@stable</code> before running se-cli. Set <code>SE_AVOID_STATS=true</code> to disable telemetry in CI.</div>
       </div>
     </main>
   </div>
@@ -247,5 +247,6 @@
   </footer>
 
   <script src="../assets/js/nav.js"></script>
+  <script src="../assets/js/i18n.js"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Token-efficient Selenium browser automation CLI for AI agents and humans. Multi-browser, daemon architecture, aria snapshots." />
+  <meta name="description" content="Token-efficient Selenium browser automation CLI for AI agents and humans. Multi-browser, daemon architecture, aria snapshots." data-i18n="home.metaDesc" />
   <meta name="theme-color" content="#22C55E" />
   <meta name="author" content="se-cli" />
 
@@ -22,7 +22,7 @@
   <meta name="twitter:description" content="A short-lived CLI + long-lived daemon that drives Chrome, Edge, and Firefox. Aria snapshots and ref references keep token cost low." />
   <meta name="twitter:image" content="assets/img/og-image.png" />
 
-  <title>se-cli — Token-efficient Selenium for AI agents</title>
+  <title data-i18n="home.title">se-cli — Token-efficient Selenium for AI agents</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg" />
@@ -64,14 +64,14 @@
   <header class="hero">
     <div class="container hero-inner">
       <h1 class="hero-title">
-        Token-efficient Selenium<br />
-        <span class="hero-title-accent">for AI agents &amp; humans</span>
+        <span data-i18n="home.heroTitle">Token-efficient Selenium</span><br />
+        <span class="hero-title-accent" data-i18n="home.heroTitleAccent">for AI agents &amp; humans</span>
       </h1>
-      <p class="hero-subtitle">
+      <p class="hero-subtitle" data-i18n="home.heroSubtitle">
         A short-lived CLI + long-lived daemon. Chrome, Edge, Firefox — aria snapshots keep token cost low.
       </p>
       <div class="hero-actions">
-        <a href="./docs/getting-started.html" class="btn btn-primary">Get Started</a>
+        <a href="./docs/getting-started.html" class="btn btn-primary" data-i18n="home.getStarted">Get Started</a>
         <div class="hero-install">
           <span class="hero-install-prompt">$</span>
           <code id="install-cmd">npm install -g @browsers-cli/se-cli</code>
@@ -86,8 +86,8 @@
 
   <section class="section section-why">
     <div class="container">
-      <h2 class="section-title">Why se-cli?</h2>
-      <p class="section-lead">
+      <h2 class="section-title" data-i18n="home.why">Why se-cli?</h2>
+      <p class="section-lead" data-i18n="home.whyLead" data-i18n-html>
         Selenium MCP implementations burn tokens — heavy schemas, full accessibility dumps, no CLI.
         se-cli borrows the proven architecture from
         <a href="https://github.com/microsoft/playwright-cli" target="_blank" rel="noopener">playwright-cli</a>
@@ -95,12 +95,12 @@
       </p>
       <div class="why-grid">
         <div class="why-card">
-          <div class="why-card-label why-card-label-red">The Problem</div>
-          <p>Selenium MCP loads ~5KB of schema per call. Full accessibility tree is returned every time. No CLI — agents are forced through verbose JSON-RPC envelopes.</p>
+          <div class="why-card-label why-card-label-red" data-i18n="home.problemLabel">The Problem</div>
+          <p data-i18n="home.problemText">Selenium MCP loads ~5KB of schema per call. Full accessibility tree is returned every time. No CLI — agents are forced through verbose JSON-RPC envelopes.</p>
         </div>
         <div class="why-card">
-          <div class="why-card-label why-card-label-green">The Solution</div>
-          <p>A short-lived CLI sends one JSON line to a long-lived daemon. Aria snapshots return compact YAML with element refs. Every action emits reusable Selenium code.</p>
+          <div class="why-card-label why-card-label-green" data-i18n="home.solutionLabel">The Solution</div>
+          <p data-i18n="home.solutionText">A short-lived CLI sends one JSON line to a long-lived daemon. Aria snapshots return compact YAML with element refs. Every action emits reusable Selenium code.</p>
         </div>
       </div>
     </div>
@@ -108,12 +108,12 @@
 
   <section class="section section-alt" id="tokens">
     <div class="container">
-      <h2 class="section-title">Token Efficiency</h2>
-      <p class="section-lead">How much context does each approach burn per interaction? Real numbers from typical agent workflows.</p>
+      <h2 class="section-title" data-i18n="home.tokenEff">Token Efficiency</h2>
+      <p class="section-lead" data-i18n="home.tokenEffLead">How much context does each approach burn per interaction? Real numbers from typical agent workflows.</p>
       <div class="token-compare">
         <div class="token-bar-group">
           <div class="token-bar-label">
-            <span class="t-label">Selenium MCP</span>
+            <span class="t-label" data-i18n="home.tokenMcp">Selenium MCP</span>
             <span class="t-value">~5,000 tokens / call</span>
           </div>
           <div class="token-bar-track">
@@ -122,7 +122,7 @@
         </div>
         <div class="token-bar-group">
           <div class="token-bar-label">
-            <span class="t-label">Raw WebDriver API</span>
+            <span class="t-label" data-i18n="home.tokenScript">Raw WebDriver API</span>
             <span class="t-value">~2,000 tokens / call</span>
           </div>
           <div class="token-bar-track">
@@ -131,7 +131,7 @@
         </div>
         <div class="token-bar-group">
           <div class="token-bar-label">
-            <span class="t-label">se-cli</span>
+            <span class="t-label" data-i18n="home.tokenCli">se-cli</span>
             <span class="t-value">~400 tokens / call</span>
           </div>
           <div class="token-bar-track">
@@ -141,15 +141,15 @@
         <div class="token-summary">
           <div class="token-stat">
             <div class="token-stat-num token-stat-num-green">12.5×</div>
-            <div class="token-stat-label">fewer tokens vs MCP</div>
+            <div class="token-stat-label" data-i18n="home.tokenFewerMcp">fewer tokens vs MCP</div>
           </div>
           <div class="token-stat">
             <div class="token-stat-num token-stat-num-green">5×</div>
-            <div class="token-stat-label">fewer tokens vs raw API</div>
+            <div class="token-stat-label" data-i18n="home.tokenFewerScript">fewer tokens vs raw API</div>
           </div>
           <div class="token-stat">
             <div class="token-stat-num token-stat-num-red">5KB</div>
-            <div class="token-stat-label">schema eliminated</div>
+            <div class="token-stat-label" data-i18n="home.tokenSchema">schema eliminated</div>
           </div>
         </div>
       </div>
@@ -158,53 +158,53 @@
 
   <section class="section" id="features">
     <div class="container">
-      <h2 class="section-title">Features</h2>
-      <p class="section-lead">Everything you need to drive a browser from a shell or an AI agent.</p>
+      <h2 class="section-title" data-i18n="home.features">Features</h2>
+      <p class="section-lead" data-i18n="home.featuresLead">Everything you need to drive a browser from a shell or an AI agent.</p>
       <div class="features-grid">
         <div class="feature-card">
           <div class="feature-icon">⚡</div>
-          <h3>10× fewer tokens</h3>
-          <p>Compact aria snapshots with refs (<code>e1</code>, <code>e2</code>) instead of full accessibility tree dumps. Schemas never enter the agent's context.</p>
+          <h3 data-i18n="home.feat10x">10× fewer tokens</h3>
+          <p data-i18n="home.feat10xDesc" data-i18n-html>Compact aria snapshots with refs (<code>e1</code>, <code>e2</code>) instead of full accessibility tree dumps. Schemas never enter the agent's context.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🌐</div>
-          <h3>Multi-browser</h3>
-          <p>Chrome, Edge, and Firefox supported out of the box. One CLI, three browsers, single session or parallel named sessions.</p>
+          <h3 data-i18n="home.featMulti">Multi-browser</h3>
+          <p data-i18n="home.featMultiDesc">Chrome, Edge, and Firefox supported out of the box. One CLI, three browsers, single session or parallel named sessions.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🔄</div>
-          <h3>Session persistence</h3>
-          <p>The daemon holds the WebDriver across CLI calls. No browser restart per command. No driver reconnect overhead.</p>
+          <h3 data-i18n="home.featPersist">Session persistence</h3>
+          <p data-i18n="home.featPersistDesc">The daemon holds the WebDriver across CLI calls. No browser restart per command. No driver reconnect overhead.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🏷️</div>
-          <h3>Named sessions</h3>
-          <p>Run multiple browsers in parallel with <code>-s=name</code>. Isolate contexts, switch between sessions, close them all at once.</p>
+          <h3 data-i18n="home.featNamed">Named sessions</h3>
+          <p data-i18n="home.featNamedDesc" data-i18n-html>Run multiple browsers in parallel with <code>-s=name</code>. Isolate contexts, switch between sessions, close them all at once.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🤖</div>
-          <h3>Agent-agnostic</h3>
-          <p>Works with any AI agent that runs shell commands — Claude Code, Cursor, Copilot CLI. Drop in <code>SKILL.md</code> and go.</p>
+          <h3 data-i18n="home.featAgent">Agent-agnostic</h3>
+          <p data-i18n="home.featAgentDesc" data-i18n-html>Works with any AI agent that runs shell commands — Claude Code, Cursor, Copilot CLI. Drop in <code>SKILL.md</code> and go.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">📝</div>
-          <h3>Code generation</h3>
-          <p>Every action emits the equivalent Selenium code. Copy directly into your test files — no translation step.</p>
+          <h3 data-i18n="home.featCodegen">Code generation</h3>
+          <p data-i18n="home.featCodegenDesc">Every action emits the equivalent Selenium code. Copy directly into your test files — no translation step.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🎯</div>
-          <h3>Aria snapshots</h3>
-          <p>YAML representation of the page following W3C ARIA roles. Interactive elements get refs you can act on by name.</p>
+          <h3 data-i18n="home.featSnap">Aria snapshots</h3>
+          <p data-i18n="home.featSnapDesc">YAML representation of the page following W3C ARIA roles. Interactive elements get refs you can act on by name.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🔌</div>
-          <h3>CDP attach</h3>
-          <p>Attach to a running Chrome via <code>--cdp=&lt;url&gt;</code>. Inspect real sessions, debug real state.</p>
+          <h3 data-i18n="home.featCdp">CDP attach</h3>
+          <p data-i18n="home.featCdpDesc" data-i18n-html>Attach to a running Chrome via <code>--cdp=&lt;url&gt;</code>. Inspect real sessions, debug real state.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🧪</div>
-          <h3>Tested &amp; CI-ready</h3>
-          <p>102 unit tests + 30 integration tests. GitHub Actions matrix across OS and browsers. npm publish on release.</p>
+          <h3 data-i18n="home.featTested">Tested &amp; CI-ready</h3>
+          <p data-i18n="home.featTestedDesc">102 unit tests + 30 integration tests. GitHub Actions matrix across OS and browsers. npm publish on release.</p>
         </div>
       </div>
     </div>
@@ -212,13 +212,13 @@
 
   <section class="section section-alt" id="quickstart">
     <div class="container">
-      <h2 class="section-title">Quick Start</h2>
-      <p class="section-lead">Install, open a page, snapshot, interact — in under a minute.</p>
+      <h2 class="section-title" data-i18n="home.quickStart">Quick Start</h2>
+      <p class="section-lead" data-i18n="home.qsLead">Install, open a page, snapshot, interact — in under a minute.</p>
 
       <div class="qs-grid">
         <div class="qs-step">
           <div class="qs-num">1</div>
-          <h3>Install</h3>
+          <h3 data-i18n="home.qsInstall">Install</h3>
           <div class="code-block">
             <div class="code-header">
               <span class="code-lang">bash</span>
@@ -230,7 +230,7 @@
 
         <div class="qs-step">
           <div class="qs-num">2</div>
-          <h3>Open &amp; snapshot</h3>
+          <h3 data-i18n="home.qsOpenSnap">Open &amp; snapshot</h3>
           <div class="code-block">
             <div class="code-header">
               <span class="code-lang">bash</span>
@@ -246,7 +246,7 @@ se-cli snapshot
 
         <div class="qs-step">
           <div class="qs-num">3</div>
-          <h3>Interact by ref</h3>
+          <h3 data-i18n="home.qsInteract">Interact by ref</h3>
           <div class="code-block">
             <div class="code-header">
               <span class="code-lang">bash</span>
@@ -268,26 +268,26 @@ se-cli close</code></pre>
 
   <section class="section" id="explore">
     <div class="container">
-      <h2 class="section-title">Explore</h2>
-      <p class="section-lead">Documentation, roadmap, and live test pages — everything you need to go deeper.</p>
+      <h2 class="section-title" data-i18n="home.explore">Explore</h2>
+      <p class="section-lead" data-i18n="home.exploreLead">Documentation, roadmap, and live test pages — everything you need to go deeper.</p>
       <div class="doc-grid">
         <a href="./docs/index.html" class="doc-card">
           <div class="doc-card-icon">📚</div>
-          <h3>Documentation</h3>
-          <p>Installation, command reference, configuration, sessions, snapshots, code generation, AI agents, and troubleshooting.</p>
-          <span class="doc-card-arrow">Read more →</span>
+          <h3 data-i18n="home.exploreDocs">Documentation</h3>
+          <p data-i18n="home.exploreDocsDesc">Installation, command reference, configuration, sessions, snapshots, code generation, AI agents, and troubleshooting.</p>
+          <span class="doc-card-arrow" data-i18n="home.readMore">Read more →</span>
         </a>
         <a href="./roadmap/index.html" class="doc-card">
           <div class="doc-card-icon">🗺️</div>
-          <h3>Roadmap</h3>
-          <p>Version timeline v0.1–v0.12, the implementation matrix across browsers, and the full changelog.</p>
-          <span class="doc-card-arrow">Read more →</span>
+          <h3 data-i18n="home.exploreRoadmap">Roadmap</h3>
+          <p data-i18n="home.exploreRoadmapDesc">Version timeline v0.1–v0.12, the implementation matrix across browsers, and the full changelog.</p>
+          <span class="doc-card-arrow" data-i18n="home.readMore">Read more →</span>
         </a>
         <a href="./test-pages/index.html" class="doc-card">
           <div class="doc-card-icon">🧪</div>
-          <h3>Test Pages</h3>
-          <p>Reference pages for navigation, forms, storage, tabs, iframes, and Shadow DOM — used by the integration suite.</p>
-          <span class="doc-card-arrow">Read more →</span>
+          <h3 data-i18n="home.exploreTestPages">Test Pages</h3>
+          <p data-i18n="home.exploreTestPagesDesc">Reference pages for navigation, forms, storage, tabs, iframes, and Shadow DOM — used by the integration suite.</p>
+          <span class="doc-card-arrow" data-i18n="home.readMore">Read more →</span>
         </a>
       </div>
     </div>
@@ -295,11 +295,11 @@ se-cli close</code></pre>
 
   <section class="section cta-section">
     <div class="container cta-inner">
-      <h2>Start automating with fewer tokens</h2>
-      <p>Install se-cli and let your agent drive any browser.</p>
+      <h2 data-i18n="home.ctaTitle">Start automating with fewer tokens</h2>
+      <p data-i18n="home.ctaText">Install se-cli and let your agent drive any browser.</p>
       <div class="cta-buttons">
-        <a href="./docs/getting-started.html" class="btn btn-primary">Get Started</a>
-        <a href="https://github.com/se-cli/se-cli/blob/main/docs/spec.md" class="btn btn-ghost" target="_blank" rel="noopener">Read the Spec</a>
+        <a href="./docs/getting-started.html" class="btn btn-primary" data-i18n="home.getStarted">Get Started</a>
+        <a href="https://github.com/se-cli/se-cli/blob/main/docs/spec.md" class="btn btn-ghost" target="_blank" rel="noopener" data-i18n="home.ctaSpec">Read the Spec</a>
       </div>
     </div>
   </section>
@@ -325,6 +325,7 @@ se-cli close</code></pre>
   </footer>
 
   <script src="assets/js/nav.js"></script>
+  <script src="assets/js/i18n.js"></script>
   <script src="assets/js/home.js"></script>
 </body>
 </html>

@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Complete se-cli command reference — session, navigation, interaction, snapshot, save & execute, storage, tabs, and flags." />
+  <meta name="description" content="Complete se-cli command reference — session, navigation, interaction, snapshot, save & execute, storage, tabs, and flags." data-i18n="cmd.metaDesc" />
   <meta name="theme-color" content="#22C55E" />
-  <title>Command Reference — se-cli Docs</title>
+  <title data-i18n="cmd.pageTitle">Command Reference — se-cli Docs</title>
   <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
   <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -37,164 +37,164 @@
 
   <div class="docs-layout">
     <aside class="docs-sidebar">
-      <h4>Get started</h4>
-      <a href="getting-started.html">Getting Started</a>
-      <a href="commands.html" class="current">Command Reference</a>
-      <a href="configuration.html">Configuration</a>
-      <h4>Guides</h4>
-      <a href="sessions.html">Sessions &amp; Browsers</a>
-      <a href="storage-state.html">Storage &amp; State</a>
-      <a href="snapshots-refs.html">Snapshots &amp; Refs</a>
-      <a href="codegen.html">Code Generation</a>
-      <a href="ai-agents.html">AI Agents</a>
-      <h4>Reference</h4>
-      <a href="troubleshooting.html">Troubleshooting</a>
+      <h4 data-i18n="sidebar.getStarted">Get started</h4>
+      <a href="getting-started.html" data-i18n="bc.gettingStarted">Getting Started</a>
+      <a href="commands.html" class="current" data-i18n="bc.commands">Command Reference</a>
+      <a href="configuration.html" data-i18n="bc.configuration">Configuration</a>
+      <h4 data-i18n="sidebar.guides">Guides</h4>
+      <a href="sessions.html" data-i18n="bc.sessions">Sessions &amp; Browsers</a>
+      <a href="storage-state.html" data-i18n="bc.storage">Storage &amp; State</a>
+      <a href="snapshots-refs.html" data-i18n="bc.snapshots">Snapshots &amp; Refs</a>
+      <a href="codegen.html" data-i18n="bc.codegen">Code Generation</a>
+      <a href="ai-agents.html" data-i18n="bc.ai">AI Agents</a>
+      <h4 data-i18n="sidebar.reference">Reference</h4>
+      <a href="troubleshooting.html" data-i18n="bc.troubleshooting">Troubleshooting</a>
     </aside>
 
     <main class="docs-content">
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="../index.html">Home</a>
+        <a href="../index.html" data-i18n="bc.home">Home</a>
         <span class="breadcrumb-sep">/</span>
-        <a href="index.html">Docs</a>
+        <a href="index.html" data-i18n="bc.docs">Docs</a>
         <span class="breadcrumb-sep">/</span>
-        <span class="breadcrumb-current">Command Reference</span>
+        <span class="breadcrumb-current" data-i18n="bc.commands">Command Reference</span>
       </nav>
 
-      <h2 id="commands">Command Reference</h2>
-      <p>se-cli ships with commands grouped into eight categories. Session-level commands run in the CLI process; the rest are forwarded to the daemon. Pick a tab to browse each group.</p>
+      <h2 id="commands" data-i18n="bc.commands">Command Reference</h2>
+      <p data-i18n="cmd.intro">se-cli ships with commands grouped into eight categories. Session-level commands run in the CLI process; the rest are forwarded to the daemon. Pick a tab to browse each group.</p>
 
       <div class="cmd-tabs" role="tablist">
-        <button class="cmd-tab active" data-tab="session" role="tab">Session</button>
-        <button class="cmd-tab" data-tab="nav" role="tab">Navigation</button>
-        <button class="cmd-tab" data-tab="interact" role="tab">Interaction</button>
-        <button class="cmd-tab" data-tab="snap" role="tab">Snapshot</button>
-        <button class="cmd-tab" data-tab="exec" role="tab">Save &amp; Execute</button>
-        <button class="cmd-tab" data-tab="storage" role="tab">Storage</button>
-        <button class="cmd-tab" data-tab="tabs" role="tab">Tabs</button>
-        <button class="cmd-tab" data-tab="flags" role="tab">Flags</button>
+        <button class="cmd-tab active" data-tab="session" role="tab" data-i18n="cmd.tab.session">Session</button>
+        <button class="cmd-tab" data-tab="nav" role="tab" data-i18n="cmd.tab.nav">Navigation</button>
+        <button class="cmd-tab" data-tab="interact" role="tab" data-i18n="cmd.tab.interact">Interaction</button>
+        <button class="cmd-tab" data-tab="snap" role="tab" data-i18n="cmd.tab.snap">Snapshot</button>
+        <button class="cmd-tab" data-tab="exec" role="tab" data-i18n="cmd.tab.exec">Save &amp; Execute</button>
+        <button class="cmd-tab" data-tab="storage" role="tab" data-i18n="cmd.tab.storage">Storage</button>
+        <button class="cmd-tab" data-tab="tabs" role="tab" data-i18n="cmd.tab.tabs">Tabs</button>
+        <button class="cmd-tab" data-tab="flags" role="tab" data-i18n="cmd.tab.flags">Flags</button>
       </div>
 
       <div class="cmd-panel active" data-panel="session">
         <table class="cmd-table">
-          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <thead><tr><th data-i18n="cmd.col.command">Command</th><th data-i18n="cmd.col.description">Description</th></tr></thead>
           <tbody>
-            <tr><td><code>open [url]</code></td><td>Start daemon + browser, optionally navigate to URL</td></tr>
-            <tr><td><code>close</code></td><td>Close browser and daemon</td></tr>
-            <tr><td><code>list</code></td><td>List all sessions</td></tr>
-            <tr><td><code>close-all</code></td><td>Close all sessions gracefully</td></tr>
-            <tr><td><code>kill-all</code></td><td>Force-kill all sessions</td></tr>
+            <tr><td><code>open [url]</code></td><td data-i18n="cmd.desc.open">Start daemon + browser, optionally navigate to URL</td></tr>
+            <tr><td><code>close</code></td><td data-i18n="cmd.desc.close">Close browser and daemon</td></tr>
+            <tr><td><code>list</code></td><td data-i18n="cmd.desc.list">List all sessions</td></tr>
+            <tr><td><code>close-all</code></td><td data-i18n="cmd.desc.closeAll">Close all sessions gracefully</td></tr>
+            <tr><td><code>kill-all</code></td><td data-i18n="cmd.desc.killAll">Force-kill all sessions</td></tr>
           </tbody>
         </table>
       </div>
 
       <div class="cmd-panel" data-panel="nav">
         <table class="cmd-table">
-          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <thead><tr><th data-i18n="cmd.col.command">Command</th><th data-i18n="cmd.col.description">Description</th></tr></thead>
           <tbody>
-            <tr><td><code>goto &lt;url&gt;</code></td><td>Navigate to URL</td></tr>
-            <tr><td><code>go-back</code></td><td>Browser back</td></tr>
-            <tr><td><code>go-forward</code></td><td>Browser forward</td></tr>
-            <tr><td><code>reload</code></td><td>Reload page</td></tr>
+            <tr><td><code>goto &lt;url&gt;</code></td><td data-i18n="cmd.desc.goto">Navigate to URL</td></tr>
+            <tr><td><code>go-back</code></td><td data-i18n="cmd.desc.goBack">Browser back</td></tr>
+            <tr><td><code>go-forward</code></td><td data-i18n="cmd.desc.goForward">Browser forward</td></tr>
+            <tr><td><code>reload</code></td><td data-i18n="cmd.desc.reload">Reload page</td></tr>
           </tbody>
         </table>
       </div>
 
       <div class="cmd-panel" data-panel="interact">
         <table class="cmd-table">
-          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <thead><tr><th data-i18n="cmd.col.command">Command</th><th data-i18n="cmd.col.description">Description</th></tr></thead>
           <tbody>
-            <tr><td><code>click &lt;ref|selector&gt;</code></td><td>Click element</td></tr>
-            <tr><td><code>fill &lt;ref|selector&gt; &lt;text&gt;</code></td><td>Clear and fill input</td></tr>
-            <tr><td><code>type &lt;text&gt;</code></td><td>Type into focused element</td></tr>
-            <tr><td><code>press &lt;key&gt;</code></td><td>Press keyboard key (Enter, Tab, Escape, …)</td></tr>
-            <tr><td><code>select &lt;ref&gt; &lt;value&gt;</code></td><td>Select dropdown option</td></tr>
-            <tr><td><code>check &lt;ref&gt;</code></td><td>Check checkbox</td></tr>
-            <tr><td><code>uncheck &lt;ref&gt;</code></td><td>Uncheck checkbox</td></tr>
+            <tr><td><code>click &lt;ref|selector&gt;</code></td><td data-i18n="cmd.desc.click">Click element</td></tr>
+            <tr><td><code>fill &lt;ref|selector&gt; &lt;text&gt;</code></td><td data-i18n="cmd.desc.fill">Clear and fill input</td></tr>
+            <tr><td><code>type &lt;text&gt;</code></td><td data-i18n="cmd.desc.type">Type into focused element</td></tr>
+            <tr><td><code>press &lt;key&gt;</code></td><td data-i18n="cmd.desc.press">Press keyboard key (Enter, Tab, Escape, …)</td></tr>
+            <tr><td><code>select &lt;ref&gt; &lt;value&gt;</code></td><td data-i18n="cmd.desc.select">Select dropdown option</td></tr>
+            <tr><td><code>check &lt;ref&gt;</code></td><td data-i18n="cmd.desc.check">Check checkbox</td></tr>
+            <tr><td><code>uncheck &lt;ref&gt;</code></td><td data-i18n="cmd.desc.uncheck">Uncheck checkbox</td></tr>
           </tbody>
         </table>
-        <div class="alert alert-info"><span class="alert-icon">i</span><div><strong>v0.5 planned.</strong> <code>hover</code>, <code>dblclick</code>, <code>drag</code>, <code>dialog-accept/dismiss</code>, <code>upload</code>, <code>resize</code>, and Actions-chain control are on the roadmap.</div></div>
+        <div class="alert alert-info"><span class="alert-icon">i</span><div data-i18n="cmd.alert.planned" data-i18n-html><strong>v0.5 planned.</strong> <code>hover</code>, <code>dblclick</code>, <code>drag</code>, <code>dialog-accept/dismiss</code>, <code>upload</code>, <code>resize</code>, and Actions-chain control are on the roadmap.</div></div>
       </div>
 
       <div class="cmd-panel" data-panel="snap">
         <table class="cmd-table">
-          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <thead><tr><th data-i18n="cmd.col.command">Command</th><th data-i18n="cmd.col.description">Description</th></tr></thead>
           <tbody>
-            <tr><td><code>snapshot [ref]</code></td><td>Aria snapshot of page or element subtree</td></tr>
-            <tr><td><code>snapshot --depth=N</code></td><td>Limit snapshot depth</td></tr>
-            <tr><td><code>snapshot --filename=f.yml</code></td><td>Save snapshot to file</td></tr>
-            <tr><td><code>find &lt;text&gt;</code></td><td>Search snapshot for text</td></tr>
-            <tr><td><code>find --regex &lt;pattern&gt;</code></td><td>Search snapshot with regex</td></tr>
+            <tr><td><code>snapshot [ref]</code></td><td data-i18n="cmd.desc.snapshot">Aria snapshot of page or element subtree</td></tr>
+            <tr><td><code>snapshot --depth=N</code></td><td data-i18n="cmd.desc.snapshotDepth">Limit snapshot depth</td></tr>
+            <tr><td><code>snapshot --filename=f.yml</code></td><td data-i18n="cmd.desc.snapshotFile">Save snapshot to file</td></tr>
+            <tr><td><code>find &lt;text&gt;</code></td><td data-i18n="cmd.desc.find">Search snapshot for text</td></tr>
+            <tr><td><code>find --regex &lt;pattern&gt;</code></td><td data-i18n="cmd.desc.findRegex">Search snapshot with regex</td></tr>
           </tbody>
         </table>
       </div>
 
       <div class="cmd-panel" data-panel="exec">
         <table class="cmd-table">
-          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <thead><tr><th data-i18n="cmd.col.command">Command</th><th data-i18n="cmd.col.description">Description</th></tr></thead>
           <tbody>
-            <tr><td><code>screenshot [ref]</code></td><td>Take screenshot (full page or element)</td></tr>
-            <tr><td><code>screenshot --filename=f.png</code></td><td>Save screenshot to file</td></tr>
-            <tr><td><code>eval "&lt;js&gt;"</code></td><td>Execute JavaScript, return result</td></tr>
-            <tr><td><code>eval "&lt;js&gt;" &lt;ref&gt;</code></td><td>Execute JavaScript on element</td></tr>
-            <tr><td><code>title</code></td><td>Get page title</td></tr>
-            <tr><td><code>url</code></td><td>Get current URL</td></tr>
+            <tr><td><code>screenshot [ref]</code></td><td data-i18n="cmd.desc.screenshot">Take screenshot (full page or element)</td></tr>
+            <tr><td><code>screenshot --filename=f.png</code></td><td data-i18n="cmd.desc.screenshotFile">Save screenshot to file</td></tr>
+            <tr><td><code>eval "&lt;js&gt;"</code></td><td data-i18n="cmd.desc.eval">Execute JavaScript, return result</td></tr>
+            <tr><td><code>eval "&lt;js&gt;" &lt;ref&gt;</code></td><td data-i18n="cmd.desc.evalRef">Execute JavaScript on element</td></tr>
+            <tr><td><code>title</code></td><td data-i18n="cmd.desc.title">Get page title</td></tr>
+            <tr><td><code>url</code></td><td data-i18n="cmd.desc.url">Get current URL</td></tr>
           </tbody>
         </table>
       </div>
 
       <div class="cmd-panel" data-panel="storage">
         <table class="cmd-table">
-          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <thead><tr><th data-i18n="cmd.col.command">Command</th><th data-i18n="cmd.col.description">Description</th></tr></thead>
           <tbody>
-            <tr><td><code>cookie-list</code></td><td>List all cookies for the current page</td></tr>
-            <tr><td><code>cookie-get &lt;name&gt;</code></td><td>Get a single cookie by name</td></tr>
-            <tr><td><code>cookie-set &lt;json&gt;</code></td><td>Add or overwrite a cookie</td></tr>
-            <tr><td><code>cookie-delete &lt;name&gt;</code></td><td>Delete a cookie by name</td></tr>
-            <tr><td><code>localstorage-get &lt;key&gt;</code></td><td>Read a localStorage value</td></tr>
-            <tr><td><code>localstorage-set &lt;key&gt; &lt;val&gt;</code></td><td>Write a localStorage value</td></tr>
-            <tr><td><code>localstorage-delete &lt;key&gt;</code></td><td>Delete a localStorage value</td></tr>
-            <tr><td><code>localstorage-clear</code></td><td>Clear all localStorage</td></tr>
-            <tr><td><code>sessionstorage-*</code></td><td>Same family for sessionStorage</td></tr>
-            <tr><td><code>state-save &lt;file&gt;</code></td><td>Export cookies + storage to JSON</td></tr>
-            <tr><td><code>state-load &lt;file&gt;</code></td><td>Restore cookies + storage from JSON</td></tr>
+            <tr><td><code>cookie-list</code></td><td data-i18n="cmd.desc.cookieList">List all cookies for the current page</td></tr>
+            <tr><td><code>cookie-get &lt;name&gt;</code></td><td data-i18n="cmd.desc.cookieGet">Get a single cookie by name</td></tr>
+            <tr><td><code>cookie-set &lt;json&gt;</code></td><td data-i18n="cmd.desc.cookieSet">Add or overwrite a cookie</td></tr>
+            <tr><td><code>cookie-delete &lt;name&gt;</code></td><td data-i18n="cmd.desc.cookieDelete">Delete a cookie by name</td></tr>
+            <tr><td><code>localstorage-get &lt;key&gt;</code></td><td data-i18n="cmd.desc.lsGet">Read a localStorage value</td></tr>
+            <tr><td><code>localstorage-set &lt;key&gt; &lt;val&gt;</code></td><td data-i18n="cmd.desc.lsSet">Write a localStorage value</td></tr>
+            <tr><td><code>localstorage-delete &lt;key&gt;</code></td><td data-i18n="cmd.desc.lsDelete">Delete a localStorage value</td></tr>
+            <tr><td><code>localstorage-clear</code></td><td data-i18n="cmd.desc.lsClear">Clear all localStorage</td></tr>
+            <tr><td><code>sessionstorage-*</code></td><td data-i18n="cmd.desc.ss">Same family for sessionStorage</td></tr>
+            <tr><td><code>state-save &lt;file&gt;</code></td><td data-i18n="cmd.desc.stateSave">Export cookies + storage to JSON</td></tr>
+            <tr><td><code>state-load &lt;file&gt;</code></td><td data-i18n="cmd.desc.stateLoad">Restore cookies + storage from JSON</td></tr>
           </tbody>
         </table>
       </div>
 
       <div class="cmd-panel" data-panel="tabs">
         <table class="cmd-table">
-          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <thead><tr><th data-i18n="cmd.col.command">Command</th><th data-i18n="cmd.col.description">Description</th></tr></thead>
           <tbody>
-            <tr><td><code>tab-list</code></td><td>List all open tabs/windows in the session</td></tr>
-            <tr><td><code>tab-new &lt;url&gt;</code></td><td>Open a new tab and navigate to URL</td></tr>
-            <tr><td><code>tab-close</code></td><td>Close the current tab</td></tr>
-            <tr><td><code>tab-select &lt;handle&gt;</code></td><td>Switch to a tab by window handle</td></tr>
+            <tr><td><code>tab-list</code></td><td data-i18n="cmd.desc.tabList">List all open tabs/windows in the session</td></tr>
+            <tr><td><code>tab-new &lt;url&gt;</code></td><td data-i18n="cmd.desc.tabNew">Open a new tab and navigate to URL</td></tr>
+            <tr><td><code>tab-close</code></td><td data-i18n="cmd.desc.tabClose">Close the current tab</td></tr>
+            <tr><td><code>tab-select &lt;handle&gt;</code></td><td data-i18n="cmd.desc.tabSelect">Switch to a tab by window handle</td></tr>
           </tbody>
         </table>
       </div>
 
       <div class="cmd-panel" data-panel="flags">
         <table class="cmd-table">
-          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <thead><tr><th data-i18n="cmd.col.flag">Flag</th><th data-i18n="cmd.col.description">Description</th></tr></thead>
           <tbody>
-            <tr><td><code>--raw</code></td><td>Output only the result value (for scripting)</td></tr>
-            <tr><td><code>--json</code></td><td>Structured JSON output</td></tr>
-            <tr><td><code>-s=&lt;name&gt;</code></td><td>Use named session</td></tr>
-            <tr><td><code>--browser=chrome|edge|firefox</code></td><td>Browser selection (default: chrome)</td></tr>
-            <tr><td><code>--headed</code></td><td>Show browser window (default: headless)</td></tr>
-            <tr><td><code>--cdp=&lt;url&gt;</code></td><td>Attach to running Chrome via CDP</td></tr>
-            <tr><td><code>--profile=&lt;path&gt;</code></td><td>Persistent user data directory (v0.2)</td></tr>
-            <tr><td><code>--persistent</code></td><td>Auto-assign a persistent userDataDir (v0.2)</td></tr>
-            <tr><td><code>--depth=&lt;N&gt;</code></td><td>Limit aria snapshot recursion (default: 50)</td></tr>
-            <tr><td><code>--filename=&lt;f&gt;</code></td><td>Save snapshot/screenshot to file</td></tr>
-            <tr><td><code>--regex=&lt;pattern&gt;</code></td><td>Search snapshot with regex (find)</td></tr>
-            <tr><td><code>--submit</code></td><td>Submit form after fill (Enter key)</td></tr>
+            <tr><td><code>--raw</code></td><td data-i18n="cmd.desc.raw">Output only the result value (for scripting)</td></tr>
+            <tr><td><code>--json</code></td><td data-i18n="cmd.desc.json">Structured JSON output</td></tr>
+            <tr><td><code>-s=&lt;name&gt;</code></td><td data-i18n="cmd.desc.s">Use named session</td></tr>
+            <tr><td><code>--browser=chrome|edge|firefox</code></td><td data-i18n="cmd.desc.browser">Browser selection (default: chrome)</td></tr>
+            <tr><td><code>--headed</code></td><td data-i18n="cmd.desc.headed">Show browser window (default: headless)</td></tr>
+            <tr><td><code>--cdp=&lt;url&gt;</code></td><td data-i18n="cmd.desc.cdp">Attach to running Chrome via CDP</td></tr>
+            <tr><td><code>--profile=&lt;path&gt;</code></td><td data-i18n="cmd.desc.profile">Persistent user data directory (v0.2)</td></tr>
+            <tr><td><code>--persistent</code></td><td data-i18n="cmd.desc.persistent">Auto-assign a persistent userDataDir (v0.2)</td></tr>
+            <tr><td><code>--depth=&lt;N&gt;</code></td><td data-i18n="cmd.desc.depth">Limit aria snapshot recursion (default: 50)</td></tr>
+            <tr><td><code>--filename=&lt;f&gt;</code></td><td data-i18n="cmd.desc.filename">Save snapshot/screenshot to file</td></tr>
+            <tr><td><code>--regex=&lt;pattern&gt;</code></td><td data-i18n="cmd.desc.regex">Search snapshot with regex (find)</td></tr>
+            <tr><td><code>--submit</code></td><td data-i18n="cmd.desc.submit">Submit form after fill (Enter key)</td></tr>
           </tbody>
         </table>
       </div>
 
-      <h2 id="output">Output formats</h2>
-      <p>Every command returns a response with up to four sections: <code>Page</code>, <code>Snapshot</code>, <code>Ran Selenium code</code>, and <code>Result</code>. <code>--raw</code> returns only the result value; <code>--json</code> returns a structured <code>{page, snapshot, code, result}</code> object for pipelines.</p>
+      <h2 id="output" data-i18n="cmd.outputHeading">Output formats</h2>
+      <p data-i18n="cmd.outputText" data-i18n-html>Every command returns a response with up to four sections: <code>Page</code>, <code>Snapshot</code>, <code>Ran Selenium code</code>, and <code>Result</code>. <code>--raw</code> returns only the result value; <code>--json</code> returns a structured <code>{page, snapshot, code, result}</code> object for pipelines.</p>
       <div class="code-block">
         <div class="code-header"><span class="code-lang">response</span></div>
 <pre><code>### Page
@@ -212,7 +212,7 @@ await driver.findElement(By.css('[data-se-ref="e2"]')).click();
 clicked</code></pre>
       </div>
 
-      <p>See the <a href="snapshots-refs.html">Snapshots &amp; Refs</a> guide for the algorithm behind <code>snapshot</code>, or the <a href="configuration.html">Configuration</a> page for the v0.4 wait/retry flags.</p>
+      <p data-i18n="cmd.seeAlso" data-i18n-html>See the <a href="snapshots-refs.html">Snapshots &amp; Refs</a> guide for the algorithm behind <code>snapshot</code>, or the <a href="configuration.html">Configuration</a> page for the v0.4 wait/retry flags.</p>
     </main>
   </div>
 
@@ -235,6 +235,7 @@ clicked</code></pre>
   </footer>
 
   <script src="../assets/js/nav.js"></script>
+  <script src="../assets/js/i18n.js"></script>
   <script src="../assets/js/home.js"></script>
 </body>
 </html>
