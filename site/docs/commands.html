@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Complete se-cli command reference — session, navigation, interaction, snapshot, save & execute, storage, tabs, and flags." />
+  <meta name="theme-color" content="#22C55E" />
+  <title>Command Reference — se-cli Docs</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+  <nav class="nav" id="nav">
+    <div class="container nav-inner">
+      <a href="../index.html" class="nav-logo" aria-label="se-cli home">
+        <img src="../assets/img/favicon.svg" alt="" width="28" height="28" />
+        <span>se-cli</span>
+      </a>
+      <div class="nav-links" id="nav-links">
+        <a href="../docs/index.html" class="current">Docs</a>
+        <a href="../roadmap/index.html">Roadmap</a>
+        <a href="../test-pages/index.html">Test Pages</a>
+        <a href="https://github.com/se-cli/se-cli" class="nav-gh" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="docs-layout">
+    <aside class="docs-sidebar">
+      <h4>Get started</h4>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="commands.html" class="current">Command Reference</a>
+      <a href="configuration.html">Configuration</a>
+      <h4>Guides</h4>
+      <a href="sessions.html">Sessions &amp; Browsers</a>
+      <a href="storage-state.html">Storage &amp; State</a>
+      <a href="snapshots-refs.html">Snapshots &amp; Refs</a>
+      <a href="codegen.html">Code Generation</a>
+      <a href="ai-agents.html">AI Agents</a>
+      <h4>Reference</h4>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </aside>
+
+    <main class="docs-content">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../index.html">Home</a>
+        <span class="breadcrumb-sep">/</span>
+        <a href="index.html">Docs</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Command Reference</span>
+      </nav>
+
+      <h2 id="commands">Command Reference</h2>
+      <p>se-cli ships with commands grouped into eight categories. Session-level commands run in the CLI process; the rest are forwarded to the daemon. Pick a tab to browse each group.</p>
+
+      <div class="cmd-tabs" role="tablist">
+        <button class="cmd-tab active" data-tab="session" role="tab">Session</button>
+        <button class="cmd-tab" data-tab="nav" role="tab">Navigation</button>
+        <button class="cmd-tab" data-tab="interact" role="tab">Interaction</button>
+        <button class="cmd-tab" data-tab="snap" role="tab">Snapshot</button>
+        <button class="cmd-tab" data-tab="exec" role="tab">Save &amp; Execute</button>
+        <button class="cmd-tab" data-tab="storage" role="tab">Storage</button>
+        <button class="cmd-tab" data-tab="tabs" role="tab">Tabs</button>
+        <button class="cmd-tab" data-tab="flags" role="tab">Flags</button>
+      </div>
+
+      <div class="cmd-panel active" data-panel="session">
+        <table class="cmd-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>open [url]</code></td><td>Start daemon + browser, optionally navigate to URL</td></tr>
+            <tr><td><code>close</code></td><td>Close browser and daemon</td></tr>
+            <tr><td><code>list</code></td><td>List all sessions</td></tr>
+            <tr><td><code>close-all</code></td><td>Close all sessions gracefully</td></tr>
+            <tr><td><code>kill-all</code></td><td>Force-kill all sessions</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cmd-panel" data-panel="nav">
+        <table class="cmd-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>goto &lt;url&gt;</code></td><td>Navigate to URL</td></tr>
+            <tr><td><code>go-back</code></td><td>Browser back</td></tr>
+            <tr><td><code>go-forward</code></td><td>Browser forward</td></tr>
+            <tr><td><code>reload</code></td><td>Reload page</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cmd-panel" data-panel="interact">
+        <table class="cmd-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>click &lt;ref|selector&gt;</code></td><td>Click element</td></tr>
+            <tr><td><code>fill &lt;ref|selector&gt; &lt;text&gt;</code></td><td>Clear and fill input</td></tr>
+            <tr><td><code>type &lt;text&gt;</code></td><td>Type into focused element</td></tr>
+            <tr><td><code>press &lt;key&gt;</code></td><td>Press keyboard key (Enter, Tab, Escape, …)</td></tr>
+            <tr><td><code>select &lt;ref&gt; &lt;value&gt;</code></td><td>Select dropdown option</td></tr>
+            <tr><td><code>check &lt;ref&gt;</code></td><td>Check checkbox</td></tr>
+            <tr><td><code>uncheck &lt;ref&gt;</code></td><td>Uncheck checkbox</td></tr>
+          </tbody>
+        </table>
+        <div class="alert alert-info"><span class="alert-icon">i</span><div><strong>v0.5 planned.</strong> <code>hover</code>, <code>dblclick</code>, <code>drag</code>, <code>dialog-accept/dismiss</code>, <code>upload</code>, <code>resize</code>, and Actions-chain control are on the roadmap.</div></div>
+      </div>
+
+      <div class="cmd-panel" data-panel="snap">
+        <table class="cmd-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>snapshot [ref]</code></td><td>Aria snapshot of page or element subtree</td></tr>
+            <tr><td><code>snapshot --depth=N</code></td><td>Limit snapshot depth</td></tr>
+            <tr><td><code>snapshot --filename=f.yml</code></td><td>Save snapshot to file</td></tr>
+            <tr><td><code>find &lt;text&gt;</code></td><td>Search snapshot for text</td></tr>
+            <tr><td><code>find --regex &lt;pattern&gt;</code></td><td>Search snapshot with regex</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cmd-panel" data-panel="exec">
+        <table class="cmd-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>screenshot [ref]</code></td><td>Take screenshot (full page or element)</td></tr>
+            <tr><td><code>screenshot --filename=f.png</code></td><td>Save screenshot to file</td></tr>
+            <tr><td><code>eval "&lt;js&gt;"</code></td><td>Execute JavaScript, return result</td></tr>
+            <tr><td><code>eval "&lt;js&gt;" &lt;ref&gt;</code></td><td>Execute JavaScript on element</td></tr>
+            <tr><td><code>title</code></td><td>Get page title</td></tr>
+            <tr><td><code>url</code></td><td>Get current URL</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cmd-panel" data-panel="storage">
+        <table class="cmd-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>cookie-list</code></td><td>List all cookies for the current page</td></tr>
+            <tr><td><code>cookie-get &lt;name&gt;</code></td><td>Get a single cookie by name</td></tr>
+            <tr><td><code>cookie-set &lt;json&gt;</code></td><td>Add or overwrite a cookie</td></tr>
+            <tr><td><code>cookie-delete &lt;name&gt;</code></td><td>Delete a cookie by name</td></tr>
+            <tr><td><code>localstorage-get &lt;key&gt;</code></td><td>Read a localStorage value</td></tr>
+            <tr><td><code>localstorage-set &lt;key&gt; &lt;val&gt;</code></td><td>Write a localStorage value</td></tr>
+            <tr><td><code>localstorage-delete &lt;key&gt;</code></td><td>Delete a localStorage value</td></tr>
+            <tr><td><code>localstorage-clear</code></td><td>Clear all localStorage</td></tr>
+            <tr><td><code>sessionstorage-*</code></td><td>Same family for sessionStorage</td></tr>
+            <tr><td><code>state-save &lt;file&gt;</code></td><td>Export cookies + storage to JSON</td></tr>
+            <tr><td><code>state-load &lt;file&gt;</code></td><td>Restore cookies + storage from JSON</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cmd-panel" data-panel="tabs">
+        <table class="cmd-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>tab-list</code></td><td>List all open tabs/windows in the session</td></tr>
+            <tr><td><code>tab-new &lt;url&gt;</code></td><td>Open a new tab and navigate to URL</td></tr>
+            <tr><td><code>tab-close</code></td><td>Close the current tab</td></tr>
+            <tr><td><code>tab-select &lt;handle&gt;</code></td><td>Switch to a tab by window handle</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cmd-panel" data-panel="flags">
+        <table class="cmd-table">
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>--raw</code></td><td>Output only the result value (for scripting)</td></tr>
+            <tr><td><code>--json</code></td><td>Structured JSON output</td></tr>
+            <tr><td><code>-s=&lt;name&gt;</code></td><td>Use named session</td></tr>
+            <tr><td><code>--browser=chrome|edge|firefox</code></td><td>Browser selection (default: chrome)</td></tr>
+            <tr><td><code>--headed</code></td><td>Show browser window (default: headless)</td></tr>
+            <tr><td><code>--cdp=&lt;url&gt;</code></td><td>Attach to running Chrome via CDP</td></tr>
+            <tr><td><code>--profile=&lt;path&gt;</code></td><td>Persistent user data directory (v0.2)</td></tr>
+            <tr><td><code>--persistent</code></td><td>Auto-assign a persistent userDataDir (v0.2)</td></tr>
+            <tr><td><code>--depth=&lt;N&gt;</code></td><td>Limit aria snapshot recursion (default: 50)</td></tr>
+            <tr><td><code>--filename=&lt;f&gt;</code></td><td>Save snapshot/screenshot to file</td></tr>
+            <tr><td><code>--regex=&lt;pattern&gt;</code></td><td>Search snapshot with regex (find)</td></tr>
+            <tr><td><code>--submit</code></td><td>Submit form after fill (Enter key)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="output">Output formats</h2>
+      <p>Every command returns a response with up to four sections: <code>Page</code>, <code>Snapshot</code>, <code>Ran Selenium code</code>, and <code>Result</code>. <code>--raw</code> returns only the result value; <code>--json</code> returns a structured <code>{page, snapshot, code, result}</code> object for pipelines.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">response</span></div>
+<pre><code>### Page
+- Page URL: https://example.com/
+- Page Title: Example Domain
+
+### Snapshot
+- e1 [heading "Welcome"]
+- e2 [link "Learn more"]
+
+### Ran Selenium code
+await driver.findElement(By.css('[data-se-ref="e2"]')).click();
+
+### Result
+clicked</code></pre>
+      </div>
+
+      <p>See the <a href="snapshots-refs.html">Snapshots &amp; Refs</a> guide for the algorithm behind <code>snapshot</code>, or the <a href="configuration.html">Configuration</a> page for the v0.4 wait/retry flags.</p>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <img src="../assets/img/favicon.svg" alt="" width="24" height="24" />
+        <span>se-cli</span>
+      </div>
+      <div class="footer-links">
+        <a href="../docs/index.html">Docs</a>
+        <a href="../roadmap/index.html">Roadmap</a>
+        <a href="../test-pages/index.html">Test Pages</a>
+        <a href="https://github.com/se-cli/se-cli">GitHub</a>
+        <a href="https://github.com/se-cli/se-cli/issues">Issues</a>
+        <a href="https://www.npmjs.com/package/@browsers-cli/se-cli">npm</a>
+      </div>
+      <div class="footer-copy">Apache-2.0 · se-cli</div>
+    </div>
+  </footer>
+
+  <script src="../assets/js/nav.js"></script>
+  <script src="../assets/js/home.js"></script>
+</body>
+</html>

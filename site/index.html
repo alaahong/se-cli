@@ -37,21 +37,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/home.css" />
 </head>
 <body>
   <nav class="nav" id="nav">
     <div class="container nav-inner">
-      <a href="#" class="nav-logo" aria-label="se-cli home">
+      <a href="./index.html" class="nav-logo" aria-label="se-cli home">
         <img src="assets/img/favicon.svg" alt="" width="28" height="28" />
         <span>se-cli</span>
       </a>
       <div class="nav-links" id="nav-links">
-        <a href="#features">Features</a>
-        <a href="#quickstart">Start</a>
-        <a href="#commands">Commands</a>
-        <a href="#architecture">Architecture</a>
-        <a href="#roadmap">Roadmap</a>
-        <a href="#faq">FAQ</a>
+        <a href="./docs/index.html">Docs</a>
+        <a href="./roadmap/index.html">Roadmap</a>
+        <a href="./test-pages/index.html">Test Pages</a>
         <a href="https://github.com/se-cli/se-cli" class="nav-gh" target="_blank" rel="noopener">
           <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
           <span>GitHub</span>
@@ -73,7 +71,7 @@
         A short-lived CLI + long-lived daemon. Chrome, Edge, Firefox — aria snapshots keep token cost low.
       </p>
       <div class="hero-actions">
-        <a href="#quickstart" class="btn btn-primary">Get Started</a>
+        <a href="./docs/getting-started.html" class="btn btn-primary">Get Started</a>
         <div class="hero-install">
           <span class="hero-install-prompt">$</span>
           <code id="install-cmd">npm install -g @browsers-cli/se-cli</code>
@@ -268,754 +266,29 @@ se-cli close</code></pre>
     </div>
   </section>
 
-  <section class="section" id="examples">
+  <section class="section" id="explore">
     <div class="container">
-      <h2 class="section-title">Usage Examples</h2>
-      <p class="section-lead">Real-world patterns: form automation, parallel sessions, CDP attach, shell scripting.</p>
-      <div class="example-grid">
-        <div class="example-card">
-          <div class="example-header">
-            <div class="example-header-icon">📝</div>
-            <h3>Form Submission</h3>
-          </div>
-          <div class="example-body">
-            <div class="code-block">
-              <div class="code-header"><span class="code-lang">bash</span></div>
-<pre><code>se-cli open https://app.example.com/login
-se-cli snapshot
-# - textbox "Email" [ref=e1]
-# - textbox "Password" [ref=e2]
-# - button "Sign in" [ref=e3]
-
-se-cli fill e1 "user@example.com"
-se-cli fill e2 "password123"
-se-cli click e3
-se-cli snapshot
-se-cli close</code></pre>
-            </div>
-          </div>
-        </div>
-
-        <div class="example-card">
-          <div class="example-header">
-            <div class="example-header-icon">🔄</div>
-            <h3>Parallel Browsers</h3>
-          </div>
-          <div class="example-body">
-            <div class="code-block">
-              <div class="code-header"><span class="code-lang">bash</span></div>
-<pre><code># Two sessions, two browsers
-se-cli -s=chrome open https://example.com \
-  --browser=chrome
-se-cli -s=firefox open https://example.com \
-  --browser=firefox
-
-se-cli -s=chrome title
-se-cli -s=firefox title
-
-se-cli -s=chrome close
-se-cli -s=firefox close</code></pre>
-            </div>
-          </div>
-        </div>
-
-        <div class="example-card">
-          <div class="example-header">
-            <div class="example-header-icon">🔌</div>
-            <h3>CDP Attach</h3>
-          </div>
-          <div class="example-body">
-            <div class="code-block">
-              <div class="code-header"><span class="code-lang">bash</span></div>
-<pre><code># Start Chrome with debugging
-google-chrome --remote-debugging-port=9222
-
-# Attach to running browser
-se-cli open --cdp=http://localhost:9222
-se-cli snapshot
-se-cli screenshot --filename=debug.png
-se-cli close</code></pre>
-            </div>
-          </div>
-        </div>
-
-        <div class="example-card">
-          <div class="example-header">
-            <div class="example-header-icon">⚙️</div>
-            <h3>Shell Scripting</h3>
-          </div>
-          <div class="example-body">
-            <div class="code-block">
-              <div class="code-header"><span class="code-lang">bash</span></div>
-<pre><code># Use --raw for clean output
-TITLE=$(se-cli --raw title)
-URL=$(se-cli --raw url)
-
-# Count elements via eval
-COUNT=$(se-cli --raw eval \
-  "document.querySelectorAll('.item').length")
-echo "Found $COUNT items on $TITLE"
-
-# JSON output for pipelines
-se-cli --json snapshot | jq '.refs[]'</code></pre>
-            </div>
-          </div>
-        </div>
-
-        <div class="example-card">
-          <div class="example-header">
-            <div class="example-header-icon">🔍</div>
-            <h3>Find &amp; Search</h3>
-          </div>
-          <div class="example-body">
-            <div class="code-block">
-              <div class="code-header"><span class="code-lang">bash</span></div>
-<pre><code># Search snapshot for text
-se-cli find "Submit"
-# - button "Submit order" [ref=e7]
-
-# Regex search
-se-cli find --regex "price.*\\\$[0-9]+"
-# - text "price: $29.99" [ref=e12]
-
-# Click the found element
-se-cli click e12</code></pre>
-            </div>
-          </div>
-        </div>
-
-        <div class="example-card">
-          <div class="example-header">
-            <div class="example-header-icon">🧪</div>
-            <h3>Code Generation</h3>
-          </div>
-          <div class="example-body">
-            <div class="code-block">
-              <div class="code-header"><span class="code-lang">bash</span></div>
-<pre><code>$ se-cli fill e1 "hello@example.com"
-
-### Ran Selenium code
-await driver.findElement(
-  By.css('[data-se-ref="e1"]')
-).sendKeys("hello@example.com");
-
-# Copy directly into test files</code></pre>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section section-alt" id="commands">
-    <div class="container">
-      <h2 class="section-title">Command Reference</h2>
-      <p class="section-lead">22 commands across sessions, navigation, interaction, snapshots, and execution.</p>
-
-      <div class="cmd-tabs" role="tablist">
-        <button class="cmd-tab active" data-tab="session" role="tab">Session</button>
-        <button class="cmd-tab" data-tab="nav" role="tab">Navigation</button>
-        <button class="cmd-tab" data-tab="interact" role="tab">Interaction</button>
-        <button class="cmd-tab" data-tab="snap" role="tab">Snapshot</button>
-        <button class="cmd-tab" data-tab="exec" role="tab">Save &amp; Execute</button>
-        <button class="cmd-tab" data-tab="flags" role="tab">Flags</button>
-      </div>
-
-      <div class="cmd-panel active" data-panel="session">
-        <table class="cmd-table">
-          <thead><tr><th>Command</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td><code>open [url]</code></td><td>Start daemon + browser, optionally navigate to URL</td></tr>
-            <tr><td><code>close</code></td><td>Close browser and daemon</td></tr>
-            <tr><td><code>list</code></td><td>List all sessions</td></tr>
-            <tr><td><code>close-all</code></td><td>Close all sessions gracefully</td></tr>
-            <tr><td><code>kill-all</code></td><td>Force-kill all sessions</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="cmd-panel" data-panel="nav">
-        <table class="cmd-table">
-          <thead><tr><th>Command</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td><code>goto &lt;url&gt;</code></td><td>Navigate to URL</td></tr>
-            <tr><td><code>go-back</code></td><td>Browser back</td></tr>
-            <tr><td><code>go-forward</code></td><td>Browser forward</td></tr>
-            <tr><td><code>reload</code></td><td>Reload page</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="cmd-panel" data-panel="interact">
-        <table class="cmd-table">
-          <thead><tr><th>Command</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td><code>click &lt;ref|selector&gt;</code></td><td>Click element</td></tr>
-            <tr><td><code>fill &lt;ref|selector&gt; &lt;text&gt;</code></td><td>Clear and fill input</td></tr>
-            <tr><td><code>type &lt;text&gt;</code></td><td>Type into focused element</td></tr>
-            <tr><td><code>press &lt;key&gt;</code></td><td>Press keyboard key (Enter, Tab, Escape, …)</td></tr>
-            <tr><td><code>select &lt;ref&gt; &lt;value&gt;</code></td><td>Select dropdown option</td></tr>
-            <tr><td><code>check &lt;ref&gt;</code></td><td>Check checkbox</td></tr>
-            <tr><td><code>uncheck &lt;ref&gt;</code></td><td>Uncheck checkbox</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="cmd-panel" data-panel="snap">
-        <table class="cmd-table">
-          <thead><tr><th>Command</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td><code>snapshot [ref]</code></td><td>Aria snapshot of page or element subtree</td></tr>
-            <tr><td><code>snapshot --depth=N</code></td><td>Limit snapshot depth</td></tr>
-            <tr><td><code>snapshot --filename=f.yml</code></td><td>Save snapshot to file</td></tr>
-            <tr><td><code>find &lt;text&gt;</code></td><td>Search snapshot for text</td></tr>
-            <tr><td><code>find --regex &lt;pattern&gt;</code></td><td>Search snapshot with regex</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="cmd-panel" data-panel="exec">
-        <table class="cmd-table">
-          <thead><tr><th>Command</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td><code>screenshot [ref]</code></td><td>Take screenshot (full page or element)</td></tr>
-            <tr><td><code>screenshot --filename=f.png</code></td><td>Save screenshot to file</td></tr>
-            <tr><td><code>eval "&lt;js&gt;"</code></td><td>Execute JavaScript, return result</td></tr>
-            <tr><td><code>eval "&lt;js&gt;" &lt;ref&gt;</code></td><td>Execute JavaScript on element</td></tr>
-            <tr><td><code>title</code></td><td>Get page title</td></tr>
-            <tr><td><code>url</code></td><td>Get current URL</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="cmd-panel" data-panel="flags">
-        <table class="cmd-table">
-          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
-          <tbody>
-            <tr><td><code>--raw</code></td><td>Output only the result value (for scripting)</td></tr>
-            <tr><td><code>--json</code></td><td>Structured JSON output</td></tr>
-            <tr><td><code>-s=&lt;name&gt;</code></td><td>Use named session</td></tr>
-            <tr><td><code>--browser=chrome|edge|firefox</code></td><td>Browser selection (default: chrome)</td></tr>
-            <tr><td><code>--headed</code></td><td>Show browser window (default: headless)</td></tr>
-            <tr><td><code>--cdp=&lt;url&gt;</code></td><td>Attach to running Chrome via CDP</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="environment">
-    <div class="container">
-      <h2 class="section-title">Environment &amp; Configuration</h2>
-      <p class="section-lead">Selenium ecosystem environment variables, driver paths, and configuration tips for se-cli users.</p>
-
-      <div class="env-group">
-        <div class="env-group-title">
-          <span class="env-group-title-icon">🔧</span>
-          se-cli Environment Variables
-        </div>
-        <table class="env-table">
-          <thead><tr><th>Variable</th><th>Description</th><th>Example</th></tr></thead>
-          <tbody>
-            <tr><td><code>SE_CLI_SESSION</code></td><td class="env-desc">Default session name when <code>-s</code> flag is not provided</td><td class="env-example">my-session</td></tr>
-            <tr><td><code>SE_CLI_E2E</code></td><td class="env-desc">Set to <code>1</code> to run integration tests (requires real browsers)</td><td class="env-example">1</td></tr>
-            <tr><td><code>SE_CLI_TEST_CHROME</code></td><td class="env-desc">Set to <code>1</code> to run Chrome integration test cases</td><td class="env-example">1</td></tr>
-            <tr><td><code>SE_CLI_TEST_EDGE</code></td><td class="env-desc">Set to <code>1</code> to run Edge integration test cases</td><td class="env-example">1</td></tr>
-            <tr><td><code>SE_CLI_TEST_FIREFOX</code></td><td class="env-desc">Set to <code>1</code> to run Firefox integration test cases</td><td class="env-example">1</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="env-group">
-        <div class="env-group-title">
-          <span class="env-group-title-icon">⚙️</span>
-          Selenium Manager Variables
-        </div>
-        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;">
-          <code>selenium-manager</code> (bundled with <code>selenium-webdriver</code>) auto-downloads drivers. These variables control its behavior. Priority: CLI args &gt; config file (<code>~/.cache/selenium/se-config.toml</code>) &gt; env vars.
-        </p>
-        <table class="env-table">
-          <thead><tr><th>Variable</th><th>Description</th><th>Example</th></tr></thead>
-          <tbody>
-            <tr><td><code>SE_BROWSER</code></td><td class="env-desc">Browser name for driver resolution</td><td class="env-example">chrome</td></tr>
-            <tr><td><code>SE_DRIVER</code></td><td class="env-desc">Driver name to use</td><td class="env-example">chromedriver</td></tr>
-            <tr><td><code>SE_BROWSER_VERSION</code></td><td class="env-desc">Pin browser major version</td><td class="env-example">120, beta, dev</td></tr>
-            <tr><td><code>SE_DRIVER_VERSION</code></td><td class="env-desc">Pin driver version</td><td class="env-example">120.0.6099.71</td></tr>
-            <tr><td><code>SE_BROWSER_PATH</code></td><td class="env-desc">Absolute path to browser binary (for version detection)</td><td class="env-example">/usr/bin/google-chrome</td></tr>
-            <tr><td><code>SE_DRIVER_MIRROR_URL</code></td><td class="env-desc">Mirror URL for driver downloads (useful in China)</td><td class="env-example">https://npmmirror.com/mirrors/chromedriver/</td></tr>
-            <tr><td><code>SE_BROWSER_MIRROR_URL</code></td><td class="env-desc">Mirror URL for browser downloads</td><td class="env-example">https://mirror.example.com/firefox/</td></tr>
-            <tr><td><code>SE_PROXY</code></td><td class="env-desc">HTTP proxy for network requests</td><td class="env-example">user:pass@proxy:8080</td></tr>
-            <tr><td><code>SE_TIMEOUT</code></td><td class="env-desc">Network request timeout in seconds (default: 300)</td><td class="env-example">600</td></tr>
-            <tr><td><code>SE_OFFLINE</code></td><td class="env-desc">Disable network requests and downloads</td><td class="env-example">true</td></tr>
-            <tr><td><code>SE_CACHE_PATH</code></td><td class="env-desc">Local cache path for drivers and browsers</td><td class="env-example">~/.cache/selenium</td></tr>
-            <tr><td><code>SE_SKIP_DRIVER_IN_PATH</code></td><td class="env-desc">Ignore drivers found in system PATH</td><td class="env-example">true</td></tr>
-            <tr><td><code>SE_SKIP_BROWSER_IN_PATH</code></td><td class="env-desc">Ignore browsers found in system PATH</td><td class="env-example">true</td></tr>
-            <tr><td><code>SE_AVOID_STATS</code></td><td class="env-desc">Disable anonymous usage statistics reporting</td><td class="env-example">true</td></tr>
-            <tr><td><code>SE_DEBUG</code></td><td class="env-desc">Enable DEBUG-level Selenium Manager logs</td><td class="env-example">true</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="env-group">
-        <div class="env-group-title">
-          <span class="env-group-title-icon">📁</span>
-          Driver Path System Properties
-        </div>
-        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;">
-          Traditional driver location via JVM system properties. When set, Selenium Manager won't intervene (acts as fallback only). se-cli passes these to the underlying <code>selenium-webdriver</code> Builder.
-        </p>
-        <table class="env-table">
-          <thead><tr><th>Property</th><th>Description</th><th>Example</th></tr></thead>
-          <tbody>
-            <tr><td><code>webdriver.chrome.driver</code></td><td class="env-desc">Path to ChromeDriver binary</td><td class="env-example">/usr/local/bin/chromedriver</td></tr>
-            <tr><td><code>webdriver.gecko.driver</code></td><td class="env-desc">Path to GeckoDriver (Firefox) binary</td><td class="env-example">/usr/local/bin/geckodriver</td></tr>
-            <tr><td><code>webdriver.edge.driver</code></td><td class="env-desc">Path to Microsoft EdgeDriver binary</td><td class="env-example">C:\drivers\msedgedriver.exe</td></tr>
-            <tr><td><code>webdriver.ie.driver</code></td><td class="env-desc">Path to IEDriverServer binary</td><td class="env-example">C:\drivers\IEDriverServer.exe</td></tr>
-          </tbody>
-        </table>
-        <div class="env-note">
-          <strong>Tip:</strong> On Node.js, set these before launching se-cli: <code>webdriver.chrome.driver=/path/to/chromedriver se-cli open https://example.com</code>. Or put the driver binary in your system <code>PATH</code> — Selenium Manager will find it automatically.
-        </div>
-      </div>
-
-      <div class="env-group">
-        <div class="env-group-title">
-          <span class="env-group-title-icon">🌐</span>
-          Browser Binary Path Variables
-        </div>
-        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;">
-          When browsers are installed in non-default locations, use these variables to help Selenium Manager locate them.
-        </p>
-        <table class="env-table">
-          <thead><tr><th>Variable</th><th>Description</th><th>Example</th></tr></thead>
-          <tbody>
-            <tr><td><code>SE_BROWSER_PATH</code></td><td class="env-desc">Selenium Manager — browser binary absolute path</td><td class="env-example">C:\Program Files\Google\Chrome\Application\chrome.exe</td></tr>
-            <tr><td><code>CHROME_BIN</code></td><td class="env-desc">Chrome/Chromium binary path (recognized by some tools)</td><td class="env-example">/usr/bin/google-chrome-stable</td></tr>
-            <tr><td><code>CHROME_PATH</code></td><td class="env-desc">Alternative Chrome binary path variable</td><td class="env-example">/opt/google/chrome/chrome</td></tr>
-            <tr><td><code>FIREFOX_BIN</code></td><td class="env-desc">Firefox binary path</td><td class="env-example">/usr/bin/firefox</td></tr>
-            <tr><td><code>MOZ_HEADLESS</code></td><td class="env-desc">Firefox headless mode switch (recognized by Firefox itself)</td><td class="env-example">1</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="env-group">
-        <div class="env-group-title">
-          <span class="env-group-title-icon">🔗</span>
-          Remote WebDriver &amp; Grid Variables
-        </div>
-        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;">
-          For connecting to Selenium Grid or cloud providers (BrowserStack, Sauce Labs, etc.). se-cli's <code>--endpoint</code> flag for Grid attach is on the v0.6 roadmap.
-        </p>
-        <table class="env-table">
-          <thead><tr><th>Variable</th><th>Description</th><th>Example</th></tr></thead>
-          <tbody>
-            <tr><td><code>SELENIUM_REMOTE_URL</code></td><td class="env-desc">Remote WebDriver server URL (Grid or SaaS)</td><td class="env-example">http://localhost:4444</td></tr>
-            <tr><td><code>SELENIUM_GRID_URL</code></td><td class="env-desc">Selenium Grid URL (alternative binding)</td><td class="env-example">http://grid.example.com:4444</td></tr>
-            <tr><td><code>SE_HUB_HOST</code></td><td class="env-desc">Grid Hub hostname</td><td class="env-example">grid.example.com</td></tr>
-            <tr><td><code>SE_HUB_PORT</code></td><td class="env-desc">Grid Hub port (default: 4444)</td><td class="env-example">4444</td></tr>
-            <tr><td><code>SE_NODE_MAX_SESSIONS</code></td><td class="env-desc">Max concurrent sessions per node (default: 1)</td><td class="env-example">4</td></tr>
-            <tr><td><code>SE_NODE_SESSION_TIMEOUT</code></td><td class="env-desc">Session idle timeout in seconds (default: 300)</td><td class="env-example">600</td></tr>
-          </tbody>
-        </table>
-        <div class="env-note">
-          <strong>Note:</strong> se-cli currently manages local browsers only. Remote Grid attach (<code>--endpoint</code>) is planned for v0.6. The variables above are recognized by the underlying <code>selenium-webdriver</code> library when configuring remote connections manually.
-        </div>
-      </div>
-
-      <div class="env-group">
-        <div class="env-group-title">
-          <span class="env-group-title-icon">🐳</span>
-          Docker &amp; CI Tips
-        </div>
-        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;">
-          Common patterns for running se-cli in Docker containers and CI pipelines.
-        </p>
-        <table class="env-table">
-          <thead><tr><th>Variable</th><th>Description</th><th>Example</th></tr></thead>
-          <tbody>
-            <tr><td><code>SE_OFFLINE</code></td><td class="env-desc">Use pre-installed browsers/drivers in Docker image (default: true in Selenium images)</td><td class="env-example">true</td></tr>
-            <tr><td><code>SE_SCREEN_WIDTH</code></td><td class="env-desc">Screen width for headless display (Docker)</td><td class="env-example">1920</td></tr>
-            <tr><td><code>SE_SCREEN_HEIGHT</code></td><td class="env-desc">Screen height for headless display (Docker)</td><td class="env-example">1080</td></tr>
-            <tr><td><code>SE_START_XVFB</code></td><td class="env-desc">Start Xvfb virtual display in container</td><td class="env-example">true</td></tr>
-            <tr><td><code>DISPLAY</code></td><td class="env-desc">X11 display address for Linux headless environments</td><td class="env-example">:99</td></tr>
-            <tr><td><code>SE_JAVA_OPTS</code></td><td class="env-desc">Extra JVM options for Selenium Grid components</td><td class="env-example">-Xmx512m</td></tr>
-          </tbody>
-        </table>
-        <div class="env-note">
-          <strong>CI tip:</strong> In GitHub Actions, Chrome is pre-installed on <code>ubuntu-latest</code> runners. For other browsers, use <code>npx @puppeteer/browsers install chrome@stable</code> before running se-cli. Set <code>SE_AVOID_STATS=true</code> to disable telemetry in CI.
-        </div>
-      </div>
-
-      <div class="env-group">
-        <div class="env-group-title">
-          <span class="env-group-title-icon">💡</span>
-          se-cli CLI Flags Reference
-        </div>
-        <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 14px;">
-          se-cli-specific flags that control browser selection, output format, and session behavior. These take priority over environment variables.
-        </p>
-        <table class="env-table">
-          <thead><tr><th>Flag</th><th>Description</th><th>Example</th></tr></thead>
-          <tbody>
-            <tr><td><code>--browser=&lt;name&gt;</code></td><td class="env-desc">Browser selection: chrome (default), edge, firefox</td><td class="env-example">--browser=firefox</td></tr>
-            <tr><td><code>--headed</code></td><td class="env-desc">Show browser window (default: headless)</td><td class="env-example">se-cli open --headed</td></tr>
-            <tr><td><code>--cdp=&lt;url&gt;</code></td><td class="env-desc">Attach to running Chrome/Edge via CDP</td><td class="env-example">--cdp=http://localhost:9222</td></tr>
-            <tr><td><code>-s=&lt;name&gt;</code></td><td class="env-desc">Named session for parallel browsers</td><td class="env-example">-s=firefox-session</td></tr>
-            <tr><td><code>--raw</code></td><td class="env-desc">Output only the result value (for scripting)</td><td class="env-example">se-cli --raw title</td></tr>
-            <tr><td><code>--json</code></td><td class="env-desc">Structured JSON output</td><td class="env-example">se-cli --json snapshot</td></tr>
-            <tr><td><code>--filename=&lt;f&gt;</code></td><td class="env-desc">Save snapshot/screenshot to file</td><td class="env-example">--filename=page.yml</td></tr>
-            <tr><td><code>--depth=&lt;N&gt;</code></td><td class="env-desc">Limit aria snapshot recursion depth (default: 50)</td><td class="env-example">--depth=3</td></tr>
-            <tr><td><code>--regex=&lt;pattern&gt;</code></td><td class="env-desc">Search snapshot with regex (find command)</td><td class="env-example">--regex "price.*\\$[0-9]+"</td></tr>
-            <tr><td><code>--submit</code></td><td class="env-desc">Submit form after fill (Enter key)</td><td class="env-example">se-cli fill e1 "text" --submit</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <section class="section section-alt" id="architecture">
-    <div class="container">
-      <h2 class="section-title">Architecture</h2>
-      <p class="section-lead">Short-lived CLI + long-lived daemon, talking over line-delimited JSON.</p>
-
-      <div class="arch-diagram">
-<pre><code>┌─────────────────┐  Unix socket / Win pipe  ┌──────────────────────┐
-│  se-cli         │ ─── line-delimited JSON ─▶ │  se-cli daemon       │
-│  (short-lived)  │ ◀── single response ───── │  (holds WebDriver)   │
-└─────────────────┘                            └──────────────────────┘
-                                                          │
-                                                          │ W3C WebDriver HTTP
-                                                          ▼
-                                                    ┌──────────┐
-                                                    │ Browser  │
-                                                    │(Chrome/  │
-                                                    │ Edge/FF) │
-                                                    └──────────┘</code></pre>
-      </div>
-
-      <div class="arch-grid">
-        <div class="arch-card">
-          <h3>CLI process</h3>
-          <p>Spawned per command. Sends one JSON line, receives one response, exits. Zero schema overhead — the daemon holds all the state.</p>
-        </div>
-        <div class="arch-card">
-          <h3>Daemon process</h3>
-          <p>Spawned on first <code>open</code>. Persists across CLI calls. Holds the WebDriver instance, the snapshot tree, and the ref registry.</p>
-        </div>
-        <div class="arch-card">
-          <h3>Communication</h3>
-          <p>Line-delimited JSON over Unix socket (Linux/macOS) or Windows named pipe. One request per connection — no long-lived streams.</p>
-        </div>
-        <div class="arch-card">
-          <h3>Session registry</h3>
-          <p><code>.session</code> JSON files in <code>&lt;cache&gt;/ms-se-cli/daemon/</code>. Survives CLI exits; cleaned up on <code>close</code>.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="agents">
-    <div class="container">
-      <h2 class="section-title">AI Agent Integration</h2>
-      <p class="section-lead">Works with any agent that runs shell commands. No MCP server, no schema bloat.</p>
-      <div class="agent-flow">
-        <div class="agent-step">
-          <div class="agent-step-num">1</div>
-          <div class="agent-step-body">
-            <h3>Install the CLI</h3>
-            <p>One global install — no per-agent setup or MCP server configuration needed.</p>
-            <div class="code-block">
-              <div class="code-header"><span class="code-lang">bash</span></div>
-<pre><code>npm install -g @browsers-cli/se-cli</code></pre>
-            </div>
-          </div>
-        </div>
-        <div class="agent-step">
-          <div class="agent-step-num">2</div>
-          <div class="agent-step-body">
-            <h3>Drop in SKILL.md</h3>
-            <p>Place the skill file into your agent's skills directory. The agent learns the command syntax instantly.</p>
-            <div class="code-block">
-              <div class="code-header"><span class="code-lang">bash</span></div>
-<pre><code># Claude Code
-mkdir -p .claude/skills/se-cli
-cp skill/SKILL.md .claude/skills/se-cli/
-
-# Cursor / Copilot CLI — same pattern</code></pre>
-            </div>
-          </div>
-        </div>
-        <div class="agent-step">
-          <div class="agent-step-num">3</div>
-          <div class="agent-step-body">
-            <h3>Agent drives the browser</h3>
-            <p>The agent calls <code>se-cli</code> commands like a human would — open, snapshot, interact, close.</p>
-            <div class="code-block">
-              <div class="code-header"><span class="code-lang">agent conversation</span></div>
-<pre><code>User: "Check that the login page works"
-Agent: I'll navigate and test the login flow.
-  $ se-cli open https://app.example.com/login
-  $ se-cli snapshot
-  $ se-cli fill e1 "test@example.com"
-  $ se-cli fill e2 "password"
-  $ se-cli click e3
-  $ se-cli snapshot
-  Login succeeded — dashboard is visible.</code></pre>
-            </div>
-          </div>
-        </div>
-        <div class="agent-step">
-          <div class="agent-step-num">4</div>
-          <div class="agent-step-body">
-            <h3>Why CLI beats MCP for agents</h3>
-            <p>No tool schemas pollute the context window. No JSON-RPC envelope overhead. Just clean shell commands and compact YAML output.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section section-alt" id="comparison">
-    <div class="container">
-      <h2 class="section-title">vs. playwright-cli</h2>
-      <p class="section-lead">Different tradeoffs. Pick the one that fits your stack.</p>
-      <div class="table-wrap">
-        <table class="cmp-table">
-          <thead>
-            <tr><th>Feature</th><th>playwright-cli</th><th>se-cli</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Aria snapshot</td><td>Built-in mature</td><td>Self-written, ~80% coverage</td></tr>
-            <tr><td>Ref engine</td><td>Native <code>aria-ref</code></td><td><code>data-se-ref</code> attribute</td></tr>
-            <tr><td>Multi-browser</td><td>Chromium only</td><td>Chrome + Edge + Firefox</td></tr>
-            <tr><td>Real Safari</td><td>No</td><td>Possible via Safari driver</td></tr>
-            <tr><td>iframe support</td><td>Full</td><td>Placeholder (v0.3)</td></tr>
-            <tr><td>Shadow DOM</td><td>Full</td><td>Placeholder (v0.3)</td></tr>
-            <tr><td>Test runner attach</td><td>Yes (Playwright test)</td><td>No (v0.7 exploratory)</td></tr>
-            <tr><td>Tracing</td><td>Full</td><td>Not planned</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="browsers">
-    <div class="container">
-      <h2 class="section-title">Browser Support</h2>
-      <p class="section-lead">Three browsers, one CLI. Drivers are auto-managed — no manual setup.</p>
-      <div class="browser-grid">
-        <div class="browser-card">
-          <div class="browser-icon">🌐</div>
-          <h3>Chrome</h3>
-          <div class="browser-features">
-            <div class="browser-feature"><span class="yes">&#10003;</span> Headless</div>
-            <div class="browser-feature"><span class="yes">&#10003;</span> Headed</div>
-            <div class="browser-feature"><span class="yes">&#10003;</span> CDP Attach</div>
-          </div>
-        </div>
-        <div class="browser-card">
-          <div class="browser-icon">🧩</div>
-          <h3>Edge</h3>
-          <div class="browser-features">
-            <div class="browser-feature"><span class="yes">&#10003;</span> Headless</div>
-            <div class="browser-feature"><span class="yes">&#10003;</span> Headed</div>
-            <div class="browser-feature"><span class="yes">&#10003;</span> CDP Attach</div>
-          </div>
-        </div>
-        <div class="browser-card">
-          <div class="browser-icon">🦊</div>
-          <h3>Firefox</h3>
-          <div class="browser-features">
-            <div class="browser-feature"><span class="yes">&#10003;</span> Headless</div>
-            <div class="browser-feature"><span class="yes">&#10003;</span> Headed</div>
-            <div class="browser-feature"><span class="no">&#10007;</span> CDP Attach</div>
-          </div>
-        </div>
-        <div class="browser-card">
-          <div class="browser-icon">🧭</div>
-          <h3>Safari</h3>
-          <div class="browser-features">
-            <div class="browser-feature"><span class="no">&#10007;</span> Headless</div>
-            <div class="browser-feature"><span class="no">&#10007;</span> Headed</div>
-            <div class="browser-feature"><span class="no">&#10007;</span> CDP Attach</div>
-          </div>
-        </div>
-      </div>
-      <p style="text-align: center; margin-top: 28px; color: var(--text-mute); font-size: 0.88rem;">
-        <code>selenium-manager</code> auto-downloads the correct driver binary for your browser and platform. Safari support is possible via Safari driver — planned for future exploration.
-      </p>
-    </div>
-  </section>
-
-  <section class="section section-alt" id="roadmap">
-    <div class="container">
-      <h2 class="section-title">Roadmap</h2>
-      <p class="section-lead">Based on competitive analysis with Playwright CLI and Selenium BiDi. Features classified as Must-Have, Core, or Marginal. <a href="https://github.com/se-cli/se-cli/issues?q=is%3Aissue+label%3Aroadmap">Track on GitHub →</a></p>
-      <div class="roadmap">
-        <div class="roadmap-item">
-          <div class="roadmap-version">v0.1 ✅</div>
-          <div class="roadmap-body">
-            <h3>MVP Architecture</h3>
-            <p>CLI + Daemon architecture, aria snapshot + ref mechanism, basic commands (click, fill, type, press, snapshot, screenshot, eval), named sessions, multi-browser support.</p>
-          </div>
-        </div>
-        <div class="roadmap-item">
-          <div class="roadmap-version">v0.2 ✅</div>
-          <div class="roadmap-body">
-            <h3>Practical Capability Completion</h3>
-            <p>Storage management (cookies, localStorage, sessionStorage), state save/load, tab management, <code>install --skills</code>, <code>--profile</code>, <code>--persistent</code>.</p>
-          </div>
-        </div>
-        <div class="roadmap-item">
-          <div class="roadmap-version">v0.3 ✅</div>
-          <div class="roadmap-body">
-            <h3>iframe &amp; Shadow DOM</h3>
-            <p>Recursive iframe snapshots with cross-frame refs (<code>f1e3</code>). Shadow DOM recursion. <code>find</code> searches across frames and shadow roots.</p>
-          </div>
-        </div>
-        <div class="roadmap-item">
-          <div class="roadmap-version">v0.4</div>
-          <div class="roadmap-body">
-            <h3>Interaction Completion <span class="badge badge-must">Must-Have</span></h3>
-            <p><code>hover</code>, <code>dblclick</code>, <code>drag</code>, <code>dialog-accept/dismiss</code>, <code>upload</code>, <code>resize</code>, fine-grained keyboard/mouse control (<code>keydown</code>, <code>mousemove</code>, <code>mousewheel</code>). All via Selenium Actions API.</p>
-          </div>
-        </div>
-        <div class="roadmap-item">
-          <div class="roadmap-version">v0.5</div>
-          <div class="roadmap-body">
-            <h3>Network &amp; Debugging <span class="badge badge-core">Core</span></h3>
-            <p>BiDi network interception (<code>route</code>/<code>unroute</code>), console log capture, network request inspection, JS error monitoring, persistent element highlighting.</p>
-          </div>
-        </div>
-        <div class="roadmap-item">
-          <div class="roadmap-version">v0.6</div>
-          <div class="roadmap-body">
-            <h3>MCP Server &amp; AI Ecosystem <span class="badge badge-must">Must-Have</span></h3>
-            <p>MCP Server via <code>@modelcontextprotocol/sdk</code> (stdio + HTTP transport), <code>run-code</code>, <code>generate-locator</code>, role-based codegen, Agent Skills frontmatter compliance.</p>
-          </div>
-        </div>
-        <div class="roadmap-item">
-          <div class="roadmap-version">v0.7</div>
-          <div class="roadmap-body">
-            <h3>Remote Connections &amp; Safari <span class="badge badge-core">Core</span></h3>
-            <p><code>--browser=safari</code> (macOS only), <code>--endpoint</code> for Selenium Grid, cloud browser integration (Browserbase), PDF export.</p>
-          </div>
-        </div>
-        <div class="roadmap-item">
-          <div class="roadmap-version">v0.8</div>
-          <div class="roadmap-body">
-            <h3>Recording &amp; Visualization <span class="badge badge-marginal">Marginal</span></h3>
-            <p><code>record</code> mode, tracing, video recording, <code>show</code> dashboard, page annotation.</p>
-          </div>
-        </div>
-        <div class="roadmap-item">
-          <div class="roadmap-version">v0.9</div>
-          <div class="roadmap-body">
-            <h3>VSCode Extension <span class="badge badge-marginal">Marginal</span></h3>
-            <p>Task Provider, Webview screenshot/snapshot preview, MCP Server auto-registration. Separate npm package.</p>
-          </div>
-        </div>
-        <div class="roadmap-item roadmap-item-long">
-          <div class="roadmap-version roadmap-version-long">long-term</div>
-          <div class="roadmap-body">
-            <h3>Future Exploration</h3>
-            <p>Python/Java client SDKs, trace viewer, DOM mutation listener, script preload, multi-language SKILL.md, pytest-selenium hooks.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="development">
-    <div class="container">
-      <h2 class="section-title">Development</h2>
-      <p class="section-lead">Open source, Apache-2.0. Clone, build, test, and contribute.</p>
-      <div class="dev-grid">
-        <div class="dev-card">
-          <h3>Clone &amp; Install</h3>
-          <p>Standard Node.js 18+ workflow with TypeScript.</p>
-          <div class="code-block">
-            <div class="code-header"><span class="code-lang">bash</span></div>
-<pre><code>git clone https://github.com/se-cli/se-cli.git
-cd se-cli
-npm install</code></pre>
-          </div>
-        </div>
-        <div class="dev-card">
-          <h3>Build</h3>
-          <p>TypeScript compilation to <code>dist/</code>.</p>
-          <div class="code-block">
-            <div class="code-header"><span class="code-lang">bash</span></div>
-<pre><code>npx tsc</code></pre>
-          </div>
-        </div>
-        <div class="dev-card">
-          <h3>Run Tests</h3>
-          <p>102 unit tests + 30 integration tests with Vitest.</p>
-          <div class="code-block">
-            <div class="code-header"><span class="code-lang">bash</span></div>
-<pre><code># Unit tests
-npx vitest run tests/unit/
-
-# Integration tests (needs browsers)
-SE_CLI_E2E=1 SE_CLI_TEST_CHROME=1 \
-npx vitest run tests/integration/</code></pre>
-          </div>
-        </div>
-      </div>
-      <div class="dev-structure">
-<pre><code>src/
-├── cli.ts                  <span class="file"># CLI entry point</span>
-├── program.ts              <span class="file"># Command routing</span>
-├── session.ts              <span class="file"># Daemon spawn + RPC client</span>
-├── registry.ts             <span class="file"># Session file management</span>
-├── output.ts               <span class="file"># Output formatting</span>
-├── protocol.ts             <span class="file"># Message types</span>
-├── minimist.ts             <span class="file"># Argv parser</span>
-├── config.ts               <span class="file"># Paths and hashing</span>
-├── response.ts             <span class="file"># Response serialization</span>
-├── snapshot/
-│   └── aria-snapshot.ts    <span class="file"># Injected JS script</span>
-└── daemon/
-    ├── server.ts           <span class="file"># Daemon socket server</span>
-    ├── backend.ts          <span class="file"># Tool dispatcher</span>
-    └── tools/              <span class="file"># Tool handlers (17 tools)</span></code></pre>
-      </div>
-      <p style="text-align: center; margin-top: 28px;">
-        <a href="https://github.com/se-cli/se-cli/blob/main/docs/spec.md" class="btn btn-ghost" target="_blank" rel="noopener">Read the Spec</a>
-        <a href="https://github.com/se-cli/se-cli/issues" class="btn btn-ghost" target="_blank" rel="noopener">Open an Issue</a>
-      </p>
-    </div>
-  </section>
-
-  <section class="section section-alt" id="faq">
-    <div class="container">
-      <h2 class="section-title">FAQ</h2>
-      <p class="section-lead">Common questions about se-cli.</p>
-      <div class="faq-list">
-        <details class="faq-item">
-          <summary>How is se-cli different from Selenium MCP?</summary>
-          <p>Selenium MCP loads ~5KB of tool schemas per call and returns full accessibility trees. se-cli uses a CLI + daemon architecture: the CLI sends one JSON line, the daemon holds the WebDriver, and aria snapshots return compact YAML with element refs. No schemas enter the agent's context — typically 10x fewer tokens.</p>
-        </details>
-        <details class="faq-item">
-          <summary>Which browsers are supported?</summary>
-          <p>Chrome, Edge, and Firefox are fully supported for both headless and headed modes. Chrome and Edge also support CDP attach via <code>--cdp=&lt;url&gt;</code> to connect to a running browser session.</p>
-        </details>
-        <details class="faq-item">
-          <summary>Do I need to install browser drivers separately?</summary>
-          <p>No. <code>selenium-manager</code> (bundled with <code>selenium-webdriver</code>) automatically downloads the correct driver binary for your browser and platform.</p>
-        </details>
-        <details class="faq-item">
-          <summary>Can I use se-cli with my AI agent?</summary>
-          <p>Yes. se-cli works with any AI agent that can run shell commands — Claude Code, Cursor, Copilot CLI, and more. Place <code>skill/SKILL.md</code> into your agent's skills directory and it can start driving browsers immediately.</p>
-        </details>
-        <details class="faq-item">
-          <summary>How do sessions persist between commands?</summary>
-          <p>The daemon process holds the WebDriver instance and stays alive across CLI invocations. Session metadata is stored as <code>.session</code> JSON files in <code>&lt;cache&gt;/ms-se-cli/daemon/</code>. Use <code>close</code> to clean up, or <code>kill-all</code> to force-kill.</p>
-        </details>
-        <details class="faq-item">
-          <summary>Is se-cli a replacement for Selenium WebDriver?</summary>
-          <p>No. se-cli is built on top of <code>selenium-webdriver</code>. It provides a CLI interface and daemon architecture on top of the WebDriver protocol, making it accessible to AI agents and shell scripts. Every action also emits the equivalent Selenium code for your test files.</p>
-        </details>
-        <details class="faq-item">
-          <summary>What's the license?</summary>
-          <p>Apache License 2.0. See <a href="https://github.com/se-cli/se-cli/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a> for details.</p>
-        </details>
+      <h2 class="section-title">Explore</h2>
+      <p class="section-lead">Documentation, roadmap, and live test pages — everything you need to go deeper.</p>
+      <div class="doc-grid">
+        <a href="./docs/index.html" class="doc-card">
+          <div class="doc-card-icon">📚</div>
+          <h3>Documentation</h3>
+          <p>Installation, command reference, configuration, sessions, snapshots, code generation, AI agents, and troubleshooting.</p>
+          <span class="doc-card-arrow">Read more →</span>
+        </a>
+        <a href="./roadmap/index.html" class="doc-card">
+          <div class="doc-card-icon">🗺️</div>
+          <h3>Roadmap</h3>
+          <p>Version timeline v0.1–v0.12, the implementation matrix across browsers, and the full changelog.</p>
+          <span class="doc-card-arrow">Read more →</span>
+        </a>
+        <a href="./test-pages/index.html" class="doc-card">
+          <div class="doc-card-icon">🧪</div>
+          <h3>Test Pages</h3>
+          <p>Reference pages for navigation, forms, storage, tabs, iframes, and Shadow DOM — used by the integration suite.</p>
+          <span class="doc-card-arrow">Read more →</span>
+        </a>
       </div>
     </div>
   </section>
@@ -1025,7 +298,7 @@ npx vitest run tests/integration/</code></pre>
       <h2>Start automating with fewer tokens</h2>
       <p>Install se-cli and let your agent drive any browser.</p>
       <div class="cta-buttons">
-        <a href="#quickstart" class="btn btn-primary">Get Started</a>
+        <a href="./docs/getting-started.html" class="btn btn-primary">Get Started</a>
         <a href="https://github.com/se-cli/se-cli/blob/main/docs/spec.md" class="btn btn-ghost" target="_blank" rel="noopener">Read the Spec</a>
       </div>
     </div>
@@ -1038,13 +311,11 @@ npx vitest run tests/integration/</code></pre>
         <span>se-cli</span>
       </div>
       <div class="footer-links">
+        <a href="./docs/index.html">Docs</a>
+        <a href="./roadmap/index.html">Roadmap</a>
+        <a href="./test-pages/index.html">Test Pages</a>
         <a href="https://github.com/se-cli/se-cli">GitHub</a>
         <a href="https://github.com/se-cli/se-cli/issues">Issues</a>
-        <a href="https://github.com/se-cli/se-cli/discussions">Discussions</a>
-        <a href="#development">Development</a>
-        <a href="https://github.com/se-cli/se-cli/blob/main/docs/spec.md">Spec</a>
-        <a href="https://github.com/se-cli/se-cli/blob/main/README.md">README</a>
-        <a href="https://github.com/se-cli/se-cli/blob/main/LICENSE">License</a>
         <a href="https://www.npmjs.com/package/@browsers-cli/se-cli">npm</a>
       </div>
       <div class="footer-copy">
@@ -1053,6 +324,7 @@ npx vitest run tests/integration/</code></pre>
     </div>
   </footer>
 
-  <script src="assets/js/main.js"></script>
+  <script src="assets/js/nav.js"></script>
+  <script src="assets/js/home.js"></script>
 </body>
 </html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="se-cli named sessions, parallel multi-browser, CDP attach, persistent profiles, and the daemon lifecycle." />
+  <meta name="theme-color" content="#22C55E" />
+  <title>Sessions &amp; Browsers — se-cli Docs</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+  <nav class="nav" id="nav">
+    <div class="container nav-inner">
+      <a href="../index.html" class="nav-logo" aria-label="se-cli home">
+        <img src="../assets/img/favicon.svg" alt="" width="28" height="28" />
+        <span>se-cli</span>
+      </a>
+      <div class="nav-links" id="nav-links">
+        <a href="../docs/index.html" class="current">Docs</a>
+        <a href="../roadmap/index.html">Roadmap</a>
+        <a href="../test-pages/index.html">Test Pages</a>
+        <a href="https://github.com/se-cli/se-cli" class="nav-gh" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="docs-layout">
+    <aside class="docs-sidebar">
+      <h4>Get started</h4>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="commands.html">Command Reference</a>
+      <a href="configuration.html">Configuration</a>
+      <h4>Guides</h4>
+      <a href="sessions.html" class="current">Sessions &amp; Browsers</a>
+      <a href="storage-state.html">Storage &amp; State</a>
+      <a href="snapshots-refs.html">Snapshots &amp; Refs</a>
+      <a href="codegen.html">Code Generation</a>
+      <a href="ai-agents.html">AI Agents</a>
+      <h4>Reference</h4>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </aside>
+
+    <main class="docs-content">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../index.html">Home</a>
+        <span class="breadcrumb-sep">/</span>
+        <a href="index.html">Docs</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Sessions &amp; Browsers</span>
+      </nav>
+
+      <h2 id="named-sessions">Named sessions</h2>
+      <p>By default every command targets the default session. Pass <code>-s=&lt;name&gt;</code> to isolate a session — each named session gets its own daemon, WebDriver, and browser, so you can drive several in parallel and switch between them freely.</p>
+      <div class="example-grid">
+        <div class="example-card">
+          <div class="example-header"><div class="example-header-icon">🏷️</div><h3>Named session</h3></div>
+          <div class="example-body"><div class="code-block"><div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code>se-cli -s=alpha open https://example.com
+se-cli -s=alpha snapshot
+se-cli -s=alpha title
+se-cli -s=alpha close
+
+se-cli list
+# alpha    chrome    running
+# default  —         (none)</code></pre></div></div>
+        </div>
+
+        <div class="example-card">
+          <div class="example-header"><div class="example-header-icon">🔄</div><h3>Parallel multi-browser</h3></div>
+          <div class="example-body"><div class="code-block"><div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code># Two sessions, two browsers
+se-cli -s=chrome open https://example.com \
+  --browser=chrome
+se-cli -s=firefox open https://example.com \
+  --browser=firefox
+
+se-cli -s=chrome title
+se-cli -s=firefox title
+
+se-cli -s=chrome close
+se-cli -s=firefox close</code></pre></div></div>
+        </div>
+
+        <div class="example-card">
+          <div class="example-header"><div class="example-header-icon">🔌</div><h3>CDP attach</h3></div>
+          <div class="example-body"><div class="code-block"><div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code># Start Chrome with debugging
+google-chrome --remote-debugging-port=9222
+
+# Attach to the running browser
+se-cli open --cdp=http://localhost:9222
+se-cli snapshot
+se-cli screenshot --filename=debug.png
+se-cli close</code></pre></div></div>
+        </div>
+      </div>
+
+      <h2 id="profiles">Persistent profiles</h2>
+      <p>Use <code>--profile</code> or <code>--persistent</code> (v0.2) to keep cookies, localStorage, and login state across runs. This is essential for authenticated workflows where you log in once and reuse the session.</p>
+      <table class="env-table">
+        <thead><tr><th>Flag</th><th>Description</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><code>--profile=&lt;path&gt;</code></td><td class="env-desc">Persistent user data directory — reuse a real browser profile</td><td class="env-example">--profile=/tmp/se-profile</td></tr>
+          <tr><td><code>--persistent</code></td><td class="env-desc">Auto-assign a userDataDir so state is retained automatically</td><td class="env-example">se-cli open --persistent</td></tr>
+          <tr><td><code>--browser=chrome|edge|firefox</code></td><td class="env-desc">Per-session browser selection</td><td class="env-example">--browser=firefox</td></tr>
+          <tr><td><code>--headed</code></td><td class="env-desc">Show the browser window (default: headless)</td><td class="env-example">se-cli open --headed</td></tr>
+        </tbody>
+      </table>
+      <div class="alert alert-info"><span class="alert-icon">i</span><div><strong>Combine with state-save.</strong> For cross-machine portability, prefer <a href="storage-state.html"><code>state-save</code></a> over profiles — JSON is portable, a userDataDir is not.</div></div>
+
+      <h2 id="daemon-lifecycle">Daemon lifecycle</h2>
+      <p>The daemon is spawned on the first <code>open</code> and persists across CLI calls. It holds the WebDriver instance, the snapshot tree, and the ref registry. Three mechanisms keep it healthy and reclaim resources.</p>
+      <div class="arch-grid">
+        <div class="arch-card">
+          <h3>selfDestructOnIdle</h3>
+          <p>Self-destructs after 30 minutes with no requests (configurable). Prevents orphan daemons from leaking memory when an agent walks away.</p>
+        </div>
+        <div class="arch-card">
+          <h3>heartbeat</h3>
+          <p>The driver periodically calls <code>getTitle()</code> as a liveness check. If the browser process died silently, the daemon detects it and reports <code>DAEMON_DEAD</code>.</p>
+        </div>
+        <div class="arch-card">
+          <h3>gracefulShutdown</h3>
+          <p><code>SIGTERM</code>/<code>SIGINT</code> → quit driver → delete the <code>.session</code> file → exit. <code>close</code> triggers the same path; <code>kill-all</code> force-terminates everything.</p>
+        </div>
+        <div class="arch-card">
+          <h3>Session registry</h3>
+          <p><code>.session</code> JSON files live in <code>&lt;cache&gt;/ms-se-cli/daemon/</code>. <code>list</code> reconciles them with live processes and cleans up orphans.</p>
+        </div>
+      </div>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code>se-cli list              # see all sessions + reconcile orphans
+se-cli close-all         # graceful close of every session
+se-cli kill-all          # force-kill all daemons + browsers</code></pre>
+      </div>
+      <p>Stuck daemon? See the <a href="troubleshooting.html">Troubleshooting</a> guide for manual cleanup of <code>.session</code> files and socket paths.</p>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <img src="../assets/img/favicon.svg" alt="" width="24" height="24" />
+        <span>se-cli</span>
+      </div>
+      <div class="footer-links">
+        <a href="../docs/index.html">Docs</a>
+        <a href="../roadmap/index.html">Roadmap</a>
+        <a href="../test-pages/index.html">Test Pages</a>
+        <a href="https://github.com/se-cli/se-cli">GitHub</a>
+        <a href="https://github.com/se-cli/se-cli/issues">Issues</a>
+        <a href="https://www.npmjs.com/package/@browsers-cli/se-cli">npm</a>
+      </div>
+      <div class="footer-copy">Apache-2.0 · se-cli</div>
+    </div>
+  </footer>
+
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

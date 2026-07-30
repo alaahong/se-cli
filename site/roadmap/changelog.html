@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="se-cli changelog — detailed per-release notes for v0.1 through v0.12, with dates, feature lists, and shipped vs. planned status." />
+  <meta name="theme-color" content="#22C55E" />
+  <title>Changelog — se-cli Roadmap</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/img/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+  <nav class="nav" id="nav">
+    <div class="container nav-inner">
+      <a href="../index.html" class="nav-logo" aria-label="se-cli home">
+        <img src="../assets/img/favicon.svg" alt="" width="28" height="28" />
+        <span>se-cli</span>
+      </a>
+      <div class="nav-links" id="nav-links">
+        <a href="../docs/index.html">Docs</a>
+        <a href="../roadmap/index.html" class="current">Roadmap</a>
+        <a href="../test-pages/index.html">Test Pages</a>
+        <a href="https://github.com/se-cli/se-cli" class="nav-gh" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <header class="page-header">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../index.html">Home</a>
+        <span class="breadcrumb-sep">/</span>
+        <a href="index.html">Roadmap</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Changelog</span>
+      </nav>
+      <h1>Changelog</h1>
+      <p>Per-release notes from the v0.1 MVP through the planned v0.12 VSCode extension. Shipped releases are solid; planned releases are dashed.</p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+      <div class="roadmap-tabs" style="display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:36px;">
+        <a href="index.html" class="cmd-tab">Timeline</a>
+        <a href="matrix.html" class="cmd-tab">Feature Matrix</a>
+        <a href="changelog.html" class="cmd-tab active">Changelog</a>
+      </div>
+
+      <div class="roadmap">
+        <div class="roadmap-item">
+          <div class="roadmap-version">v0.1</div>
+          <div class="roadmap-body">
+            <h3>MVP Architecture <span class="badge badge-must">Must-Have</span> <span class="matrix-status-released">✓ shipped</span></h3>
+            <span class="roadmap-meta">2026-07-28 · initial release</span>
+            <p>The foundational architecture proving the token-efficient CLI + daemon model.</p>
+            <ul>
+              <li>CLI + Daemon process architecture — short-lived CLI sends one JSON line to a long-lived daemon over a Unix socket / Windows named pipe.</li>
+              <li>Basic commands: <code>open</code>, <code>close</code>, <code>goto</code>, <code>click</code>, <code>fill</code>, <code>type</code>, <code>press</code>, <code>snapshot</code>, <code>screenshot</code>, <code>eval</code>, <code>title</code>, <code>url</code>.</li>
+              <li>Aria snapshot injection script + <code>data-se-ref</code> reference mechanism.</li>
+              <li>Named session management (<code>-s=&lt;name&gt;</code>) and multi-browser support (Chrome, Edge, Firefox).</li>
+              <li>Code generation replay — every action emits the equivalent Selenium code.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="roadmap-item">
+          <div class="roadmap-version">v0.2</div>
+          <div class="roadmap-body">
+            <h3>Practical Capability Completion <span class="badge badge-must">Must-Have</span> <span class="matrix-status-released">✓ shipped</span></h3>
+            <span class="roadmap-meta">2026-07 · practical layer</span>
+            <p>The capabilities that make se-cli usable for real workflows beyond demos.</p>
+            <ul>
+              <li><strong>Storage management</strong>: <code>cookie-list/get/set/delete</code>, <code>localstorage-*</code>, <code>sessionstorage-*</code>.</li>
+              <li><strong>State save/load</strong>: export cookies + storage to JSON, restore by loading in reverse.</li>
+              <li><strong>Tab management</strong>: <code>tab-list</code>, <code>tab-new</code>, <code>tab-close</code>, <code>tab-select</code>.</li>
+              <li><code>install --skills</code>: copy <code>SKILL.md</code> to <code>.claude/skills/se-cli/</code> or <code>.agents/skills/se-cli/</code>.</li>
+              <li><code>--profile=&lt;path&gt;</code> persistent user data directory and <code>--persistent</code> auto-assign.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="roadmap-item">
+          <div class="roadmap-version">v0.3</div>
+          <div class="roadmap-body">
+            <h3>iframe &amp; Shadow DOM <span class="badge badge-must">Must-Have</span> <span class="matrix-status-released">✓ shipped</span></h3>
+            <span class="roadmap-meta">2026-07 · structural depth</span>
+            <p>Full DOM coverage — snapshots no longer stop at frame or shadow boundaries.</p>
+            <ul>
+              <li><strong>iframe recursive snapshot</strong>: cross-frame refs (e.g. <code>f3e15</code>) navigate into framed content.</li>
+              <li><strong>Shadow DOM recursion</strong>: traverse <code>el.shadowRoot</code> for open shadow roots.</li>
+              <li><strong>find command enhancement</strong>: search across frames and shadow DOM boundaries.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="roadmap-item roadmap-item-long">
+          <div class="roadmap-version roadmap-version-long">v0.4</div>
+          <div class="roadmap-body">
+            <h3>Wait &amp; Retry Configuration Layer <span class="badge badge-must">Must-Have</span> <span class="matrix-status-planned">planned</span></h3>
+            <span class="roadmap-meta">planned · foundation for all later releases</span>
+            <p>Surfaces Selenium's implicit/explicit wait, pageLoad/script timeout, and <code>ExpectedConditions</code> as CLI-native configuration. Every capability that previously required code is exposed through the 4-tier priority: <code>flag &gt; ENV &gt; config file &gt; default</code>.</p>
+            <ul>
+              <li>Flag layer: <code>--timeout</code>, <code>--wait</code>, <code>--retry</code>, <code>--retry-interval</code>, <code>--implicit-wait</code>, <code>--page-load-timeout</code>, <code>--script-timeout</code>, <code>--no-wait</code>.</li>
+              <li>ENV layer: <code>SE_CLI_TIMEOUT</code>, <code>SE_CLI_WAIT</code>, <code>SE_CLI_RETRY</code>, <code>SE_CLI_RETRY_INTERVAL</code>, <code>SE_CLI_IMPLICIT_WAIT</code>, <code>SE_CLI_PAGE_LOAD_TIMEOUT</code>, <code>SE_CLI_SCRIPT_TIMEOUT</code>.</li>
+              <li>Config file layer: <code>.se-cli.json</code> or <code>~/.config/se-cli/config.json</code> with per-command overrides.</li>
+              <li>New commands: <code>config get/set/list/init</code> (list shows the source per item: flag/env/file/default).</li>
+              <li>Codegen reflects the effective strategy: <code>await driver.wait(until.elementIsVisible(el), 5000);</code></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="roadmap-item roadmap-item-long">
+          <div class="roadmap-version roadmap-version-long">v0.5</div>
+          <div class="roadmap-body">
+            <h3>Interaction Completion <span class="badge badge-must">Must-Have</span> <span class="matrix-status-planned">planned</span></h3>
+            <span class="roadmap-meta">planned · interaction parity</span>
+            <p>Closes the gap with Playwright CLI on basic interactions. All Actions commands automatically consume the v0.4 wait/retry configuration.</p>
+            <ul>
+              <li><code>hover</code>, <code>dblclick</code>, <code>drag &lt;start&gt; &lt;end&gt;</code> via <code>driver.actions()</code>.</li>
+              <li><code>dialog-accept [text]</code> / <code>dialog-dismiss</code> via <code>driver.switchTo().alert()</code>.</li>
+              <li><code>upload &lt;file&gt;</code> via <code>sendKeys(path)</code>; <code>resize &lt;w&gt; &lt;h&gt;</code> viewport control.</li>
+              <li>Fine-grained keyboard/mouse: <code>keydown</code>/<code>keyup</code>, <code>mousemove</code>, <code>mousedown</code>/<code>mouseup</code>, <code>mousewheel</code>.</li>
+              <li><code>--actions-chain</code> flag: combine multiple actions into a single <code>perform()</code> to reduce round-trips.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="roadmap-item roadmap-item-long">
+          <div class="roadmap-version roadmap-version-long">v0.6</div>
+          <div class="roadmap-body">
+            <h3>Web-First Assertions <span class="badge badge-core">Core</span> <span class="matrix-status-planned">planned</span></h3>
+            <span class="roadmap-meta">planned · CI-friendly testing</span>
+            <p>Playwright's <code>expect(locator).toBeVisible()</code> retry-until-timeout model, ported to a CLI with exit codes scripts can chain on.</p>
+            <ul>
+              <li><code>expect &lt;ref&gt; visible|hidden|enabled|disabled|checked|unchecked</code>.</li>
+              <li><code>expect &lt;ref&gt; text "..." [--exact]</code>, <code>value "..."</code>, <code>count N</code>, <code>attribute &lt;name&gt; &lt;value&gt;</code>.</li>
+              <li><code>expect title "..."</code> / <code>expect url "..."</code>.</li>
+              <li>Exit codes: success <code>0</code>, failure <code>1</code> — chain with <code>&amp;&amp;</code> in CI.</li>
+              <li><code>--not</code> inverts the assertion; defaults to v0.4 <code>--timeout</code>.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="roadmap-item roadmap-item-long">
+          <div class="roadmap-version roadmap-version-long">v0.7</div>
+          <div class="roadmap-body">
+            <h3>Network &amp; Debugging <span class="badge badge-core">Core</span> <span class="matrix-status-planned">planned</span></h3>
+            <span class="roadmap-meta">planned · BiDi + CDP</span>
+            <p>Leverages the Selenium BiDi protocol (selenium-webdriver@4.46.0) for cross-browser network interception and log capture; CDP used as a Chromium-only enhancement.</p>
+            <ul>
+              <li><code>route &lt;pattern&gt; --status=/--body=/--headers=</code>, <code>route-list</code>, <code>unroute [id]</code> via BiDi <code>Network.addIntercept</code>.</li>
+              <li><code>console [level]</code>, <code>requests</code>, <code>request &lt;index&gt;</code>, <code>js-error</code>.</li>
+              <li><code>highlight &lt;ref&gt; [--style=]</code> persistent element highlighting via CSS overlay; <code>highlight --hide</code> to clear.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="roadmap-item roadmap-item-long">
+          <div class="roadmap-version roadmap-version-long">v0.8</div>
+          <div class="roadmap-body">
+            <h3>Device &amp; Environment Emulation <span class="badge badge-core">Core</span> <span class="matrix-status-planned">planned</span></h3>
+            <span class="roadmap-meta">planned · CDP-first, BiDi fallback</span>
+            <p>All capabilities via CDP <code>Emulation.*</code> / <code>Network.*</code> domains, BiDi as a fallback. Selenium has no native equivalent — CDP makes this trivial to port from Playwright.</p>
+            <ul>
+              <li><code>open --geolocation= --timezone= --locale= --color-scheme= --viewport= --user-agent= --permissions=</code>.</li>
+              <li><code>device "iPhone 13"</code> preset and <code>device-list</code> (reference Playwright DeviceDescriptors).</li>
+              <li><code>emulate --offline</code>, <code>--throttle-network=slow3g|fast3g|custom:...</code>, <code>--throttle-cpu=4</code>, <code>--reset</code>.</li>
+              <li>Emulation state integrated into <code>state-save</code>.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="roadmap-item roadmap-item-long">
+          <div class="roadmap-version roadmap-version-long">v0.9</div>
+          <div class="roadmap-body">
+            <h3>MCP Server &amp; AI Ecosystem <span class="badge badge-must">Must-Have</span> <span class="matrix-status-planned">planned</span></h3>
+            <span class="roadmap-meta">planned · dual-track AI strategy</span>
+            <p>Exposes se-cli as an MCP Server. Dual-track: CLI+SKILLS (token-efficient for coding agents) and MCP Server (persistent state for autonomous workflows) — both share the same underlying tool implementation.</p>
+            <ul>
+              <li><code>se-cli mcp</code>: start MCP Server using <code>@modelcontextprotocol/sdk</code>; stdio (default) and Streamable HTTP transports.</li>
+              <li><code>run-code "async driver =&gt; ..."</code>: execute arbitrary Selenium snippets.</li>
+              <li><code>generate-locator &lt;ref&gt;</code>: best locator expression (<code>By.role</code>/<code>By.css</code>); role-based codegen.</li>
+              <li><code>SKILL.md</code> frontmatter compliance (<code>name</code>, <code>description</code>, <code>license</code>, <code>compatibility</code>) and multi-target <code>install --skills</code>.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="roadmap-item roadmap-item-long">
+          <div class="roadmap-version roadmap-version-long">v0.10</div>
+          <div class="roadmap-body">
+            <h3>Remote, Grid &amp; Custom Browsers <span class="badge badge-core">Core</span> <span class="matrix-status-planned">planned</span></h3>
+            <span class="roadmap-meta">planned · the Selenium moat</span>
+            <p>The differentiated stronghold — the area Playwright will never match. Extends browser coverage and connection capabilities.</p>
+            <ul>
+              <li><code>--browser=safari</code> via <code>safaridriver</code> (macOS only, no headless/BiDi/CDP).</li>
+              <li><code>--endpoint=&lt;url&gt;</code>: Selenium Grid 4 or remote WebDriver; <code>grid status/attach/distribute --shard=x/y</code>.</li>
+              <li><code>--browser-binary</code>, <code>--driver-binary</code>, <code>--browser-args</code>, <code>--browser-prefs</code>, <code>--capabilities</code> (cover all W3C WebDriver endpoints).</li>
+              <li>Cloud browser integration: Browserbase, Sauce Labs, BrowserStack.</li>
+              <li><code>pdf --filename=f</code> via CDP <code>Page.printToPDF</code> (Chromium only).</li>
+              <li><code>--browser=edge-ie</code>: Edge IE mode for legacy IE scenarios (Windows Edge Enterprise only, auto-configures policy).</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="roadmap-item roadmap-item-long">
+          <div class="roadmap-version roadmap-version-long">v0.11</div>
+          <div class="roadmap-body">
+            <h3>Recording &amp; Visualization <span class="badge badge-marginal">Marginal</span> <span class="matrix-status-planned">planned</span></h3>
+            <span class="roadmap-meta">planned · dev &amp; debug workflows</span>
+            <p>High implementation complexity but significant differentiation potential. Scheduled late; may slip.</p>
+            <ul>
+              <li><code>se-cli record</code>: recording mode — user actions generate a complete test file.</li>
+              <li><code>tracing-start</code> / <code>tracing-stop</code>: simplified operation tracing (see "Will Never Implement").</li>
+              <li><code>video-start</code> / <code>video-stop</code> / <code>video-chapter &lt;title&gt;</code>: CDP or ffmpeg frame capture.</li>
+              <li><code>show</code> dashboard for multi-session monitoring; <code>show --annotate</code> for design feedback.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="roadmap-item roadmap-item-long">
+          <div class="roadmap-version roadmap-version-long">v0.12</div>
+          <div class="roadmap-body">
+            <h3>VSCode Extension <span class="badge badge-marginal">Marginal</span> <span class="matrix-status-planned">planned</span></h3>
+            <span class="roadmap-meta">planned · separate npm package</span>
+            <p>A separate package (<code>@browsers-cli/se-cli-vscode</code>) that depends on se-cli CLI being globally installed.</p>
+            <ul>
+              <li><strong>Task Provider</strong>: register se-cli commands as VSCode custom tasks.</li>
+              <li><strong>Webview</strong>: browser screenshot and aria snapshot preview via <code>postMessage</code>.</li>
+              <li><strong>MCP Server auto-registration</strong>: write <code>.vscode/mcp.json</code> on install.</li>
+              <li><code>attach --extension</code>: connect to a real browser through the extension.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-danger" style="max-width: 760px; margin: 40px auto 0;">
+        <span class="alert-icon">⊘</span>
+        <div>
+          <strong>Will Never Implement.</strong>
+          <ul style="margin: 8px 0 0 20px;">
+            <li>Native aria ref engine — relies on <code>data-se-ref</code> attributes permanently.</li>
+            <li>Playwright-level full tracing parity — only a simplified version is pursued.</li>
+            <li>Real IE 11 (IEDriverServer) — replaced by Edge IE mode in v0.10.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="doc-grid" style="max-width: 760px; margin-top: 48px;">
+        <a href="index.html" class="doc-card">
+          <div class="doc-card-icon">🗺️</div>
+          <h3>Timeline</h3>
+          <p>The compact visual timeline with classification badges and guiding principles.</p>
+          <span class="doc-card-arrow">View timeline →</span>
+        </a>
+        <a href="matrix.html" class="doc-card">
+          <div class="doc-card-icon">🔲</div>
+          <h3>Feature Matrix</h3>
+          <p>Capability × browser support table with version and browser filters.</p>
+          <span class="doc-card-arrow">Open matrix →</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <img src="../assets/img/favicon.svg" alt="" width="24" height="24" />
+        <span>se-cli</span>
+      </div>
+      <div class="footer-links">
+        <a href="../docs/index.html">Docs</a>
+        <a href="../roadmap/index.html">Roadmap</a>
+        <a href="../test-pages/index.html">Test Pages</a>
+        <a href="https://github.com/se-cli/se-cli">GitHub</a>
+        <a href="https://github.com/se-cli/se-cli/issues">Issues</a>
+        <a href="https://www.npmjs.com/package/@browsers-cli/se-cli">npm</a>
+      </div>
+      <div class="footer-copy">Apache-2.0 · se-cli</div>
+    </div>
+  </footer>
+
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

@@ -346,11 +346,16 @@ Each interaction command outputs the corresponding Selenium code:
 await driver.findElement(By.css('[data-se-ref="e2"]')).click();
 ```
 
-## 8. Roadmap (v0.2+)
+## 8. Roadmap (v0.4+)
 
 Based on competitive analysis with Playwright CLI and Selenium WebDriver BiDi.
-Features are classified as **Must-Have** (基础缺失), **Core** (差异化), or **Marginal** (边际).
-Delivered incrementally per version.
+Features are classified as **Must-Have** (基础底座), **Core** (差异化), or **Marginal** (边际).
+
+**Guiding principles (revised 2026-07-29)**:
+1. Selenium-native strengths (wait/retry/timeout, Grid, custom browsers, real Safari, Edge IE mode) are prioritized as the defensive moat — Playwright will never match these.
+2. Playwright-CLI features that are easy to port (auto-wait, retry-assertion, device emulation) are ranked by `complexity × importance` and front-loaded when high value.
+3. CLI has no "code writing" — every Selenium capability that requires code (explicit waits, `ExpectedConditions`, Actions chains, `setScriptTimeout`) MUST be exposed via a 4-tier priority: **flag > ENV > config file > built-in default**.
+4. Explicit "will never implement" boundary to avoid misplaced community expectations.
 
 ### v0.1: MVP Architecture ✅
 
@@ -375,10 +380,53 @@ Delivered incrementally per version.
 - [x] **Shadow DOM recursion**: recursively traverse `el.shadowRoot` for open shadow roots
 - [x] **find command enhancement**: support cross-frame and shadow DOM search
 
-### v0.4: Interaction Completion (Must-Have)
+### v0.4: Wait & Retry Configuration Layer (Must-Have, foundation)
+
+All subsequent commands depend on this layer. Surfaces Selenium's implicit/explicit wait,
+pageLoad/script timeout, and `ExpectedConditions` as CLI-native configuration.
+
+**Configuration priority (4 tiers, high → low)**: `--flag` > `ENV` > `.se-cli.json` > built-in default
+
+**Flag layer (per-command override)**:
+- `--timeout=<ms>` — per-command explicit-wait timeout (default 5000)
+- `--wait=<state>` — wait condition: `visible|hidden|enabled|disabled|stable|attached|none|auto` (default `auto`: click/fill → `visible+enabled`, snapshot/eval → `none`)
+- `--retry=<n>` — failure retry count (default 0; `-1` = until timeout)
+- `--retry-interval=<ms>` — polling interval (default 100)
+- `--implicit-wait=<ms>` — driver implicit wait (default 0, discouraged but compatible)
+- `--page-load-timeout=<ms>` — `driver.manage().timeouts().pageLoadTimeout()`
+- `--script-timeout=<ms>` — `setScriptTimeout` (affects async `eval`)
+- `--no-wait` — shorthand for `--wait=none --timeout=0` (precise-timing scenarios)
+
+**ENV layer**: `SE_CLI_TIMEOUT` / `SE_CLI_WAIT` / `SE_CLI_RETRY` / `SE_CLI_RETRY_INTERVAL` / `SE_CLI_IMPLICIT_WAIT` / `SE_CLI_PAGE_LOAD_TIMEOUT` / `SE_CLI_SCRIPT_TIMEOUT`
+
+**Config file layer** (`.se-cli.json` or `~/.config/se-cli/config.json`):
+```json
+{
+  "wait": { "timeout": 5000, "state": "auto", "retry": 0, "retryInterval": 100 },
+  "timeouts": { "implicit": 0, "pageLoad": 30000, "script": 30000 },
+  "perCommand": {
+    "click":    { "wait": "visible+enabled" },
+    "fill":     { "wait": "visible+enabled" },
+    "snapshot": { "wait": "none" },
+    "eval":     { "wait": "none", "scriptTimeout": 30000 }
+  }
+}
+```
+
+**New commands**:
+- [ ] `config get <key>` / `config set <key> <value>` / `config list` (list shows source per item: flag/env/file/default)
+- [ ] `config init` — generate template config file
+
+**Code generation**: emitted code reflects the effective strategy
+```js
+await driver.wait(until.elementIsVisible(el), 5000);
+await driver.wait(until.elementIsEnabled(el), 5000);
+```
+
+### v0.5: Interaction Completion (Must-Have)
 
 Close the gap on basic interaction capabilities missing vs Playwright CLI and Selenium.
-All commands based on Selenium Actions API — low complexity, high impact.
+All Actions commands automatically consume the v0.4 wait/retry configuration.
 
 - [ ] **hover <ref>**: mouse hover via `driver.actions().move()`
 - [ ] **dblclick <ref>**: double-click via `driver.actions().doubleClick()`
@@ -391,13 +439,37 @@ All commands based on Selenium Actions API — low complexity, high impact.
 - [ ] **mousemove <x> <y>**: mouse position control
 - [ ] **mousedown / mouseup**: mouse button control
 - [ ] **mousewheel <dx> <dy>**: scroll wheel control
+- [ ] **--actions-chain** flag: combine multiple actions into a single `driver.actions().move().down().up().perform()` to reduce round-trips
 
-### v0.5: Network & Debugging (Core)
+### v0.6: Web-First Assertions (Core, Playwright port: medium complexity × high importance)
+
+Playwright's `expect(locator).toBeVisible()` retry-until-timeout assertion is the key to CI-friendly tests.
+CLI form with exit codes:
+
+```
+se-cli expect <ref|sel> visible   [--timeout=5000] [--not]
+se-cli expect <ref>     hidden
+se-cli expect <ref>     enabled | disabled
+se-cli expect <ref>     checked | unchecked
+se-cli expect <ref>     text "expected"  [--exact]
+se-cli expect <ref>     value "expected"
+se-cli expect <ref>     count N
+se-cli expect <ref>     attribute <name> <value>
+se-cli expect title "..."  |  expect url "..."
+```
+
+- [ ] Exit codes: success 0, failure 1 (CI/scripts can chain with `&&`)
+- [ ] Default to v0.4 `--timeout`; assertion internals use `driver.wait(until.condition, timeout)`
+- [ ] Code generation: `await driver.wait(ExpectedConditions.textToBe(locator, "expected"), 5000);`
+- [ ] `--not` flag inverts the assertion
+
+### v0.7: Network & Debugging (Core)
 
 Leverage Selenium BiDi protocol (available in selenium-webdriver@4.46.0) for network
 interception, console log capture, and request monitoring. BiDi works on Chrome/Edge/Firefox.
+CDP used as Chromium-only enhancement.
 
-- [ ] **route <pattern> --status= / --body=**: network interception via BiDi `Network.addIntercept`
+- [ ] **route <pattern> --status= / --body= / --headers=**: network interception via BiDi `Network.addIntercept`
 - [ ] **route-list**: list active route rules
 - [ ] **unroute [id]**: remove route rule
 - [ ] **console [level]**: capture browser console messages via `driver.script().addConsoleMessageHandler()`
@@ -407,7 +479,21 @@ interception, console log capture, and request monitoring. BiDi works on Chrome/
 - [ ] **highlight <ref> [--style=]**: persistent element highlighting via CSS overlay injection
 - [ ] **highlight --hide**: remove highlights
 
-### v0.6: MCP Server & AI Ecosystem (Must-Have)
+### v0.8: Device & Environment Emulation (Core, Playwright port: low complexity × medium importance)
+
+All capabilities via CDP `Emulation.*` / `Network.*` domains, BiDi as fallback.
+Selenium has no native equivalent, but CDP makes this trivial to port.
+
+- [ ] `open --geolocation=lat,lng --timezone=America/Los_Angeles --locale=zh-CN --color-scheme=dark --viewport=WxH --user-agent="..." --permissions=geolocation,notifications`
+- [ ] `device "iPhone 13"` — apply preset (UA + viewport + touch + deviceScaleFactor)
+- [ ] `device-list` — list built-in device profiles (reference Playwright DeviceDescriptors)
+- [ ] `emulate --offline` — go offline
+- [ ] `emulate --throttle-network=slow3g` — `slow3g|fast3g|custom:--download=,--upload=,--latency=`
+- [ ] `emulate --throttle-cpu=4` — CPU slowdown rate
+- [ ] `emulate --reset` — restore all emulation
+- [ ] Emulation state integrated into `state-save` (persist emulate configuration)
+
+### v0.9: MCP Server & AI Ecosystem (Must-Have)
 
 Expose se-cli as an MCP Server for AI agent integration. Playwright already provides
 `@playwright/mcp`; se-cli must follow to stay competitive. Dual-track strategy:
@@ -424,32 +510,58 @@ autonomous workflows). Both share the same underlying tool implementation.
 - [ ] **SKILL.md frontmatter compliance**: add `name`, `description`, `license`, `compatibility` metadata per Agent Skills spec
 - [ ] **install --skills enhancement**: multi-target discovery (Claude Code, Cursor, generic)
 
-### v0.7: Remote Connections & Safari (Core)
+### v0.10: Remote, Grid & Custom Browsers (Core, Selenium moat)
 
-Extend browser coverage and connection capabilities.
+Extend browser coverage and connection capabilities. This is the area Playwright will
+never match — emphasized as a differentiated stronghold rather than a passing "Core" note.
 
-- [ ] **--browser=safari**: Safari support via `safaridriver` (macOS only, no headless/BiDi/CDP)
+- [ ] **--browser=safari**: real Safari via `safaridriver` (macOS only, no headless/BiDi/CDP)
 - [ ] **--endpoint=<url>**: connect to Selenium Grid 4 or remote WebDriver
-- [ ] **Cloud browser integration**: Browserbase and other SaaS browser backends
-- [ ] **PDF export**: `pdf --filename=f` via CDP `Page.printToPDF` (Chromium only)
+- [ ] **--browser-binary=<path>**: custom browser binary (360, UC, QQ, Brave, Electron-embedded, QtWebEngine, domestic browsers)
+- [ ] **--driver-binary=<path>**: custom driver binary (bypass selenium-manager)
+- [ ] **--browser-args="<args>"**: pass-through browser launch arguments
+- [ ] **--browser-prefs=<json>**: Chromium prefs injection
+- [ ] **--capabilities=<json>**: pass-through arbitrary W3C capabilities (cover all WebDriver protocol endpoints)
+- [ ] **Cloud browser integration**: Browserbase, Sauce Labs, BrowserStack
+- [ ] **grid status / grid attach / grid distribute --shard=x/y**: Grid management and distributed sharding
+- [ ] **pdf --filename=f**: via CDP `Page.printToPDF` (Chromium only)
+- [ ] **--browser=edge-ie** (Edge IE mode, recommended path for legacy IE scenarios)
+  - msedgedriver + Edge IE mode loads the IE engine
+  - Auto-configure Edge IE mode policy (group policy / registry / `--ie-mode-tab`)
+  - Platform: Windows Edge Enterprise only
+  - Capability matrix:
+    - ✅ navigate / interaction / screenshot / cookie / storage / state-save / tabs
+    - ✅ basic iframe (`switchTo().frame()`)
+    - ✅ partial CDP: console / basic network monitoring (no interception)
+    - ⚠️ Actions chain degraded (some actions execute as single steps)
+    - ❌ BiDi network interception (route/unroute)
+    - ❌ Shadow DOM (IE engine does not support it)
+    - ❌ emulate / device / throttle
+    - ❌ tracing / video
+  - aria snapshot: uses main injection script (Edge shell supports modern JS), but IE-engine-rendered DOM may have role calculation drift; output header annotated `[browser=edge-ie, capabilities=limited]`
+  - codegen: disable `By.role()`, keep `By.css()` / `By.xpath()`
+  - Startup detects IE mode availability; if unconfigured, returns clear setup guidance (registry / group policy steps)
 
 > **Safari limitations**: safaridriver has no headless mode, no BiDi/CDP support, macOS only.
 > Basic navigation/interaction/screenshot/storage commands work; network interception,
 > console logs, and BiDi features are unavailable.
+>
+> **Edge IE mode limitations**: Windows Edge Enterprise only; IE mode must be enabled via
+> policy. Network interception, Shadow DOM, emulation, and recording unavailable.
 
-### v0.8: Recording & Visualization (Marginal)
+### v0.11: Recording & Visualization (Marginal)
 
 Recording and visualization capabilities for development and debugging workflows.
 High implementation complexity but significant differentiation potential.
 
 - [ ] **se-cli record**: recording mode — user actions generate a complete test file
-- [ ] **tracing-start / tracing-stop**: operation tracing and storage
+- [ ] **tracing-start / tracing-stop**: operation tracing and storage (simplified; see "Will Never Implement")
 - [ ] **video-start / video-stop**: video recording via CDP or ffmpeg frame capture
 - [ ] **video-chapter <title>**: mark chapters in recordings
 - [ ] **show**: visualization dashboard for multi-session monitoring
 - [ ] **show --annotate**: page annotation for design feedback
 
-### v0.9: VSCode Extension (Marginal)
+### v0.12: VSCode Extension (Marginal)
 
 Develop VSCode extension as a separate npm package (`@browsers-cli/se-cli-vscode`).
 Depends on se-cli CLI being globally installed.
@@ -462,16 +574,19 @@ Depends on se-cli CLI being globally installed.
 ### Long-term Goals (no version commitment)
 
 - [ ] **Multi-language SDK**: Python/Java client bindings (CLI stays Node)
-- [ ] **Trace Viewer**: GUI playback for recorded traces
+- [ ] **Simplified Trace Viewer**: GUI playback for recorded traces (aligned with issue #24)
 - [ ] **DOM mutation listener**: via BiDi DOM mutation events
 - [ ] **Script preload**: BiDi script pinning and preloading
 - [ ] **Multi-language SKILL.md**: localized skill files
-- [ ] **pytest-selenium hooks**: test framework integration
+- [ ] **pytest-selenium / JUnit5 hooks**: test framework integration (attach to test pause points, issue #22)
+- [ ] **Appium mobile testing completion**: iOS/Android bidirectional, Appium Grid
+- [ ] **Selenium Grid 4 hub/node management CLI**: deploy, autoscale, node health check
 
 ### Will Never Implement (explicitly abandoned)
 
 - ❌ **Native aria ref engine**: cannot match the stability of Playwright's `aria-ref` selector engine; will always rely on the `data-se-ref` attribute
-- ❌ **Full tracing equivalent**: Selenium has no native tracing; BiDi event streams are orders of magnitude worse, no parity pursued
+- ❌ **Playwright-level full tracing parity**: Selenium BiDi event stream quality is insufficient for timeline + DOM snapshot + network + console + source map integration; only a simplified version is pursued
+- ❌ **Real IE 11 (IEDriverServer) support**: IE 11 is EOL; replaced by Edge IE mode (v0.10) to avoid maintaining an ES5 injection script and Windows-only CI. Users who need true IE11 should use legacy Selenium bindings directly.
 
 ## 9. Risks & Mitigation
 
