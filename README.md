@@ -453,19 +453,32 @@ src/
 
 ## Roadmap
 
-Based on competitive analysis with Playwright CLI and Selenium BiDi. Features classified as **Must-Have**, **Core**, or **Marginal**.
+Based on competitive analysis with Playwright CLI and Selenium WebDriver BiDi.
+Features are classified as **Must-Have** (基础底座), **Core** (差异化), or **Marginal** (边际).
+
+**Guiding principles**:
+
+1. Selenium-native strengths (wait/retry/timeout, Grid, custom browsers, real Safari, Edge IE mode) are prioritized as the defensive moat — Playwright will never match these.
+2. Playwright-CLI features that are easy to port (auto-wait, retry-assertion, device emulation) are ranked by `complexity × importance` and front-loaded when high value.
+3. CLI has no "code writing" — every Selenium capability that requires code (explicit waits, `ExpectedConditions`, Actions chains, `setScriptTimeout`) is exposed via a 4-tier priority: **flag > ENV > config file > built-in default**.
+4. Explicit "will never implement" boundary to avoid misplaced community expectations.
 
 - **v0.1** ✅: CLI + Daemon architecture, aria snapshot + ref mechanism, basic commands, multi-browser support
 - **v0.2** ✅: Storage management, tab management, state save/load, `install --skills`, `--profile`, `--persistent`
 - **v0.3** ✅: iframe recursive snapshot, Shadow DOM recursion, cross-frame `find`
-- **v0.4** (Must-Have): `hover`, `dblclick`, `drag`, `dialog-accept/dismiss`, `upload`, `resize`, fine-grained keyboard/mouse control
-- **v0.5** (Core): BiDi network interception (`route`/`unroute`), console logs, request inspection, JS error monitoring, `highlight`
-- **v0.6** (Must-Have): MCP Server via `@modelcontextprotocol/sdk`, `run-code`, `generate-locator`, Agent Skills frontmatter compliance
-- **v0.7** (Core): `--browser=safari`, `--endpoint` for Selenium Grid, cloud browser integration, PDF export
-- **v0.8** (Marginal): `record` mode, tracing, video recording, `show` dashboard, page annotation
-- **v0.9** (Marginal): VSCode extension — Task Provider, Webview, MCP auto-registration
+- **v0.4** (Must-Have, foundation): Wait & Retry configuration layer — `--timeout`/`--wait`/`--retry`/`--page-load-timeout`/`--script-timeout` flags, `SE_CLI_*` ENV vars, `.se-cli.json` config file, `config get/set/list/init` commands
+- **v0.5** (Must-Have): Interaction completion — `hover`, `dblclick`, `drag`, `dialog-accept/dismiss`, `upload`, `resize`, `keydown/keyup`, `mousemove`, `mousewheel`, `--actions-chain`
+- **v0.6** (Core, Playwright port): Web-First assertions — `expect <ref> visible [--not]` with exit codes 0/1, `--timeout` integration, CI-friendly chaining
+- **v0.7** (Core): Network & debugging — BiDi `route`/`unroute`, `console`, `requests`, `js-error`, `highlight`
+- **v0.8** (Core, Playwright port): Device & environment emulation — `device`, `device-list`, `emulate --throttle-network/--throttle-cpu/--offline`, geolocation/timezone/locale/viewport/UA override
+- **v0.9** (Must-Have): MCP Server & AI ecosystem — `se-cli mcp` via `@modelcontextprotocol/sdk`, `run-code`, `generate-locator`, SKILL.md frontmatter compliance, multi-target `install --skills`
+- **v0.10** (Core, Selenium moat): Remote, Grid & custom browsers — `--browser=safari`, `--endpoint`, `--browser-binary`, `--driver-binary`, `--capabilities`, cloud browser integration, `pdf`, `--browser=edge-ie` for legacy IE scenarios
+- **v0.11** (Marginal): Recording & visualization — `record`, `tracing-start/stop`, `video-start/stop`, `show` dashboard, `--annotate`
+- **v0.12** (Marginal): VSCode extension — Task Provider, Webview, MCP auto-registration
 
-See [docs/spec.md](docs/spec.md) for full roadmap.
+**Will never implement**: native aria ref engine (staying on `data-se-ref`), Playwright-level full tracing parity, real IE 11 (replaced by Edge IE mode in v0.10).
+
+See [docs/spec.md](docs/spec.md) for the full roadmap with configuration details and capability matrices.
 
 ## License
 
