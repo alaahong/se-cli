@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="se-cli troubleshooting — error codes, daemon cleanup, driver version drift, and FAQ." />
+  <meta name="theme-color" content="#22C55E" />
+  <title>Troubleshooting — se-cli Docs</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+  <nav class="nav" id="nav">
+    <div class="container nav-inner">
+      <a href="../index.html" class="nav-logo" aria-label="se-cli home">
+        <img src="../assets/img/favicon.svg" alt="" width="28" height="28" />
+        <span>se-cli</span>
+      </a>
+      <div class="nav-links" id="nav-links">
+        <a href="../docs/index.html" class="current">Docs</a>
+        <a href="../roadmap/index.html">Roadmap</a>
+        <a href="../test-pages/index.html">Test Pages</a>
+        <a href="https://github.com/se-cli/se-cli" class="nav-gh" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="docs-layout">
+    <aside class="docs-sidebar">
+      <h4>Get started</h4>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="commands.html">Command Reference</a>
+      <a href="configuration.html">Configuration</a>
+      <h4>Guides</h4>
+      <a href="sessions.html">Sessions &amp; Browsers</a>
+      <a href="storage-state.html">Storage &amp; State</a>
+      <a href="snapshots-refs.html">Snapshots &amp; Refs</a>
+      <a href="codegen.html">Code Generation</a>
+      <a href="ai-agents.html">AI Agents</a>
+      <h4>Reference</h4>
+      <a href="troubleshooting.html" class="current">Troubleshooting</a>
+    </aside>
+
+    <main class="docs-content">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../index.html">Home</a>
+        <span class="breadcrumb-sep">/</span>
+        <a href="index.html">Docs</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Troubleshooting</span>
+      </nav>
+
+      <h2 id="error-codes">Error codes</h2>
+      <p>se-cli returns structured errors with a <code>code</code> field. Here are the codes you will most often see and how to recover.</p>
+      <table class="cmd-table">
+        <thead><tr><th>Code</th><th>Meaning</th><th>Recovery</th></tr></thead>
+        <tbody>
+          <tr><td><code>ELEMENT_NOT_FOUND</code></td><td>The ref/selector no longer matches an element (DOM rebuilt)</td><td>Run <code>se-cli snapshot</code> to refresh refs, then retry</td></tr>
+          <tr><td><code>DAEMON_DEAD</code></td><td>The daemon process crashed or was killed mid-session</td><td>Run <code>se-cli close</code> (or <code>kill-all</code>) then <code>se-cli open</code> again</td></tr>
+          <tr><td><code>VERSION_MISMATCH</code></td><td>CLI version differs from the running daemon version</td><td>Run <code>se-cli close &amp;&amp; se-cli open</code> so they match</td></tr>
+          <tr><td><code>UNSUPPORTED_BROWSER</code></td><td>Requested browser is not available on this platform</td><td>Install the browser or pick <code>--browser=chrome|edge|firefox</code></td></tr>
+        </tbody>
+      </table>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">error output</span></div>
+<pre><code>### Error
+Element not found: [data-se-ref="e15"]
+Hint: run `se-cli snapshot` to refresh refs.</code></pre>
+      </div>
+
+      <h2 id="daemon-stuck">Daemon is stuck / won't close</h2>
+      <p>If <code>close</code> hangs or <code>list</code> shows ghost sessions, escalate from graceful to forceful cleanup.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code># 1. graceful: close every session
+se-cli close-all
+
+# 2. forceful: kill all daemons + browsers
+se-cli kill-all
+
+# 3. last resort: remove orphan .session files manually
+rm -rf "$(./node_modules/.bin/se-cli config get cachePath)/ms-se-cli/daemon"/*.session
+# Linux/macOS socket dir is usually $TMPDIR/se-cli/
+rm -rf "${TMPDIR:-/tmp}/se-cli/"*</code></pre>
+      </div>
+      <div class="alert alert-warning"><span class="alert-icon">!</span><div><strong>Avoid <code>kill -9</code> on the daemon PID.</strong> That bypasses <code>gracefulShutdown</code> and can leave the browser process orphaned. Prefer <code>kill-all</code>, which drives the quit path. Only delete <code>.session</code> files after <code>kill-all</code> returns.</div></div>
+
+      <h2 id="driver-drift">Driver version drift</h2>
+      <div class="alert alert-info"><span class="alert-icon">i</span><div><strong>Let <code>selenium-manager</code> handle it.</strong> Driver mismatch after a browser auto-update is the classic Selenium headache. <code>selenium-manager</code> (bundled with <code>selenium-webdriver</code>) detects the installed browser version and downloads the matching driver automatically — do not pin a driver version unless you have a specific reason.</div></div>
+      <p>If you must pin (e.g. offline CI), set the matching variables before launching se-cli:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code># pin driver + browser version
+SE_BROWSER_VERSION=120 SE_DRIVER_VERSION=120.0.6099.71 \
+SE_OFFLINE=true se-cli open https://example.com</code></pre>
+      </div>
+      <p>See the <a href="configuration.html#env-vars">Configuration</a> page for the full set of Selenium Manager variables.</p>
+
+      <h2 id="faq">FAQ</h2>
+      <p>Common questions about se-cli.</p>
+      <div class="faq-list">
+        <details class="faq-item" open>
+          <summary>How is se-cli different from Selenium MCP?</summary>
+          <p>Selenium MCP loads ~5KB of tool schemas per call and returns full accessibility trees. se-cli uses a CLI + daemon architecture: the CLI sends one JSON line, the daemon holds the WebDriver, and aria snapshots return compact YAML with element refs. No schemas enter the agent's context — typically 10× fewer tokens.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Which browsers are supported?</summary>
+          <p>Chrome, Edge, and Firefox are fully supported for both headless and headed modes. Chrome and Edge also support CDP attach via <code>--cdp=&lt;url&gt;</code>. Safari (<code>--browser=safari</code>) and Edge IE mode (<code>--browser=edge-ie</code>) are planned for v0.10.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Do I need to install browser drivers separately?</summary>
+          <p>No. <code>selenium-manager</code> (bundled with <code>selenium-webdriver</code>) automatically downloads the correct driver binary for your browser and platform.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Can I use se-cli with my AI agent?</summary>
+          <p>Yes. se-cli works with any AI agent that can run shell commands — Claude Code, Cursor, Copilot CLI. Run <code>se-cli install --skills</code> (or place <code>skill/SKILL.md</code> manually) and it can start driving browsers immediately.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How do sessions persist between commands?</summary>
+          <p>The daemon process holds the WebDriver instance and stays alive across CLI invocations. Session metadata is stored as <code>.session</code> JSON files in <code>&lt;cache&gt;/ms-se-cli/daemon/</code>. Use <code>close</code> to clean up, or <code>kill-all</code> to force-kill.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Is se-cli a replacement for Selenium WebDriver?</summary>
+          <p>No. se-cli is built on top of <code>selenium-webdriver</code>. It provides a CLI interface and daemon architecture on top of the WebDriver protocol, making it accessible to AI agents and shell scripts. Every action also emits the equivalent Selenium code for your test files.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What's the license?</summary>
+          <p>Apache License 2.0. See <a href="https://github.com/se-cli/se-cli/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a> for details.</p>
+        </details>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <img src="../assets/img/favicon.svg" alt="" width="24" height="24" />
+        <span>se-cli</span>
+      </div>
+      <div class="footer-links">
+        <a href="../docs/index.html">Docs</a>
+        <a href="../roadmap/index.html">Roadmap</a>
+        <a href="../test-pages/index.html">Test Pages</a>
+        <a href="https://github.com/se-cli/se-cli">GitHub</a>
+        <a href="https://github.com/se-cli/se-cli/issues">Issues</a>
+        <a href="https://www.npmjs.com/package/@browsers-cli/se-cli">npm</a>
+      </div>
+      <div class="footer-copy">Apache-2.0 · se-cli</div>
+    </div>
+  </footer>
+
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="se-cli aria snapshot algorithm, ref lifecycle, depth control, cross-frame refs, and Shadow DOM recursion." />
+  <meta name="theme-color" content="#22C55E" />
+  <title>Snapshots &amp; Refs — se-cli Docs</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+  <nav class="nav" id="nav">
+    <div class="container nav-inner">
+      <a href="../index.html" class="nav-logo" aria-label="se-cli home">
+        <img src="../assets/img/favicon.svg" alt="" width="28" height="28" />
+        <span>se-cli</span>
+      </a>
+      <div class="nav-links" id="nav-links">
+        <a href="../docs/index.html" class="current">Docs</a>
+        <a href="../roadmap/index.html">Roadmap</a>
+        <a href="../test-pages/index.html">Test Pages</a>
+        <a href="https://github.com/se-cli/se-cli" class="nav-gh" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="docs-layout">
+    <aside class="docs-sidebar">
+      <h4>Get started</h4>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="commands.html">Command Reference</a>
+      <a href="configuration.html">Configuration</a>
+      <h4>Guides</h4>
+      <a href="sessions.html">Sessions &amp; Browsers</a>
+      <a href="storage-state.html">Storage &amp; State</a>
+      <a href="snapshots-refs.html" class="current">Snapshots &amp; Refs</a>
+      <a href="codegen.html">Code Generation</a>
+      <a href="ai-agents.html">AI Agents</a>
+      <h4>Reference</h4>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </aside>
+
+    <main class="docs-content">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../index.html">Home</a>
+        <span class="breadcrumb-sep">/</span>
+        <a href="index.html">Docs</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Snapshots &amp; Refs</span>
+      </nav>
+
+      <h2 id="algorithm">Aria snapshot algorithm</h2>
+      <p>The <code>snapshot</code> command injects a script that recursively walks the DOM and builds a YAML accessibility tree per the W3C ARIA spec, assigning <code>data-se-ref="eN"</code> attributes to interactive elements. The output is compact — the part of the page an agent actually needs.</p>
+      <div class="arch-diagram">
+<pre><code>- document:
+  - heading "Welcome to Example" [level=1]
+  - link "Learn more" [ref=e1]
+  - textbox "Search" [ref=e2]
+  - button "Submit" [ref=e3]
+  - navigation:
+    - link "Home" [ref=e4]</code></pre>
+      </div>
+
+      <div class="arch-grid">
+        <div class="arch-card">
+          <h3>Role determination</h3>
+          <p>Priority: explicit <code>role</code> attribute → ARIA implicit role (<code>&lt;button&gt;</code>→button, <code>&lt;a&gt;</code>→link) → tag-name fallback (<code>&lt;nav&gt;</code>→navigation, <code>&lt;main&gt;</code>→main, <code>&lt;header&gt;</code>→banner).</p>
+        </div>
+        <div class="arch-card">
+          <h3>Interactive element detection</h3>
+          <p>Refs are assigned only to interactive tags (<code>a</code>, <code>button</code>, <code>input</code>, <code>select</code>, …) and interactive roles (button, link, textbox, checkbox, menuitem, tab, combobox, …).</p>
+        </div>
+        <div class="arch-card">
+          <h3>Text &amp; label extraction</h3>
+          <p>Priority: <code>aria-label</code> &gt; <code>aria-labelledby</code> &gt; <code>&lt;label for&gt;</code> &gt; <code>alt</code>/<code>title</code> &gt; textContent &gt; placeholder. Text is truncated to 80 chars to prevent token bloat.</p>
+        </div>
+        <div class="arch-card">
+          <h3>Ref resolution</h3>
+          <p>A ref like <code>e1</code> resolves to <code>By.css('[data-se-ref="e1"]')</code>. Anything that isn't a ref is treated as a raw CSS selector.</p>
+        </div>
+      </div>
+
+      <h2 id="ref-lifecycle">Ref lifecycle</h2>
+      <div class="alert alert-warning"><span class="alert-icon">!</span><div><strong>Refs are valid only within a single snapshot.</strong> After a DOM rebuild the <code>data-se-ref</code> attribute is lost — you must <code>snapshot</code> again before acting. If you see <code>ELEMENT_NOT_FOUND</code>, refresh the snapshot first.</div></div>
+      <p>The ref registry is held by the daemon, keyed per session. Re-snapshotting reassigns refs from <code>e1</code> upward; old refs are invalidated. For long-lived agents, snapshot after any navigation or action that rebuilds the DOM.</p>
+
+      <h2 id="depth-and-find">Depth control &amp; find</h2>
+      <p><code>--depth=N</code> limits recursion (default 50) — useful on deep pages to keep the snapshot small. <code>find</code> greps the snapshot instead of dumping everything, returning only matching elements with their refs.</p>
+      <div class="example-grid">
+        <div class="example-card">
+          <div class="example-header"><div class="example-header-icon">🎯</div><h3>Depth limit</h3></div>
+          <div class="example-body"><div class="code-block"><div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code># Only the top two levels of the tree
+se-cli snapshot --depth=2
+# - document:
+#   - navigation [ref=e1]
+#   - main [ref=e2]</code></pre></div></div>
+        </div>
+
+        <div class="example-card">
+          <div class="example-header"><div class="example-header-icon">🔍</div><h3>Find by text / regex</h3></div>
+          <div class="example-body"><div class="code-block"><div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code>se-cli find "Submit"
+# - button "Submit order" [ref=e7]
+
+se-cli find --regex "price.*\\$[0-9]+"
+# - text "price: $29.99" [ref=e12]
+
+se-cli click e12</code></pre></div></div>
+        </div>
+      </div>
+
+      <h2 id="iframe">iframe: cross-frame refs</h2>
+      <p>Since v0.3 the snapshot recurses into iframes. Elements inside an iframe get a compound ref <code>f&lt;frame&gt;e&lt;index&gt;</code> — for example <code>f3e15</code> means element <code>e15</code> inside the third frame. se-cli resolves the frame switch automatically when you act on a cross-frame ref.</p>
+      <div class="arch-card">
+        <h3>Cross-frame ref format</h3>
+        <p><code>f3e15</code> → the daemon switches to iframe #3 via <code>driver.switchTo().frame(...)</code>, then locates <code>[data-se-ref="e15"]</code> inside it. After the action it switches back to the default content. Recursion is nested — <code>f1f2e3</code> is a ref two frames deep.</p>
+      </div>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code>se-cli open https://app.example.com
+se-cli snapshot
+# - document:
+#   - heading "Outer page" [ref=e1]
+#   - iframe "ad frame":
+#     - button "Buy now" [ref=f1e2]
+
+se-cli click f1e2</code></pre>
+      </div>
+
+      <h2 id="shadow-dom">Shadow DOM</h2>
+      <p>Also in v0.3: the snapshot recurses into <strong>open</strong> shadow roots via <code>el.shadowRoot</code>. Elements inside a shadow root appear inline in the tree with normal refs — no special prefix needed. Closed shadow roots cannot be traversed and emit a placeholder.</p>
+      <div class="arch-card">
+        <h3>Shadow DOM traversal</h3>
+        <p>For open shadow roots the injected script walks <code>el.shadowRoot.querySelectorAll('*')</code> and assigns refs normally. <code>find</code> searches across both frames and shadow roots transparently. Note: Edge IE mode cannot support Shadow DOM (the IE engine has no shadow root concept).</p>
+      </div>
+      <div class="alert alert-info"><span class="alert-icon">i</span><div><strong>Coverage caveat.</strong> se-cli's aria algorithm is a self-written simplified version (~80% coverage) versus Playwright's mature built-in implementation. See <a href="../roadmap/matrix.html">the implementation matrix</a> for which snapshot features ship where.</div></div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <img src="../assets/img/favicon.svg" alt="" width="24" height="24" />
+        <span>se-cli</span>
+      </div>
+      <div class="footer-links">
+        <a href="../docs/index.html">Docs</a>
+        <a href="../roadmap/index.html">Roadmap</a>
+        <a href="../test-pages/index.html">Test Pages</a>
+        <a href="https://github.com/se-cli/se-cli">GitHub</a>
+        <a href="https://github.com/se-cli/se-cli/issues">Issues</a>
+        <a href="https://www.npmjs.com/package/@browsers-cli/se-cli">npm</a>
+      </div>
+      <div class="footer-copy">Apache-2.0 · se-cli</div>
+    </div>
+  </footer>
+
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>

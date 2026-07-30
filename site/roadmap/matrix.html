@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="se-cli feature matrix — every capability cross-referenced against Chrome, Edge, Firefox, Safari, and Edge IE mode, with version and browser filters." />
+  <meta name="theme-color" content="#22C55E" />
+  <title>Feature Matrix — se-cli Roadmap</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/img/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+  <nav class="nav" id="nav">
+    <div class="container nav-inner">
+      <a href="../index.html" class="nav-logo" aria-label="se-cli home">
+        <img src="../assets/img/favicon.svg" alt="" width="28" height="28" />
+        <span>se-cli</span>
+      </a>
+      <div class="nav-links" id="nav-links">
+        <a href="../docs/index.html">Docs</a>
+        <a href="../roadmap/index.html" class="current">Roadmap</a>
+        <a href="../test-pages/index.html">Test Pages</a>
+        <a href="https://github.com/se-cli/se-cli" class="nav-gh" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <header class="page-header">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../index.html">Home</a>
+        <span class="breadcrumb-sep">/</span>
+        <a href="index.html">Roadmap</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Feature Matrix</span>
+      </nav>
+      <h1>Feature Matrix</h1>
+      <p>Every capability mapped against the five supported browser targets. Filter by browser or version to scope a release.</p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+      <div class="roadmap-tabs" style="display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:32px;">
+        <a href="index.html" class="cmd-tab">Timeline</a>
+        <a href="matrix.html" class="cmd-tab active">Feature Matrix</a>
+        <a href="changelog.html" class="cmd-tab">Changelog</a>
+      </div>
+
+      <div class="matrix-filter-group">
+        <span class="matrix-filter-label">Browser</span>
+        <div class="matrix-filter">
+          <button class="matrix-btn active" data-matrix-browser="all">All</button>
+          <button class="matrix-btn" data-matrix-browser="chrome">Chrome</button>
+          <button class="matrix-btn" data-matrix-browser="edge">Edge</button>
+          <button class="matrix-btn" data-matrix-browser="firefox">Firefox</button>
+          <button class="matrix-btn" data-matrix-browser="safari">Safari</button>
+          <button class="matrix-btn" data-matrix-browser="edge-ie">Edge IE</button>
+        </div>
+      </div>
+
+      <div class="matrix-filter-group">
+        <span class="matrix-filter-label">Version</span>
+        <div class="matrix-filter">
+          <button class="matrix-btn active" data-matrix-version="all">All</button>
+          <button class="matrix-btn" data-matrix-version="1-3">v0.1–0.3 (Shipped)</button>
+          <button class="matrix-btn" data-matrix-version="4-6">v0.4–0.6</button>
+          <button class="matrix-btn" data-matrix-version="7-9">v0.7–0.9</button>
+          <button class="matrix-btn" data-matrix-version="10-12">v0.10–0.12</button>
+        </div>
+      </div>
+
+      <div class="matrix-legend">
+        <span><span class="matrix-cell-yes">✓</span> Full support</span>
+        <span><span class="matrix-cell-partial">◐</span> Partial / degraded</span>
+        <span><span class="matrix-cell-planned">○</span> Planned</span>
+        <span><span class="matrix-cell-no">—</span> Not supported</span>
+      </div>
+
+      <div class="matrix-wrap">
+        <table class="matrix-table" id="matrix-table">
+          <thead>
+            <tr>
+              <th>Capability</th>
+              <th>Since</th>
+              <th>Chrome</th>
+              <th>Edge</th>
+              <th>Firefox</th>
+              <th>Safari</th>
+              <th>Edge IE</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="group-row"><td colspan="7">Session &amp; Architecture</td></tr>
+            <tr data-version="1">
+              <td>CLI + Daemon architecture</td><td><code>v0.1</code></td>
+              <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
+            </tr>
+            <tr data-version="1">
+              <td>Named sessions / parallel browsers</td><td><code>v0.1</code></td>
+              <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
+            </tr>
+            <tr data-version="1">
+              <td>Multi-browser launch</td><td><code>v0.1</code></td>
+              <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+            <tr data-version="1">
+              <td>CDP attach (<code>--cdp</code>)</td><td><code>v0.1</code></td>
+              <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td>
+            </tr>
+            <tr data-version="2">
+              <td>Persistent profile (<code>--profile</code>)</td><td><code>v0.2</code></td>
+              <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
+            </tr>
+
+            <tr class="group-row"><td colspan="7">Navigation</td></tr>
+            <tr data-version="1">
+              <td>goto / go-back / go-forward / reload</td><td><code>v0.1</code></td>
+              <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
+            </tr>
+            <tr data-version="1">
+              <td>title / url</td><td><code>v0.1</code></td>
+              <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
+            </tr>
+
+            <tr class="group-row"><td colspan="7">Interaction</td></tr>
+            <tr data-version="1">
+              <td>click / fill / type / press</td><td><code>v0.1</code></td>
+              <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
+            </tr>
+            <tr data-version="1">
+              <td>select / check / uncheck</td><td><code>v0.1</code></td>
+              <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
+            </tr>
+            <tr data-version="5">
+              <td>hover / dblclick / drag</td><td><code>v0.5</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-partial">◐</td>
+            </tr>
+            <tr data-version="5">
+              <td>dialog accept / dismiss</td><td><code>v0.5</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+            <tr data-version="5">
+              <td>upload / resize viewport</td><td><code>v0.5</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+            <tr data-version="5">
+              <td>keyboard / mouse fine control</td><td><code>v0.5</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-partial">◐</td>
+            </tr>
+            <tr data-version="5">
+              <td><code>--actions-chain</code> batch</td><td><code>v0.5</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-partial">◐</td>
+            </tr>
+
+            <tr class="group-row"><td colspan="7">Snapshot &amp; Search</td></tr>
+            <tr data-version="1">
+              <td>aria snapshot + ref mechanism</td><td><code>v0.1</code></td>
+              <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-partial">◐</td>
+            </tr>
+            <tr data-version="1">
+              <td>find / find --regex</td><td><code>v0.1</code></td>
+              <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
+            </tr>
+            <tr data-version="3">
+              <td>iframe recursive snapshot</td><td><code>v0.3</code></td>
+              <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
+            </tr>
+            <tr data-version="3">
+              <td>Shadow DOM recursion</td><td><code>v0.3</code></td>
+              <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-no">—</td>
+            </tr>
+
+            <tr class="group-row"><td colspan="7">Storage &amp; State</td></tr>
+            <tr data-version="2">
+              <td>cookie / localStorage / sessionStorage</td><td><code>v0.2</code></td>
+              <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
+            </tr>
+            <tr data-version="2">
+              <td>state-save / state-load</td><td><code>v0.2</code></td>
+              <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
+            </tr>
+            <tr data-version="2">
+              <td>tab management</td><td><code>v0.2</code></td>
+              <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
+            </tr>
+
+            <tr class="group-row"><td colspan="7">Wait &amp; Retry (v0.4)</td></tr>
+            <tr data-version="4">
+              <td><code>--timeout</code> / <code>--wait</code> / <code>--retry</code></td><td><code>v0.4</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+            <tr data-version="4">
+              <td>4-tier config priority</td><td><code>v0.4</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+            <tr data-version="4">
+              <td>config get / set / list / init</td><td><code>v0.4</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+
+            <tr class="group-row"><td colspan="7">Assertions (v0.6)</td></tr>
+            <tr data-version="6">
+              <td>expect visible / hidden / enabled / disabled</td><td><code>v0.6</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+            <tr data-version="6">
+              <td>expect text / value / count / attribute</td><td><code>v0.6</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+            <tr data-version="6">
+              <td><code>--not</code> inversion / exit codes</td><td><code>v0.6</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+
+            <tr class="group-row"><td colspan="7">Network &amp; Debugging (v0.7)</td></tr>
+            <tr data-version="7">
+              <td>route / unroute (interception)</td><td><code>v0.7</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td>
+            </tr>
+            <tr data-version="7">
+              <td>console capture</td><td><code>v0.7</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-no">—</td><td class="matrix-cell-partial">◐</td>
+            </tr>
+            <tr data-version="7">
+              <td>requests / js-error</td><td><code>v0.7</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-no">—</td><td class="matrix-cell-partial">◐</td>
+            </tr>
+            <tr data-version="7">
+              <td>highlight / highlight --hide</td><td><code>v0.7</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+
+            <tr class="group-row"><td colspan="7">Device Emulation (v0.8)</td></tr>
+            <tr data-version="8">
+              <td>device presets / viewport</td><td><code>v0.8</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-partial">◐</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td>
+            </tr>
+            <tr data-version="8">
+              <td>geolocation / timezone / locale</td><td><code>v0.8</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-partial">◐</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td>
+            </tr>
+            <tr data-version="8">
+              <td>throttle network / cpu / offline</td><td><code>v0.8</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-partial">◐</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td>
+            </tr>
+
+            <tr class="group-row"><td colspan="7">MCP &amp; AI (v0.9)</td></tr>
+            <tr data-version="9">
+              <td>MCP server (stdio / HTTP)</td><td><code>v0.9</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+            <tr data-version="9">
+              <td>run-code / generate-locator</td><td><code>v0.9</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+            <tr data-version="9">
+              <td><code>By.role()</code> codegen</td><td><code>v0.9</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-no">—</td>
+            </tr>
+            <tr data-version="2">
+              <td>install --skills</td><td><code>v0.2</code></td>
+              <td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td><td class="matrix-cell-yes">✓</td>
+            </tr>
+
+            <tr class="group-row"><td colspan="7">Remote &amp; Browsers (v0.10)</td></tr>
+            <tr data-version="10">
+              <td>Safari (<code>safaridriver</code>)</td><td><code>v0.10</code></td>
+              <td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-no">—</td>
+            </tr>
+            <tr data-version="10">
+              <td>Selenium Grid (<code>--endpoint</code>)</td><td><code>v0.10</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+            <tr data-version="10">
+              <td>custom browser / driver binary</td><td><code>v0.10</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+            <tr data-version="10">
+              <td>Edge IE mode</td><td><code>v0.10</code></td>
+              <td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td><td class="matrix-cell-planned">○</td>
+            </tr>
+            <tr data-version="10">
+              <td>cloud browsers (Browserbase / Sauce / BrowserStack)</td><td><code>v0.10</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+            <tr data-version="10">
+              <td>pdf export</td><td><code>v0.10</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td>
+            </tr>
+
+            <tr class="group-row"><td colspan="7">Recording (v0.11)</td></tr>
+            <tr data-version="11">
+              <td>record mode → test file</td><td><code>v0.11</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+            <tr data-version="11">
+              <td>tracing start / stop</td><td><code>v0.11</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-partial">◐</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td>
+            </tr>
+            <tr data-version="11">
+              <td>video capture</td><td><code>v0.11</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-partial">◐</td><td class="matrix-cell-no">—</td><td class="matrix-cell-no">—</td>
+            </tr>
+            <tr data-version="11">
+              <td>show dashboard / annotate</td><td><code>v0.11</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+
+            <tr class="group-row"><td colspan="7">VSCode Extension (v0.12)</td></tr>
+            <tr data-version="12">
+              <td>task provider / webview</td><td><code>v0.12</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+            <tr data-version="12">
+              <td>MCP auto-registration / attach</td><td><code>v0.12</code></td>
+              <td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td><td class="matrix-cell-planned">○</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="env-note" style="max-width: 100%; margin-top: 24px;">
+        <strong>Notes.</strong> Safari has no headless, BiDi, or CDP support — only basic navigation, interaction, screenshot, storage, and iframe work. Edge IE mode is Windows Enterprise only; the IE engine lacks Shadow DOM, emulation, BiDi interception, and recording — capabilities marked <span class="matrix-cell-partial">◐</span> run in a degraded form (Actions chain steps, partial CDP for console/network monitoring). Capabilities marked <span class="matrix-cell-planned">○</span> are scheduled but not yet shipped.
+      </div>
+
+      <div class="doc-grid" style="max-width: 760px; margin-top: 48px;">
+        <a href="index.html" class="doc-card">
+          <div class="doc-card-icon">🗺️</div>
+          <h3>Timeline</h3>
+          <p>The version-by-version narrative with classification badges and guiding principles.</p>
+          <span class="doc-card-arrow">View timeline →</span>
+        </a>
+        <a href="changelog.html" class="doc-card">
+          <div class="doc-card-icon">📋</div>
+          <h3>Changelog</h3>
+          <p>Detailed per-release notes with full feature lists and shipped vs. planned status.</p>
+          <span class="doc-card-arrow">Read changelog →</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <img src="../assets/img/favicon.svg" alt="" width="24" height="24" />
+        <span>se-cli</span>
+      </div>
+      <div class="footer-links">
+        <a href="../docs/index.html">Docs</a>
+        <a href="../roadmap/index.html">Roadmap</a>
+        <a href="../test-pages/index.html">Test Pages</a>
+        <a href="https://github.com/se-cli/se-cli">GitHub</a>
+        <a href="https://github.com/se-cli/se-cli/issues">Issues</a>
+        <a href="https://www.npmjs.com/package/@browsers-cli/se-cli">npm</a>
+      </div>
+      <div class="footer-copy">Apache-2.0 · se-cli</div>
+    </div>
+  </footer>
+
+  <script src="../assets/js/nav.js"></script>
+  <script src="../assets/js/matrix-filter.js"></script>
+</body>
+</html>

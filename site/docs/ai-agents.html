@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="se-cli for AI agents — SKILL.md install, Claude Code / Cursor integration, the CLI-vs-MCP token tradeoff, and the planned MCP Server." />
+  <meta name="theme-color" content="#22C55E" />
+  <title>AI Agents — se-cli Docs</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+  <nav class="nav" id="nav">
+    <div class="container nav-inner">
+      <a href="../index.html" class="nav-logo" aria-label="se-cli home">
+        <img src="../assets/img/favicon.svg" alt="" width="28" height="28" />
+        <span>se-cli</span>
+      </a>
+      <div class="nav-links" id="nav-links">
+        <a href="../docs/index.html" class="current">Docs</a>
+        <a href="../roadmap/index.html">Roadmap</a>
+        <a href="../test-pages/index.html">Test Pages</a>
+        <a href="https://github.com/se-cli/se-cli" class="nav-gh" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="docs-layout">
+    <aside class="docs-sidebar">
+      <h4>Get started</h4>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="commands.html">Command Reference</a>
+      <a href="configuration.html">Configuration</a>
+      <h4>Guides</h4>
+      <a href="sessions.html">Sessions &amp; Browsers</a>
+      <a href="storage-state.html">Storage &amp; State</a>
+      <a href="snapshots-refs.html">Snapshots &amp; Refs</a>
+      <a href="codegen.html">Code Generation</a>
+      <a href="ai-agents.html" class="current">AI Agents</a>
+      <h4>Reference</h4>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </aside>
+
+    <main class="docs-content">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../index.html">Home</a>
+        <span class="breadcrumb-sep">/</span>
+        <a href="index.html">Docs</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">AI Agents</span>
+      </nav>
+
+      <h2 id="agent-flow">Agent integration flow</h2>
+      <p>se-cli works with any AI agent that can run shell commands — Claude Code, Cursor, Copilot CLI, and more. There is no MCP server required for the CLI path: install once, drop in <code>SKILL.md</code>, and the agent drives the browser like a human would.</p>
+      <div class="agent-flow">
+        <div class="agent-step">
+          <div class="agent-step-num">1</div>
+          <div class="agent-step-body">
+            <h3>Install the CLI</h3>
+            <p>One global install — no per-agent setup or MCP server configuration needed.</p>
+            <div class="code-block"><div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code>npm install -g @browsers-cli/se-cli</code></pre></div>
+          </div>
+        </div>
+        <div class="agent-step">
+          <div class="agent-step-num">2</div>
+          <div class="agent-step-body">
+            <h3>Install the skill (recommended)</h3>
+            <p><code>install --skills</code> copies <code>SKILL.md</code> into your agent's skills directory so it learns the command syntax instantly. Targets Claude Code, Cursor, and a generic <code>.agents/skills/</code> path.</p>
+            <div class="code-block"><div class="code-header"><span class="code-lang">bash</span></div>
+<pre><code>se-cli install --skills
+
+# equivalent manual placement
+mkdir -p .claude/skills/se-cli
+cp skill/SKILL.md .claude/skills/se-cli/</code></pre></div>
+          </div>
+        </div>
+        <div class="agent-step">
+          <div class="agent-step-num">3</div>
+          <div class="agent-step-body">
+            <h3>Agent drives the browser</h3>
+            <p>The agent calls <code>se-cli</code> commands like a human would — open, snapshot, interact, close.</p>
+            <div class="code-block"><div class="code-header"><span class="code-lang">agent conversation</span></div>
+<pre><code>User: "Check that the login page works"
+Agent: I'll navigate and test the login flow.
+  $ se-cli open https://app.example.com/login
+  $ se-cli snapshot
+  $ se-cli fill e1 "test@example.com"
+  $ se-cli fill e2 "password"
+  $ se-cli click e3
+  $ se-cli snapshot
+  Login succeeded — dashboard is visible.</code></pre></div>
+          </div>
+        </div>
+        <div class="agent-step">
+          <div class="agent-step-num">4</div>
+          <div class="agent-step-body">
+            <h3>Why CLI beats MCP for coding agents</h3>
+            <p>No tool schemas pollute the context window. No JSON-RPC envelope overhead. Just clean shell commands and compact YAML output — typically ~12× fewer tokens than Selenium MCP per interaction.</p>
+          </div>
+        </div>
+      </div>
+
+      <h2 id="token-compare">MCP vs CLI token cost</h2>
+      <p>For a coding agent that already runs shell commands, the CLI path is dramatically cheaper. The MCP Server (below) is for autonomous workflows that need a persistent tool server instead of a shell.</p>
+      <div class="table-wrap">
+        <table class="cmp-table">
+          <thead><tr><th>Aspect</th><th>Selenium MCP</th><th>se-cli (CLI)</th></tr></thead>
+          <tbody>
+            <tr><td>Tokens / call</td><td>~5,000</td><td>~400</td></tr>
+            <tr><td>Schema in context</td><td>~5KB, always loaded</td><td>None</td></tr>
+            <tr><td>Output format</td><td>JSON-RPC envelope + full tree</td><td>Compact YAML + refs</td></tr>
+            <tr><td>Agent requirement</td><td>MCP client</td><td>Any shell-capable agent</td></tr>
+            <tr><td>Persistent server</td><td>Yes</td><td>No (daemon holds state)</td></tr>
+            <tr><td>Best for</td><td>Autonomous long-running workflows</td><td>Coding agents (Claude Code, Cursor)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="mcp-server">MCP Server <span class="badge badge-must">Planned · v0.9</span></h2>
+      <p>se-cli will also ship as an MCP Server via <code>@modelcontextprotocol/sdk</code>, dual-tracking the CLI: both share the same underlying tool implementation. This covers autonomous agents that prefer a persistent tool server over shell commands.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">planned · v0.9</span></div>
+<pre><code># stdio transport (default) — local agent
+se-cli mcp
+
+# streamable HTTP transport (optional) — remote agent
+se-cli mcp --transport=http --port=8765</code></pre>
+      </div>
+      <ul>
+        <li>All CLI tools wrapped as <code>registerTool</code> calls</li>
+        <li><code>run-code "async driver =&gt; ..."</code> for arbitrary Selenium snippets</li>
+        <li><code>generate-locator &lt;ref&gt;</code> for best-available locators</li>
+        <li>Role-based codegen (<code>By.role()</code>) via the shared codegen module</li>
+        <li>SKILL.md frontmatter compliance (<code>name</code>, <code>description</code>, <code>license</code>, <code>compatibility</code>)</li>
+      </ul>
+      <div class="alert alert-info"><span class="alert-icon">i</span><div><strong>Dual-track strategy.</strong> CLI + SKILLS stays the token-efficient path for coding agents; the MCP Server adds persistent-state tooling for autonomous workflows. Track progress on the <a href="../roadmap/index.html">roadmap</a>.</div></div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <img src="../assets/img/favicon.svg" alt="" width="24" height="24" />
+        <span>se-cli</span>
+      </div>
+      <div class="footer-links">
+        <a href="../docs/index.html">Docs</a>
+        <a href="../roadmap/index.html">Roadmap</a>
+        <a href="../test-pages/index.html">Test Pages</a>
+        <a href="https://github.com/se-cli/se-cli">GitHub</a>
+        <a href="https://github.com/se-cli/se-cli/issues">Issues</a>
+        <a href="https://www.npmjs.com/package/@browsers-cli/se-cli">npm</a>
+      </div>
+      <div class="footer-copy">Apache-2.0 · se-cli</div>
+    </div>
+  </footer>
+
+  <script src="../assets/js/nav.js"></script>
+</body>
+</html>
