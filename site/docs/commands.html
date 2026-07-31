@@ -71,6 +71,7 @@
         <button class="cmd-tab" data-tab="exec" role="tab" data-i18n="cmd.tab.exec">Save &amp; Execute</button>
         <button class="cmd-tab" data-tab="storage" role="tab" data-i18n="cmd.tab.storage">Storage</button>
         <button class="cmd-tab" data-tab="tabs" role="tab" data-i18n="cmd.tab.tabs">Tabs</button>
+        <button class="cmd-tab" data-tab="config" role="tab" data-i18n="cmd.tab.config">Config</button>
         <button class="cmd-tab" data-tab="flags" role="tab" data-i18n="cmd.tab.flags">Flags</button>
       </div>
 
@@ -173,6 +174,19 @@
         </table>
       </div>
 
+      <div class="cmd-panel" data-panel="config">
+        <table class="cmd-table">
+          <thead><tr><th data-i18n="cmd.col.command">Command</th><th data-i18n="cmd.col.description">Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>config get &lt;key&gt;</code></td><td data-i18n="cmd.desc.configGet">Show a config value and its source</td></tr>
+            <tr><td><code>config set &lt;key&gt; &lt;value&gt;</code></td><td data-i18n="cmd.desc.configSet">Write a value to the config file</td></tr>
+            <tr><td><code>config list</code></td><td data-i18n="cmd.desc.configList">List all settings with source (flag/env/file/default)</td></tr>
+            <tr><td><code>config init</code></td><td data-i18n="cmd.desc.configInit">Generate a template config file</td></tr>
+          </tbody>
+        </table>
+        <div class="alert alert-info"><span class="alert-icon">i</span><div data-i18n="cmd.alert.config" data-i18n-html><strong>v0.4.</strong> See the <a href="configuration.html">Configuration</a> page for the 4-tier priority system and wait/retry flags.</div></div>
+      </div>
+
       <div class="cmd-panel" data-panel="flags">
         <table class="cmd-table">
           <thead><tr><th data-i18n="cmd.col.flag">Flag</th><th data-i18n="cmd.col.description">Description</th></tr></thead>
@@ -189,6 +203,14 @@
             <tr><td><code>--filename=&lt;f&gt;</code></td><td data-i18n="cmd.desc.filename">Save snapshot/screenshot to file</td></tr>
             <tr><td><code>--regex=&lt;pattern&gt;</code></td><td data-i18n="cmd.desc.regex">Search snapshot with regex (find)</td></tr>
             <tr><td><code>--submit</code></td><td data-i18n="cmd.desc.submit">Submit form after fill (Enter key)</td></tr>
+            <tr><td><code>--timeout=&lt;ms&gt;</code></td><td data-i18n="cmd.desc.timeout" data-i18n-html>Per-command explicit-wait timeout (v0.4, default 5000)</td></tr>
+            <tr><td><code>--wait=&lt;state&gt;</code></td><td data-i18n="cmd.desc.wait" data-i18n-html>Wait condition: <code>visible|hidden|enabled|disabled|stable|attached|none|auto</code> (v0.4)</td></tr>
+            <tr><td><code>--retry=&lt;n&gt;</code></td><td data-i18n="cmd.desc.retry" data-i18n-html>Failure retry count, <code>-1</code> = until timeout (v0.4)</td></tr>
+            <tr><td><code>--retry-interval=&lt;ms&gt;</code></td><td data-i18n="cmd.desc.retryInterval">Polling interval for retries (v0.4, default 100)</td></tr>
+            <tr><td><code>--implicit-wait=&lt;ms&gt;</code></td><td data-i18n="cmd.desc.implicitWait">Driver implicit wait (v0.4)</td></tr>
+            <tr><td><code>--page-load-timeout=&lt;ms&gt;</code></td><td data-i18n="cmd.desc.pageLoadTimeout" data-i18n-html><code>driver.manage().timeouts().pageLoadTimeout()</code> (v0.4)</td></tr>
+            <tr><td><code>--script-timeout=&lt;ms&gt;</code></td><td data-i18n="cmd.desc.scriptTimeout" data-i18n-html><code>setScriptTimeout</code> for async <code>eval</code> (v0.4)</td></tr>
+            <tr><td><code>--no-wait</code></td><td data-i18n="cmd.desc.noWait" data-i18n-html>Shorthand for <code>--wait=none --timeout=0</code> (v0.4)</td></tr>
           </tbody>
         </table>
       </div>

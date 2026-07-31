@@ -4,13 +4,26 @@ import { Registry } from './registry';
 import { baseDaemonDir, workspaceHash } from './config';
 import { render } from './output';
 import type { ServerMessage } from './protocol';
+import {
+  loadConfigFile,
+  getConfigValue,
+  setConfigValue,
+  listConfig,
+  generateTemplateConfig,
+  resolveConfig,
+} from './wait-config';
 import * as path from 'path';
 import * as fs from 'fs';
 
 export async function main(argv: string[]): Promise<void> {
   const opts = {
-    boolean: ['headed', 'raw', 'json', 'persistent', 'help'],
-    string: ['browser', 'filename', 'depth', 's', 'session', 'cdp', 'profile'],
+    boolean: ['headed', 'raw', 'json', 'persistent', 'help', 'no-wait'],
+    string: [
+      'browser', 'filename', 'depth', 's', 'session', 'cdp', 'profile',
+      // v0.4 wait/retry flags
+      'timeout', 'wait', 'retry', 'retry-interval',
+      'implicit-wait', 'page-load-timeout', 'script-timeout',
+    ],
     alias: { s: 'session' },
   };
   const args = parseArgs(argv, opts);
@@ -117,6 +130,49 @@ export async function main(argv: string[]): Promise<void> {
     return;
   }
 
+  // v0.4: config commands — handled locally, no daemon needed
+  if (cmd === 'config') {
+    const subCmd = args._[1];
+    if (subCmd === 'get') {
+      const key = args._[2];
+      if (!key) {
+        console.error('Usage: se-cli config get <key>');
+        process.exit(1);
+      }
+      const fileConfig = loadConfigFile(cwd);
+      if (!fileConfig) {
+        console.log('(no config file found)');
+        return;
+      }
+      const result = getConfigValue(fileConfig, key);
+      if (result) {
+        console.log(result.value);
+      } else {
+        console.log(`(not set: ${key})`);
+      }
+    } else if (subCmd === 'set') {
+      const key = args._[2];
+      const value = args._[3];
+      if (!key || !value) {
+        console.error('Usage: se-cli config set <key> <value>');
+        process.exit(1);
+      }
+      setConfigValue(cwd, key, value);
+      console.log(`Set ${key} = ${value}`);
+    } else if (subCmd === 'list') {
+      const resolved = resolveConfig({}, cwd, process.env as any);
+      const lines = listConfig(resolved);
+      for (const line of lines) console.log(line);
+    } else if (subCmd === 'init') {
+      generateTemplateConfig(cwd);
+      console.log('Generated .se-cli.json');
+    } else {
+      console.error('Usage: se-cli config [get|set|list|init]');
+      process.exit(1);
+    }
+    return;
+  }
+
   // Tool commands — forward to daemon.
   // Strip CLI-level flags (--raw, --json, --headed, --browser, --cdp, -s, --session,
   // --persistent, --help) so the daemon only sees the command and its tool-specific
@@ -162,6 +218,7 @@ Usage:
   se-cli list
   se-cli close-all
   se-cli kill-all
+  se-cli config [get|set|list|init]
   se-cli -s=<name> <cmd>
 
 Commands:
@@ -183,6 +240,10 @@ Commands:
   sessionstorage-get <key> / sessionstorage-set <key> <val> / sessionstorage-delete [key] / sessionstorage-list
   tab-list / tab-new [url] / tab-close / tab-select <index>
   state-save [--filename=f] / state-load [--filename=f]
+  config get <key>        get config value (e.g. wait.timeout)
+  config set <key> <val>  set config value in .se-cli.json
+  config list             list all config values with sources
+  config init            generate template .se-cli.json
 
 Flags:
   --raw                   output only the result value
@@ -193,5 +254,19 @@ Flags:
   --cdp=<url>             attach to running Chrome via CDP
   --profile=<path>        use a persistent browser profile directory
   --persistent            keep browser profile across sessions (auto-assigns profile path)
+
+Wait & Retry (v0.4):
+  --timeout=<ms>          per-command explicit-wait timeout (default 5000)
+  --wait=<state>          wait condition: visible|hidden|enabled|disabled|stable|attached|none|auto (default auto)
+  --retry=<n>             failure retry count (default 0; -1 = until timeout)
+  --retry-interval=<ms>   polling interval (default 100)
+  --implicit-wait=<ms>    driver implicit wait (default 0)
+  --page-load-timeout=<ms>  page load timeout (default 30000)
+  --script-timeout=<ms>  script timeout for async eval (default 30000)
+  --no-wait               shorthand for --wait=none --timeout=0
+
+Environment:
+  SE_CLI_TIMEOUT / SE_CLI_WAIT / SE_CLI_RETRY / SE_CLI_RETRY_INTERVAL
+  SE_CLI_IMPLICIT_WAIT / SE_CLI_PAGE_LOAD_TIMEOUT / SE_CLI_SCRIPT_TIMEOUT
 `);
 }

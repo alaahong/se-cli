@@ -281,4 +281,89 @@ describe('parseCommand', () => {
   it('throws on unknown command', () => {
     expect(() => parseCommand(['unknown-cmd'])).toThrow(/Unknown command/);
   });
+
+  // --- v0.4: Config commands ---
+
+  it('maps config get to config_get', () => {
+    const r = parseCommand(['config', 'get', 'wait.timeout']);
+    expect(r.toolName).toBe('config_get');
+    expect(r.toolParams).toEqual({ key: 'wait.timeout' });
+  });
+
+  it('maps config set to config_set', () => {
+    const r = parseCommand(['config', 'set', 'wait.timeout', '8000']);
+    expect(r.toolName).toBe('config_set');
+    expect(r.toolParams).toEqual({ key: 'wait.timeout', value: '8000' });
+  });
+
+  it('maps config list to config_list', () => {
+    const r = parseCommand(['config', 'list']);
+    expect(r.toolName).toBe('config_list');
+    expect(r.toolParams).toEqual({});
+  });
+
+  it('maps config init to config_init', () => {
+    const r = parseCommand(['config', 'init']);
+    expect(r.toolName).toBe('config_init');
+    expect(r.toolParams).toEqual({});
+  });
+
+  it('throws on unknown config subcommand', () => {
+    expect(() => parseCommand(['config', 'unknown'])).toThrow(/Unknown config subcommand/);
+  });
+
+  // --- v0.4: Wait/retry flag extraction ---
+
+  it('extracts --timeout flag', () => {
+    const r = parseCommand(['click', 'e1', '--timeout=10000']);
+    expect(r.flags.timeout).toBe('10000');
+  });
+
+  it('extracts --wait flag', () => {
+    const r = parseCommand(['click', 'e1', '--wait=visible']);
+    expect(r.flags.wait).toBe('visible');
+  });
+
+  it('extracts --retry flag', () => {
+    const r = parseCommand(['click', 'e1', '--retry=3']);
+    expect(r.flags.retry).toBe('3');
+  });
+
+  it('extracts --retry-interval flag', () => {
+    const r = parseCommand(['click', 'e1', '--retry-interval=500']);
+    expect(r.flags['retry-interval']).toBe('500');
+  });
+
+  it('extracts --no-wait flag', () => {
+    const r = parseCommand(['click', 'e1', '--no-wait']);
+    expect(r.flags['no-wait']).toBe(true);
+  });
+
+  it('extracts --implicit-wait flag', () => {
+    const r = parseCommand(['click', 'e1', '--implicit-wait=2000']);
+    expect(r.flags['implicit-wait']).toBe('2000');
+  });
+
+  it('extracts --page-load-timeout flag', () => {
+    const r = parseCommand(['goto', 'https://example.com', '--page-load-timeout=60000']);
+    expect(r.flags['page-load-timeout']).toBe('60000');
+  });
+
+  it('extracts --script-timeout flag', () => {
+    const r = parseCommand(['eval', 'document.title', '--script-timeout=45000']);
+    expect(r.flags['script-timeout']).toBe('45000');
+  });
+
+  it('returns empty flags when no wait/retry flags provided', () => {
+    const r = parseCommand(['click', 'e1']);
+    expect(r.flags).toEqual({});
+  });
+
+  it('extracts multiple wait/retry flags simultaneously', () => {
+    const r = parseCommand(['click', 'e1', '--wait=visible', '--timeout=10000', '--retry=3', '--retry-interval=200']);
+    expect(r.flags.wait).toBe('visible');
+    expect(r.flags.timeout).toBe('10000');
+    expect(r.flags.retry).toBe('3');
+    expect(r.flags['retry-interval']).toBe('200');
+  });
 });

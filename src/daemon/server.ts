@@ -132,7 +132,12 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
   // method === 'run' — dispatch to backend
   const { callTool, parseCommand } = require('./backend');
   try {
-    if (!driver) {
+    // Parse the command first so we can skip driver initialization for
+    // config commands that don't need a browser.
+    const { toolName, toolParams, flags } = parseCommand(msg.params.args);
+    const isConfigCmd = toolName === 'config_get' || toolName === 'config_set' ||
+      toolName === 'config_list' || toolName === 'config_init';
+    if (!isConfigCmd && !driver) {
       // Clear any previous init error and attempt a fresh build.
       // The initial build might have failed due to a transient issue
       // (e.g. chromedriver DLL init failure 0xC0000142 on Windows CI),
@@ -147,8 +152,7 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
         return { ok: false, error: driverInitError, code: 'DRIVER_ERROR' };
       }
     }
-    const { toolName, toolParams } = parseCommand(msg.params.args);
-    const response = await callTool(driver, toolName, toolParams, { raw: !!msg.params.raw, json: !!msg.params.json });
+    const response = await callTool(driver, toolName, toolParams, { raw: !!msg.params.raw, json: !!msg.params.json }, flags, msg.params.cwd);
     return { ok: true, text: response.serialize() };
   } catch (e: any) {
     let code: ServerMessage['code'] = 'DRIVER_ERROR';

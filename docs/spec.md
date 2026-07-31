@@ -380,7 +380,7 @@ Features are classified as **Must-Have** (基础底座), **Core** (差异化), o
 - [x] **Shadow DOM recursion**: recursively traverse `el.shadowRoot` for open shadow roots
 - [x] **find command enhancement**: support cross-frame and shadow DOM search
 
-### v0.4: Wait & Retry Configuration Layer (Must-Have, foundation)
+### v0.4: Wait & Retry Configuration Layer ✅
 
 All subsequent commands depend on this layer. Surfaces Selenium's implicit/explicit wait,
 pageLoad/script timeout, and `ExpectedConditions` as CLI-native configuration.
@@ -414,14 +414,26 @@ pageLoad/script timeout, and `ExpectedConditions` as CLI-native configuration.
 ```
 
 **New commands**:
-- [ ] `config get <key>` / `config set <key> <value>` / `config list` (list shows source per item: flag/env/file/default)
-- [ ] `config init` — generate template config file
+- [x] `config get <key>` / `config set <key> <value>` / `config list` (list shows source per item: flag/env/file/default)
+- [x] `config init` — generate template config file
 
 **Code generation**: emitted code reflects the effective strategy
 ```js
 await driver.wait(until.elementIsVisible(el), 5000);
 await driver.wait(until.elementIsEnabled(el), 5000);
 ```
+
+**Implementation status (v0.4)**:
+- [x] 4-tier configuration resolver (`src/wait-config.ts`)
+- [x] Flag layer: `--timeout`, `--wait`, `--retry`, `--retry-interval`, `--implicit-wait`, `--page-load-timeout`, `--script-timeout`, `--no-wait`
+- [x] ENV layer: `SE_CLI_TIMEOUT` / `SE_CLI_WAIT` / `SE_CLI_RETRY` / `SE_CLI_RETRY_INTERVAL` / `SE_CLI_IMPLICIT_WAIT` / `SE_CLI_PAGE_LOAD_TIMEOUT` / `SE_CLI_SCRIPT_TIMEOUT`
+- [x] Config file layer: `.se-cli.json` and `~/.config/se-cli/config.json`
+- [x] `config get/set/list/init` commands
+- [x] Wait-aware code generation for interactive tools (click, fill, check, uncheck, select)
+- [x] Retry logic with configurable count and interval
+- [x] Auto state resolution (interactive commands → visible, read-only commands → none)
+- [x] Unit tests (`tests/unit/wait-config.test.ts`)
+- [x] Integration tests (`tests/integration/fixtures/wait.html`)
 
 ### v0.5: Interaction Completion (Must-Have)
 
