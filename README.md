@@ -150,6 +150,33 @@ se-cli close
 | `mousewheel <dx> <dy>` | Scroll wheel by offsets (v0.5) |
 | `actions-chain <json>` | Chain multiple actions in one perform() (v0.5) |
 
+### Assertions (v0.6)
+
+Web-First assertions inspired by Playwright. Each `expect` command polls the page until the condition is met (or the timeout expires), then exits with code `0` (pass) or `1` (fail) — ideal for CI pipelines and agent verification flows.
+
+| Command | Description |
+|---------|-------------|
+| `expect <ref> visible` | Assert element is visible (exit 0/1) (v0.6) |
+| `expect <ref> hidden` | Assert element is hidden (v0.6) |
+| `expect <ref> enabled` | Assert element is enabled (v0.6) |
+| `expect <ref> disabled` | Assert element is disabled (v0.6) |
+| `expect <ref> checked` | Assert checkbox is checked (v0.6) |
+| `expect <ref> unchecked` | Assert checkbox is unchecked (v0.6) |
+| `expect <ref> text "..."` | Assert element text contains/exact match (v0.6) |
+| `expect <ref> value "..."` | Assert input value (v0.6) |
+| `expect <ref> count N` | Assert matching element count (v0.6) |
+| `expect <ref> attribute <name> <value>` | Assert attribute value (v0.6) |
+| `expect title "..."` | Assert page title (v0.6) |
+| `expect url "..."` | Assert page URL (v0.6) |
+
+**Assertion flags:**
+
+| Flag | Description |
+|------|-------------|
+| `--not` | Invert the assertion — pass when the condition is false (v0.6) |
+| `--exact` | Require strict/exact match instead of substring containment (v0.6) |
+| `--timeout=<ms>` | Polling timeout before the assertion fails (default uses `--timeout` config) (v0.6) |
+
 ### Snapshot & Discovery
 
 | Command | Description |
@@ -458,7 +485,7 @@ src/
 └── daemon/
     ├── server.ts           # Daemon socket server
     ├── backend.ts          # Tool dispatcher
-    └── tools/              # Tool handlers (50 tools)
+    └── tools/              # Tool handlers (51 tools)
 ```
 
 ## Browser Support
@@ -499,7 +526,7 @@ Features are classified as **Must-Have** (基础底座), **Core** (差异化), o
 - **v0.3** ✅: iframe recursive snapshot, Shadow DOM recursion, cross-frame `find`
 - **v0.4** ✅: Wait & Retry configuration layer — `--timeout`/`--wait`/`--retry`/`--page-load-timeout`/`--script-timeout` flags, `SE_CLI_*` ENV vars, `.se-cli.json` config file, `config get/set/list/init` commands
 - **v0.5** ✅: Interaction completion — `hover`, `dblclick`, `drag`, `dialog-accept/dismiss`, `upload`, `resize`, `keydown/keyup`, `mousemove`, `mousedown/mouseup`, `mousewheel`, `actions-chain`
-- **v0.6** (Core, Playwright port): Web-First assertions — `expect <ref> visible [--not]` with exit codes 0/1, `--timeout` integration, CI-friendly chaining
+- **v0.6** ✅: Web-First Assertions — `expect <ref> visible|hidden|enabled|disabled|checked|unchecked|text|value|count|attribute`, `expect title|url`, `--not` inversion, `--exact` strict match, `--timeout` polling, CI-friendly exit codes
 - **v0.7** (Core): Network & debugging — BiDi `route`/`unroute`, `console`, `requests`, `js-error`, `highlight`
 - **v0.8** (Core, Playwright port): Device & environment emulation — `device`, `device-list`, `emulate --throttle-network/--throttle-cpu/--offline`, geolocation/timezone/locale/viewport/UA override
 - **v0.9** (Must-Have): MCP Server & AI ecosystem — `se-cli mcp` via `@modelcontextprotocol/sdk`, `run-code`, `generate-locator`, SKILL.md frontmatter compliance, multi-target `install --skills`

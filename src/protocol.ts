@@ -29,5 +29,5 @@ export interface ServerMessage {
   raw?: string;
   json?: SerializedResponse;
   error?: string;
-  code?: 'ELEMENT_NOT_FOUND' | 'DAEMON_DEAD' | 'VERSION_MISMATCH' | 'DRIVER_ERROR' | 'TIMEOUT';
+  code?: 'ELEMENT_NOT_FOUND' | 'DAEMON_DEAD' | 'VERSION_MISMATCH' | 'DRIVER_ERROR' | 'TIMEOUT' | 'ASSERTION_FAILED';
 }

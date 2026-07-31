@@ -165,6 +165,7 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
     const name = e.name || '';
     if (name === 'NoSuchElementError' || name === 'StaleElementReferenceError') code = 'ELEMENT_NOT_FOUND';
     else if (name === 'TimeoutError') code = 'TIMEOUT';
+    else if (name === 'AssertionError') code = 'ASSERTION_FAILED';
     // Reset the driver on fatal errors so the next command can rebuild
     // a fresh driver instead of reusing a crashed/stale session. This is
     // the primary fix for Chrome flaky tests: when the browser crashes

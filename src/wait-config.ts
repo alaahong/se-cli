@@ -97,6 +97,8 @@ export const DEFAULTS: { wait: WaitConfig; timeouts: TimeoutConfig; perCommand: 
     mouseup:    { wait: { state: 'none' } },
     mousewheel: { wait: { state: 'none' } },
     'actions-chain': { wait: { state: 'none' } },
+    // v0.6: assertions — use 'attached' so timeout is passed through _wait
+    expect:   { wait: { state: 'attached' as WaitState } },
   },
 };
 
@@ -210,7 +212,32 @@ export function resolveConfig(
     sources,
   };
 
-  // Apply per-command defaults from file config (if any)
+  // Apply built-in per-command defaults (lowest priority after global defaults)
+  if (commandName && DEFAULTS.perCommand[commandName]) {
+    const pc = DEFAULTS.perCommand[commandName];
+    if (pc.wait?.timeout !== undefined) {
+      result.wait.timeout = pc.wait.timeout;
+      sources.timeout = 'default';
+    }
+    if (pc.wait?.state !== undefined) {
+      result.wait.state = pc.wait.state;
+      sources.state = 'default';
+    }
+    if (pc.wait?.retry !== undefined) {
+      result.wait.retry = pc.wait.retry;
+      sources.retry = 'default';
+    }
+    if (pc.wait?.retryInterval !== undefined) {
+      result.wait.retryInterval = pc.wait.retryInterval;
+      sources.retryInterval = 'default';
+    }
+    if (pc.scriptTimeout !== undefined) {
+      result.timeouts.script = pc.scriptTimeout;
+      sources.script = 'default';
+    }
+  }
+
+  // Apply per-command overrides from file config (higher priority than built-in)
   if (fileConfig && commandName && fileConfig.perCommand[commandName]) {
     const pc = fileConfig.perCommand[commandName];
     if (pc.wait?.timeout !== undefined) {

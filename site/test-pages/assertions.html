@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assertion Test Page</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 1rem; }
+    .card { border: 1px solid #ccc; padding: 16px; margin: 16px 0; border-radius: 8px; }
+    .status { font-size: 14px; color: #666; min-height: 1.5rem; margin: 8px 0; }
+    .hidden { display: none !important; }
+
+    .box {
+      width: 120px; height: 60px;
+      background: #e0e0e0; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 8px 0;
+    }
+    .visible-box { background: #22C55E; color: white; }
+    .invisible-box { visibility: hidden; }
+
+    input[type="text"], input[type="email"] {
+      padding: 0.5rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px;
+      margin: 4px 0; display: block;
+    }
+    input:disabled { background: #f0f0f0; color: #999; }
+
+    .checkbox-group { display: flex; gap: 1rem; align-items: center; }
+    label { font-size: 0.9rem; }
+
+    .item-list { list-style: none; padding: 0; }
+    .item-list li { padding: 4px 0; border-bottom: 1px solid #eee; }
+  </style>
+</head>
+<body>
+  <h1>Assertion Test Page</h1>
+
+  <!-- Section 1: Visibility -->
+  <div class="card">
+    <h2>Visibility</h2>
+    <div class="box visible-box" id="visible-element" role="status">I am visible</div>
+    <div class="box invisible-box" id="hidden-element" role="status">I am hidden</div>
+    <div class="box hidden" id="display-none-element" role="status">I am display:none</div>
+  </div>
+
+  <!-- Section 2: Enabled/Disabled -->
+  <div class="card">
+    <h2>Enabled / Disabled</h2>
+    <input type="text" id="enabled-input" value="hello" placeholder="Enabled input" />
+    <input type="text" id="disabled-input" value="" placeholder="Disabled input" disabled />
+  </div>
+
+  <!-- Section 3: Checked/Unchecked -->
+  <div class="card">
+    <h2>Checked / Unchecked</h2>
+    <div class="checkbox-group">
+      <label><input type="checkbox" id="checked-box" checked /> Checked Box</label>
+      <label><input type="checkbox" id="unchecked-box" /> Unchecked Box</label>
+    </div>
+  </div>
+
+  <!-- Section 4: Text Content -->
+  <div class="card">
+    <h2>Text Content</h2>
+    <div id="text-element">Hello World</div>
+    <div id="text-partial">The quick brown fox jumps over the lazy dog</div>
+  </div>
+
+  <!-- Section 5: Input Values -->
+  <div class="card">
+    <h2>Input Values</h2>
+    <input type="text" id="value-input" value="test@example.com" />
+    <input type="email" id="empty-input" value="" placeholder="Empty" />
+  </div>
+
+  <!-- Section 6: Element Count -->
+  <div class="card">
+    <h2>Element Count</h2>
+    <ul class="item-list" id="count-container">
+      <li class="count-item">Item 1</li>
+      <li class="count-item">Item 2</li>
+      <li class="count-item">Item 3</li>
+    </ul>
+  </div>
+
+  <!-- Section 7: Attributes -->
+  <div class="card">
+    <h2>Attributes</h2>
+    <a href="https://example.com" id="link-element" target="_blank" data-testid="test-link">Example Link</a>
+    <div id="attr-element" data-role="button" data-value="42">Attribute Element</div>
+  </div>
+
+  <!-- Section 8: Dynamic Element (for timeout testing) -->
+  <div class="card">
+    <h2>Dynamic Element</h2>
+    <p class="status" id="dynamic-status">Element will appear in 2 seconds...</p>
+    <div id="dynamic-container"></div>
+  </div>
+
+  <!-- Section 9: Toggle Visibility (for hidden->visible testing) -->
+  <div class="card">
+    <h2>Toggle Visibility</h2>
+    <button type="button" id="toggle-btn">Toggle Element</button>
+    <div class="box hidden" id="toggle-element" role="status">Toggled visible</div>
+  </div>
+
+  <script>
+    // 8. Dynamic Element — appears after 2 seconds
+    setTimeout(function() {
+      var container = document.getElementById('dynamic-container');
+      var el = document.createElement('div');
+      el.className = 'box visible-box';
+      el.id = 'dynamic-element';
+      el.setAttribute('role', 'status');
+      el.textContent = 'I appeared dynamically!';
+      container.appendChild(el);
+      document.getElementById('dynamic-status').textContent = 'Element is now visible!';
+    }, 2000);
+
+    // 9. Toggle Visibility
+    document.getElementById('toggle-btn').addEventListener('click', function() {
+      var el = document.getElementById('toggle-element');
+      el.classList.toggle('hidden');
+    });
+  </script>
+</body>
+</html>
