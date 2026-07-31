@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wait & Retry Test Page</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 20px auto; }
+    .card { border: 1px solid #ccc; padding: 16px; margin: 16px 0; border-radius: 8px; }
+    .status { font-size: 14px; color: #666; }
+    .hidden { display: none; }
+    .disabled { pointer-events: none; opacity: 0.5; }
+  </style>
+</head>
+<body>
+  <h1>Wait & Retry Test Page</h1>
+
+  <!-- Section 1: Delayed visibility -->
+  <div class="card">
+    <h2>Delayed Visibility</h2>
+    <p class="status" id="vis-status">Button will appear in 2 seconds...</p>
+    <button id="delayed-visible" class="hidden" data-se-ref>Delayed Visible Button</button>
+  </div>
+
+  <!-- Section 2: Delayed enablement -->
+  <div class="card">
+    <h2>Delayed Enablement</h2>
+    <p class="status" id="en-status">Button will be enabled in 2 seconds...</p>
+    <button id="delayed-enabled" disabled data-se-ref>Delayed Enabled Button</button>
+  </div>
+
+  <!-- Section 3: Disappearing element -->
+  <div class="card">
+    <h2>Disappearing Element</h2>
+    <p class="status" id="hide-status">Button will disappear in 3 seconds...</p>
+    <button id="disappearing" data-se-ref>Disappearing Button</button>
+  </div>
+
+  <!-- Section 4: Dynamic element -->
+  <div class="card">
+    <h2>Dynamic Element</h2>
+    <p class="status" id="dyn-status">Element will appear after 2 seconds...</p>
+    <div id="dynamic-container"></div>
+  </div>
+
+  <!-- Section 5: Flaky button (for retry testing) -->
+  <div class="card">
+    <h2>Flaky Button (Retry Test)</h2>
+    <p class="status" id="flaky-status">Click count: 0</p>
+    <button id="flaky-btn" data-se-ref>Flaky Button</button>
+  </div>
+
+  <script>
+    // 1. Delayed visibility
+    setTimeout(() => {
+      document.getElementById('delayed-visible').classList.remove('hidden');
+      document.getElementById('vis-status').textContent = 'Button is now visible!';
+    }, 2000);
+
+    // 2. Delayed enablement
+    setTimeout(() => {
+      document.getElementById('delayed-enabled').disabled = false;
+      document.getElementById('en-status').textContent = 'Button is now enabled!';
+    }, 2000);
+
+    // 3. Disappearing element
+    setTimeout(() => {
+      document.getElementById('disappearing').classList.add('hidden');
+      document.getElementById('hide-status').textContent = 'Button has disappeared!';
+    }, 3000);
+
+    // 4. Dynamic element
+    setTimeout(() => {
+      const container = document.getElementById('dynamic-container');
+      const btn = document.createElement('button');
+      btn.id = 'dynamic-btn';
+      btn.setAttribute('data-se-ref', '');
+      btn.textContent = 'Dynamically Added Button';
+      container.appendChild(btn);
+      document.getElementById('dyn-status').textContent = 'Dynamic element added!';
+    }, 2000);
+
+    // 5. Flaky button - fails first click, succeeds on second
+    let clickCount = 0;
+    document.getElementById('flaky-btn').addEventListener('click', () => {
+      clickCount++;
+      document.getElementById('flaky-status').textContent = 'Click count: ' + clickCount;
+      if (clickCount === 1) {
+        // First click - simulate failure by throwing
+        throw new Error('Simulated flaky failure');
+      }
+    });
+  </script>
+</body>
+</html>

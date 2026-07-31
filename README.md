@@ -190,6 +190,15 @@ se-cli close
 | `state-save [--filename=f.json]` | Save cookies, localStorage, sessionStorage to file |
 | `state-load [--filename=f.json]` | Load state from file (restores all storage) |
 
+### Configuration
+
+| Command | Description |
+|---------|-------------|
+| `config get <key>` | Show a config value and its source |
+| `config set <key> <value>` | Write a value to the config file |
+| `config list` | List all settings with source (flag/env/file/default) |
+| `config init` | Generate a template config file (.se-cli.json) |
+
 ### Flags
 
 | Flag | Description |
@@ -202,6 +211,14 @@ se-cli close
 | `--cdp=<url>` | Attach to running Chrome via CDP |
 | `--profile=<path>` | Use a persistent browser profile directory |
 | `--persistent` | Keep browser profile across sessions (auto-assigns path) |
+| `--timeout=<ms>` | Per-command explicit-wait timeout (v0.4) |
+| `--wait=<state>` | Wait condition: visible\|hidden\|enabled\|disabled\|stable\|attached\|none\|auto (v0.4) |
+| `--retry=<n>` | Failure retry count, -1 = until timeout (v0.4) |
+| `--retry-interval=<ms>` | Polling interval for retries (v0.4) |
+| `--implicit-wait=<ms>` | Driver implicit wait (v0.4) |
+| `--page-load-timeout=<ms>` | Page load timeout (v0.4) |
+| `--script-timeout=<ms>` | Script timeout for async eval (v0.4) |
+| `--no-wait` | Shorthand for --wait=none --timeout=0 (v0.4) |
 
 ## Usage Examples
 
@@ -466,7 +483,7 @@ Features are classified as **Must-Have** (基础底座), **Core** (差异化), o
 - **v0.1** ✅: CLI + Daemon architecture, aria snapshot + ref mechanism, basic commands, multi-browser support
 - **v0.2** ✅: Storage management, tab management, state save/load, `install --skills`, `--profile`, `--persistent`
 - **v0.3** ✅: iframe recursive snapshot, Shadow DOM recursion, cross-frame `find`
-- **v0.4** (Must-Have, foundation): Wait & Retry configuration layer — `--timeout`/`--wait`/`--retry`/`--page-load-timeout`/`--script-timeout` flags, `SE_CLI_*` ENV vars, `.se-cli.json` config file, `config get/set/list/init` commands
+- **v0.4** ✅: Wait & Retry configuration layer — `--timeout`/`--wait`/`--retry`/`--page-load-timeout`/`--script-timeout` flags, `SE_CLI_*` ENV vars, `.se-cli.json` config file, `config get/set/list/init` commands
 - **v0.5** (Must-Have): Interaction completion — `hover`, `dblclick`, `drag`, `dialog-accept/dismiss`, `upload`, `resize`, `keydown/keyup`, `mousemove`, `mousewheel`, `--actions-chain`
 - **v0.6** (Core, Playwright port): Web-First assertions — `expect <ref> visible [--not]` with exit codes 0/1, `--timeout` integration, CI-friendly chaining
 - **v0.7** (Core): Network & debugging — BiDi `route`/`unroute`, `console`, `requests`, `js-error`, `highlight`
@@ -479,6 +496,30 @@ Features are classified as **Must-Have** (基础底座), **Core** (差异化), o
 **Will never implement**: native aria ref engine (staying on `data-se-ref`), Playwright-level full tracing parity, real IE 11 (replaced by Edge IE mode in v0.10).
 
 See [docs/spec.md](docs/spec.md) for the full roadmap with configuration details and capability matrices.
+
+## Wait & Retry Configuration (v0.4)
+
+Control element wait conditions, timeouts, and retry behavior:
+
+```bash
+# Wait for element to be visible before clicking
+se-cli click e1 --wait=visible --timeout=10000
+
+# Retry failed commands
+se-cli click e1 --retry=3 --retry-interval=200
+
+# Skip waiting entirely
+se-cli click e1 --no-wait
+
+# Configure via environment variables
+SE_CLI_TIMEOUT=10000 se-cli click e1
+
+# Config file (.se-cli.json)
+se-cli config init     # generate template
+se-cli config list     # show all settings
+se-cli config set wait.timeout 8000
+se-cli config get wait.timeout
+```
 
 ## License
 

@@ -3,19 +3,21 @@ import { execFile } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
 import { startTestServer, type TestServer } from './test-server';
 import { resolveTestBrowsers, shouldRunE2E, type BrowserName } from './detect-browsers';
 
 const execFileAsync = promisify(execFile);
 const CLI = path.join(__dirname, '..', '..', 'dist', 'cli.js');
 
-async function run(args: string[], env?: Record<string, string>): Promise<string> {
+async function run(args: string[], env?: Record<string, string>, cwd?: string): Promise<string> {
   const { stdout } = await execFileAsync('node', [CLI, ...args], {
     encoding: 'utf8',
     timeout: 120000,
     env: { ...process.env, ...env },
     shell: false,
     maxBuffer: 10 * 1024 * 1024,
+    cwd,
   });
   return stdout;
 }
@@ -98,6 +100,7 @@ const STORAGE_URL  = () => server.url('storage.html');     // storage: cookies, 
 const TABS_URL     = () => server.url('tabs.html');        // tabs: open, list, close, select
 const IFRAME_URL   = () => server.url('iframe.html');       // iframes: recursive snapshot, cross-frame refs
 const SHADOW_URL   = () => server.url('shadow-dom.html');   // shadow DOM: open shadow roots with interactive elements
+const WAIT_URL     = () => server.url('wait.html');          // wait & retry: delayed visibility/enablement, dynamic element, flaky button
 
 describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   // Skip if E2E is not enabled, or if this browser wasn't resolved
@@ -587,5 +590,81 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
     const result = await run(['--raw', 'find', 'Shadow DOM Form'], { SE_CLI_SESSION: S() });
     expect(result).toContain('Shadow DOM Form');
     expect(result).not.toContain('No matches found');
+  });
+
+  // --- v0.4: Wait & Retry Configuration ---
+
+  (skip ? it.skip : it)('waits for delayed visible element with --wait=visible', async () => {
+    await run(['open', WAIT_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    // #delayed-visible starts hidden (display:none), so it is excluded from
+    // the ARIA snapshot and receives no ref. Use a CSS selector directly —
+    // findElement() locates it in the DOM regardless of visibility, then
+    // --wait=visible polls until it becomes visible (after 2s).
+    const result = await run(['click', '#delayed-visible', '--wait=visible', '--timeout=5000'], { SE_CLI_SESSION: S() });
+    expect(result).toContain('clicked');
+  });
+
+  (skip ? it.skip : it)('waits for delayed enabled element with --wait=enabled', async () => {
+    await run(['open', WAIT_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    // #delayed-enabled is visible (but disabled) immediately, so it does get
+    // a snapshot ref. Resolve the ref, then click with --wait=enabled which
+    // polls until the button is no longer disabled (after 2s).
+    const snapshot = await run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
+    const refMatch = snapshot.match(/Delayed Enabled Button[^\n]*ref=(e\d+)/);
+    expect(refMatch).not.toBeNull();
+    const ref = refMatch![1];
+    const result = await run(['click', ref, '--wait=enabled', '--timeout=5000'], { SE_CLI_SESSION: S() });
+    expect(result).toContain('clicked');
+  });
+
+  (skip ? it.skip : it)('clicks without waiting using --no-wait', async () => {
+    await run(['open', WAIT_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    // With --no-wait (shorthand for --wait=none --timeout=0), clicking a
+    // hidden element should fail immediately rather than waiting for it to
+    // appear. The error is expected and swallowed here.
+    try {
+      await run(['click', '#delayed-visible', '--no-wait'], { SE_CLI_SESSION: S() });
+    } catch {
+      // Expected to fail since element is hidden
+    }
+  });
+
+  (skip ? it.skip : it)('generates config file with config init', async () => {
+    // Use a temp cwd so the generated .se-cli.json doesn't leak into the
+    // repo or interfere with other tests. config commands are handled
+    // locally by the CLI (no daemon/session required).
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'se-cli-cfg-'));
+    try {
+      const result = await run(['config', 'init'], { SE_CLI_SESSION: S() }, tmp);
+      expect(result).toContain('Generated');
+      expect(fs.existsSync(path.join(tmp, '.se-cli.json'))).toBe(true);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  (skip ? it.skip : it)('lists config values with config list', async () => {
+    // Run in an empty temp dir so every value resolves to the built-in
+    // default (no .se-cli.json present).
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'se-cli-cfg-'));
+    try {
+      const result = await run(['config', 'list'], { SE_CLI_SESSION: S() }, tmp);
+      expect(result).toContain('wait.timeout');
+      expect(result).toContain('wait.state');
+      expect(result).toContain('default');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  (skip ? it.skip : it)('sets and gets config value', async () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'se-cli-cfg-'));
+    try {
+      await run(['config', 'set', 'wait.timeout', '8000'], { SE_CLI_SESSION: S() }, tmp);
+      const result = await run(['--raw', 'config', 'get', 'wait.timeout'], { SE_CLI_SESSION: S() }, tmp);
+      expect(result.trim()).toBe('8000');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
   });
 });
