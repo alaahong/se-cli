@@ -1,6 +1,22 @@
 import { Response } from '../../response';
 
 /**
+ * Wait for a dialog (alert/confirm/prompt) to appear, with a timeout.
+ * Handles the race condition where the dialog is triggered via setTimeout
+ * in eval but hasn't appeared yet when dialog-accept/dismiss is called.
+ */
+async function waitForAlert(driver: any, timeout = 5000): Promise<any> {
+  const { until } = require('selenium-webdriver');
+  try {
+    await driver.wait(until.alertIsPresent(), timeout);
+  } catch {
+    // If wait times out, fall through to switchTo().alert() which will
+    // throw a descriptive "no such alert" error.
+  }
+  return driver.switchTo().alert();
+}
+
+/**
  * dialog-accept [text] — accept alert/confirm/prompt dialog
  * If text is provided, it is typed into a prompt dialog before accepting.
  */
@@ -9,7 +25,7 @@ export async function browser_dialog_accept(
   params: { text?: string },
   response: Response,
 ): Promise<void> {
-  const alert = await driver.switchTo().alert();
+  const alert = await waitForAlert(driver);
 
   if (params.text) {
     await alert.sendKeys(params.text);
@@ -33,7 +49,7 @@ export async function browser_dialog_dismiss(
   params: {},
   response: Response,
 ): Promise<void> {
-  const alert = await driver.switchTo().alert();
+  const alert = await waitForAlert(driver);
   await alert.dismiss();
 
   const title = await driver.getTitle();

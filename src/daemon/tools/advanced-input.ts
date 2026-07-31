@@ -108,19 +108,15 @@ export async function browser_mousewheel(
   params: { dx: number; dy: number },
   response: Response,
 ): Promise<void> {
-  // Selenium doesn't have a direct mouseWheel action on all drivers,
-  // so we use the Actions API's scroll method (available in selenium-webdriver 4.x)
+  // The Actions API scroll() takes positional args: (x, y, deltaX, deltaY, origin?, duration?)
+  // where x,y is the starting viewport coordinate and deltaX/deltaY is the scroll amount.
   const actions = driver.actions({ bridge: true });
-  await actions.scroll({
-    x: params.dx,
-    y: params.dy,
-    origin: 'viewport',
-  }).perform();
+  await actions.scroll(0, 0, params.dx, params.dy).perform();
 
   const title = await driver.getTitle();
   const url = await driver.getCurrentUrl();
   response.addPage({ url, title });
-  response.addCode(`await driver.actions().scroll({ x: ${params.dx}, y: ${params.dy}, origin: 'viewport' }).perform();`);
+  response.addCode(`await driver.actions().scroll(0, 0, ${params.dx}, ${params.dy}).perform();`);
   response.addResult(`scrolled (${params.dx}, ${params.dy})`);
 }
 
@@ -176,11 +172,7 @@ export async function browser_actions_chain(
         }
         break;
       case 'scroll':
-        await actions.scroll({
-          x: step.x || 0,
-          y: step.y || 0,
-          origin: step.target ? await findElement(driver, step.target) : 'viewport',
-        });
+        await actions.scroll(0, 0, step.x || 0, step.y || 0);
         break;
       case 'pause':
         await actions.pause(step.duration || 100);
