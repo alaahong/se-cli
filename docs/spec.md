@@ -435,23 +435,36 @@ await driver.wait(until.elementIsEnabled(el), 5000);
 - [x] Unit tests (`tests/unit/wait-config.test.ts`)
 - [x] Integration tests (`tests/integration/fixtures/wait.html`)
 
-### v0.5: Interaction Completion (Must-Have)
+### v0.5: Interaction Completion ✅
 
 Close the gap on basic interaction capabilities missing vs Playwright CLI and Selenium.
 All Actions commands automatically consume the v0.4 wait/retry configuration.
 
-- [ ] **hover <ref>**: mouse hover via `driver.actions().move()`
-- [ ] **dblclick <ref>**: double-click via `driver.actions().doubleClick()`
-- [ ] **drag <start> <end>**: drag and drop via `driver.actions().dragAndDrop()`
-- [ ] **dialog-accept [text]**: handle alert/confirm/prompt via `driver.switchTo().alert()`
-- [ ] **dialog-dismiss**: dismiss dialog
-- [ ] **upload <file>**: file upload via `driver.findElement().sendKeys(path)`
-- [ ] **resize <w> <h>**: viewport control via `driver.manage().window().setSize()`
-- [ ] **keydown / keyup <key>**: fine-grained keyboard control via Actions chain
-- [ ] **mousemove <x> <y>**: mouse position control
-- [ ] **mousedown / mouseup**: mouse button control
-- [ ] **mousewheel <dx> <dy>**: scroll wheel control
-- [ ] **--actions-chain** flag: combine multiple actions into a single `driver.actions().move().down().up().perform()` to reduce round-trips
+- [x] **hover <ref>**: mouse hover via `driver.actions().move()`
+- [x] **dblclick <ref>**: double-click via `driver.actions().doubleClick()`
+- [x] **drag <start> <end>**: drag and drop via `driver.actions().dragAndDrop()`
+- [x] **dialog-accept [text]**: handle alert/confirm/prompt via `driver.switchTo().alert()`
+- [x] **dialog-dismiss**: dismiss dialog
+- [x] **upload <ref> <file>**: file upload via `driver.findElement().sendKeys(path)`
+- [x] **resize <w> <h>**: viewport control via `driver.manage().window().setRect()`
+- [x] **keydown / keyup <key>**: fine-grained keyboard control via Actions chain
+- [x] **mousemove <x> <y>**: mouse position control
+- [x] **mousedown / mouseup [button]**: mouse button control
+- [x] **mousewheel <dx> <dy>**: scroll wheel control
+- [x] **actions-chain <json>**: combine multiple actions into a single `driver.actions().move().down().up().perform()` to reduce round-trips
+
+**Implementation status (v0.5)**:
+- [x] `hover`, `dblclick`, `drag` tools (`src/daemon/tools/interactions.ts`)
+- [x] `dialog-accept`, `dialog-dismiss` tools (`src/daemon/tools/dialog.ts`)
+- [x] `upload <ref> <file>` tool via `element.sendKeys(absolutePath)` (`src/daemon/tools/upload.ts`)
+- [x] `resize <w> <h>` tool via `driver.manage().window().setRect()` (`src/daemon/tools/resize.ts`)
+- [x] Fine-grained keyboard control: `keydown`, `keyup` (`src/daemon/tools/advanced-input.ts`)
+- [x] Fine-grained mouse control: `mousemove`, `mousedown`, `mouseup`, `mousewheel` (`src/daemon/tools/advanced-input.ts`)
+- [x] `actions-chain <json>` for batched `perform()` to reduce round-trips (`src/daemon/tools/advanced-input.ts`)
+- [x] All Actions commands consume v0.4 wait/retry configuration
+- [x] Code generation for all new interaction tools
+- [x] Unit tests for each tool
+- [x] Integration tests (`tests/integration/fixtures/interactions.html`)
 
 ### v0.6: Web-First Assertions (Core, Playwright port: medium complexity × high importance)
 

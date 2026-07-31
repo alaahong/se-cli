@@ -135,6 +135,20 @@ se-cli close
 | `select <ref> <value>` | Select dropdown option |
 | `check <ref>` | Check checkbox |
 | `uncheck <ref>` | Uncheck checkbox |
+| `hover <ref>` | Mouse hover over element (v0.5) |
+| `dblclick <ref>` | Double-click element (v0.5) |
+| `drag <start> <end>` | Drag and drop element (v0.5) |
+| `dialog-accept [text]` | Accept alert/confirm/prompt dialog (v0.5) |
+| `dialog-dismiss` | Dismiss dialog (v0.5) |
+| `upload <ref> <file>` | Upload file to input element (v0.5) |
+| `resize <w> <h>` | Set viewport size (v0.5) |
+| `keydown <key>` | Press and hold key (v0.5) |
+| `keyup <key>` | Release held key (v0.5) |
+| `mousemove <x> <y>` | Move mouse to coordinates (v0.5) |
+| `mousedown [button]` | Press mouse button (left/right/middle) (v0.5) |
+| `mouseup [button]` | Release mouse button (v0.5) |
+| `mousewheel <dx> <dy>` | Scroll wheel by offsets (v0.5) |
+| `actions-chain <json>` | Chain multiple actions in one perform() (v0.5) |
 
 ### Snapshot & Discovery
 
@@ -444,7 +458,7 @@ src/
 └── daemon/
     ├── server.ts           # Daemon socket server
     ├── backend.ts          # Tool dispatcher
-    └── tools/              # Tool handlers (35 tools)
+    └── tools/              # Tool handlers (50 tools)
 ```
 
 ## Browser Support
@@ -484,7 +498,7 @@ Features are classified as **Must-Have** (基础底座), **Core** (差异化), o
 - **v0.2** ✅: Storage management, tab management, state save/load, `install --skills`, `--profile`, `--persistent`
 - **v0.3** ✅: iframe recursive snapshot, Shadow DOM recursion, cross-frame `find`
 - **v0.4** ✅: Wait & Retry configuration layer — `--timeout`/`--wait`/`--retry`/`--page-load-timeout`/`--script-timeout` flags, `SE_CLI_*` ENV vars, `.se-cli.json` config file, `config get/set/list/init` commands
-- **v0.5** (Must-Have): Interaction completion — `hover`, `dblclick`, `drag`, `dialog-accept/dismiss`, `upload`, `resize`, `keydown/keyup`, `mousemove`, `mousewheel`, `--actions-chain`
+- **v0.5** ✅: Interaction completion — `hover`, `dblclick`, `drag`, `dialog-accept/dismiss`, `upload`, `resize`, `keydown/keyup`, `mousemove`, `mousedown/mouseup`, `mousewheel`, `actions-chain`
 - **v0.6** (Core, Playwright port): Web-First assertions — `expect <ref> visible [--not]` with exit codes 0/1, `--timeout` integration, CI-friendly chaining
 - **v0.7** (Core): Network & debugging — BiDi `route`/`unroute`, `console`, `requests`, `js-error`, `highlight`
 - **v0.8** (Core, Playwright port): Device & environment emulation — `device`, `device-list`, `emulate --throttle-network/--throttle-cpu/--offline`, geolocation/timezone/locale/viewport/UA override

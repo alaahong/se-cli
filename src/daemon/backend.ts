@@ -248,6 +248,21 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
       if (subCmd === 'init') return { toolName: 'config_init', toolParams: {} };
       throw new Error(`Unknown config subcommand: ${subCmd}. Supported: get, set, list, init`);
     },
+    // v0.5: Interaction Completion
+    'hover': () => ({ toolName: 'browser_hover', toolParams: { target: positional[0] } }),
+    'dblclick': () => ({ toolName: 'browser_dblclick', toolParams: { target: positional[0] } }),
+    'drag': () => ({ toolName: 'browser_drag', toolParams: { start: positional[0], end: positional[1] } }),
+    'dialog-accept': () => ({ toolName: 'browser_dialog_accept', toolParams: { text: positional[0] } }),
+    'dialog-dismiss': () => ({ toolName: 'browser_dialog_dismiss', toolParams: {} }),
+    'upload': () => ({ toolName: 'browser_upload', toolParams: { target: positional[0], file: positional[1] } }),
+    'resize': () => ({ toolName: 'browser_resize', toolParams: { width: parseInt(positional[0]), height: parseInt(positional[1]) } }),
+    'keydown': () => ({ toolName: 'browser_keydown', toolParams: { key: positional[0] } }),
+    'keyup': () => ({ toolName: 'browser_keyup', toolParams: { key: positional[0] } }),
+    'mousemove': () => ({ toolName: 'browser_mousemove', toolParams: { x: parseInt(positional[0]), y: parseInt(positional[1]) } }),
+    'mousedown': () => ({ toolName: 'browser_mousedown', toolParams: { button: positional[0] } }),
+    'mouseup': () => ({ toolName: 'browser_mouseup', toolParams: { button: positional[0] } }),
+    'mousewheel': () => ({ toolName: 'browser_mousewheel', toolParams: { dx: parseInt(positional[0]), dy: parseInt(positional[1]) } }),
+    'actions-chain': () => ({ toolName: 'browser_actions_chain', toolParams: { actions: positional[0] } }),
   };
   const factory = commands[cmd];
   if (!factory) throw new Error(`Unknown command: ${cmd}`);

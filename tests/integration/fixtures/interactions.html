@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interaction Test Page</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 1rem; }
+    .card { border: 1px solid #ccc; padding: 16px; margin: 16px 0; border-radius: 8px; }
+    .status { font-size: 14px; color: #666; min-height: 1.5rem; margin: 8px 0; }
+    .hidden { display: none !important; }
+
+    .hover-area {
+      width: 200px; height: 80px;
+      background: #e0e0e0; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background 0.3s; user-select: none;
+    }
+    .hover-area.hovered { background: #22C55E; color: white; }
+
+    .dblclick-area {
+      width: 200px; height: 80px;
+      background: #e0e0e0; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; user-select: none;
+    }
+    .dblclick-area.double-clicked { background: #6366f1; color: white; }
+
+    .drag-container { display: flex; gap: 1rem; align-items: flex-start; margin: 1rem 0; }
+    .draggable {
+      width: 80px; height: 80px;
+      background: #22C55E; color: white; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: grab; user-select: none;
+    }
+    .drop-zone {
+      width: 160px; height: 120px;
+      border: 3px dashed #ccc; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: #999;
+    }
+    .drop-zone.dropped { border-color: #22C55E; background: #f0f9ff; color: #22C55E; }
+
+    .btn-group { display: flex; gap: 1rem; margin: 1rem 0; flex-wrap: wrap; }
+    button {
+      padding: 0.5rem 1.5rem; font-size: 1rem;
+      border: none; border-radius: 4px; cursor: pointer;
+      background: #6366f1; color: white;
+    }
+    button:hover { background: #4f46e5; }
+
+    .dialog-result, .file-info {
+      margin-top: 0.5rem; padding: 0.75rem;
+      background: #f0f9ff; border-radius: 4px; min-height: 1.5rem;
+    }
+
+    .scroll-container {
+      width: 300px; height: 150px;
+      overflow-y: auto; border: 1px solid #ccc;
+      border-radius: 8px; padding: 1rem;
+    }
+    .scroll-content p { margin: 0.5rem 0; }
+
+    .coord-display {
+      width: 300px; height: 80px;
+      background: #f0f9ff; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: monospace; font-size: 1.2rem;
+    }
+
+    .key-area {
+      width: 300px; height: 80px;
+      background: #f0f9ff; border: 2px solid #ccc;
+      border-radius: 8px; padding: 1rem;
+      outline: none; user-select: none;
+    }
+    .key-area.focused { border-color: #6366f1; }
+  </style>
+</head>
+<body>
+  <h1>Interaction Test Page</h1>
+
+  <!-- Section 1: Hover -->
+  <div class="card">
+    <h2>Hover</h2>
+    <div class="hover-area" id="hover-area" role="button" tabindex="0">Hover over me</div>
+    <p class="status" id="hover-status">No hover yet</p>
+  </div>
+
+  <!-- Section 2: Double Click -->
+  <div class="card">
+    <h2>Double Click</h2>
+    <div class="dblclick-area" id="dblclick-area" role="button" tabindex="0">Double-click me</div>
+    <p class="status" id="dblclick-status">No double-click yet</p>
+  </div>
+
+  <!-- Section 3: Drag and Drop -->
+  <div class="card">
+    <h2>Drag and Drop</h2>
+    <div class="drag-container">
+      <div class="draggable" id="drag-source" draggable="true">Drag me</div>
+      <div class="drop-zone" id="drop-zone">Drop here</div>
+    </div>
+    <p class="status" id="drag-status">No drag yet</p>
+  </div>
+
+  <!-- Section 4: Dialogs -->
+  <div class="card">
+    <h2>Dialogs</h2>
+    <div class="btn-group">
+      <button type="button" id="alert-btn">Show Alert</button>
+      <button type="button" id="confirm-btn">Show Confirm</button>
+      <button type="button" id="prompt-btn">Show Prompt</button>
+    </div>
+    <div class="dialog-result" id="dialog-status" role="status" aria-live="polite">No dialog yet</div>
+  </div>
+
+  <!-- Section 5: File Upload -->
+  <div class="card">
+    <h2>File Upload</h2>
+    <input type="file" id="file-input" />
+    <div class="file-info" id="file-info">No file uploaded</div>
+  </div>
+
+  <!-- Section 6: Scrollable Container -->
+  <div class="card">
+    <h2>Scrollable Container</h2>
+    <div class="scroll-container" id="scroll-container">
+      <div class="scroll-content" id="scroll-content"></div>
+    </div>
+    <p class="status" id="scroll-status">Scroll position: 0</p>
+  </div>
+
+  <!-- Section 7: Mouse Coordinates -->
+  <div class="card">
+    <h2>Mouse Coordinates</h2>
+    <div class="coord-display" id="coord-display" role="status">Move mouse here</div>
+  </div>
+
+  <!-- Section 8: Key Events -->
+  <div class="card">
+    <h2>Key Events</h2>
+    <div class="key-area" id="key-area" tabindex="0" role="textbox" aria-label="Key event detector">Click here and press keys</div>
+    <p class="status" id="key-status">No key events yet</p>
+  </div>
+
+  <!-- Section 9: Delayed Hover Target (for wait/retry testing) -->
+  <div class="card">
+    <h2>Delayed Hover Target</h2>
+    <p class="status" id="delayed-hover-status">Target will appear in 2 seconds...</p>
+    <div id="delayed-hover-container"></div>
+    <p class="status" id="delayed-hover-result">No hover on delayed target</p>
+  </div>
+
+  <script>
+    // 1. Hover — detect mouseenter
+    var hoverArea = document.getElementById('hover-area');
+    hoverArea.addEventListener('mouseenter', function() {
+      hoverArea.classList.add('hovered');
+      document.getElementById('hover-status').textContent = 'Hovered!';
+    });
+    hoverArea.addEventListener('mouseleave', function() {
+      hoverArea.classList.remove('hovered');
+    });
+
+    // 2. Double Click — detect dblclick
+    var dblclickArea = document.getElementById('dblclick-area');
+    dblclickArea.addEventListener('dblclick', function() {
+      dblclickArea.classList.add('double-clicked');
+      document.getElementById('dblclick-status').textContent = 'Double-clicked!';
+    });
+
+    // 3. Drag and Drop — HTML5 drag events + mouse events
+    var dragSource = document.getElementById('drag-source');
+    var dropZone = document.getElementById('drop-zone');
+
+    dragSource.addEventListener('dragstart', function(e) {
+      e.dataTransfer.setData('text/plain', 'drag-source');
+    });
+    dropZone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+    });
+    dropZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropZone.classList.add('dropped');
+      dropZone.textContent = 'Dropped!';
+      document.getElementById('drag-status').textContent = 'Dropped!';
+    });
+    // Mouse-event fallback for Selenium's mouse-based dragAndDrop
+    dropZone.addEventListener('mouseup', function() {
+      dropZone.classList.add('dropped');
+      dropZone.textContent = 'Dropped!';
+      document.getElementById('drag-status').textContent = 'Dropped!';
+    });
+
+    // 4. Dialogs — alert, confirm, prompt
+    document.getElementById('alert-btn').addEventListener('click', function() {
+      alert('Test Alert');
+      document.getElementById('dialog-status').textContent = 'Alert: dismissed';
+    });
+    document.getElementById('confirm-btn').addEventListener('click', function() {
+      var r = confirm('Test Confirm');
+      document.getElementById('dialog-status').textContent = 'Confirm: ' + r;
+    });
+    document.getElementById('prompt-btn').addEventListener('click', function() {
+      var r = prompt('Test Prompt');
+      document.getElementById('dialog-status').textContent = 'Prompt: ' + r;
+    });
+
+    // 5. File Upload — show filename on change
+    document.getElementById('file-input').addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      if (file) {
+        document.getElementById('file-info').textContent = 'File: ' + file.name;
+      }
+    });
+
+    // 6. Scrollable Container — 20 lines, track scroll position
+    var scrollContent = document.getElementById('scroll-content');
+    for (var i = 1; i <= 20; i++) {
+      var p = document.createElement('p');
+      p.textContent = 'Line ' + i;
+      scrollContent.appendChild(p);
+    }
+    var scrollContainer = document.getElementById('scroll-container');
+    scrollContainer.addEventListener('scroll', function() {
+      document.getElementById('scroll-status').textContent =
+        'Scroll position: ' + Math.round(scrollContainer.scrollTop);
+    });
+
+    // 7. Mouse Coordinates — track mousemove on document
+    document.addEventListener('mousemove', function(e) {
+      document.getElementById('coord-display').textContent =
+        'X: ' + e.clientX + ', Y: ' + e.clientY;
+    });
+
+    // 8. Key Events — detect keydown and keyup on focused area
+    var keyArea = document.getElementById('key-area');
+    keyArea.addEventListener('focus', function() {
+      keyArea.classList.add('focused');
+    });
+    keyArea.addEventListener('blur', function() {
+      keyArea.classList.remove('focused');
+    });
+    keyArea.addEventListener('keydown', function(e) {
+      document.getElementById('key-status').textContent = 'keydown: ' + e.key;
+    });
+    keyArea.addEventListener('keyup', function(e) {
+      document.getElementById('key-status').textContent = 'keyup: ' + e.key;
+    });
+
+    // 9. Delayed Hover Target — dynamically created after 2 seconds
+    setTimeout(function() {
+      var container = document.getElementById('delayed-hover-container');
+      var el = document.createElement('div');
+      el.className = 'hover-area';
+      el.id = 'delayed-hover-target';
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      el.textContent = 'Delayed Hover Target';
+      el.addEventListener('mouseenter', function() {
+        document.getElementById('delayed-hover-result').textContent = 'Hovered delayed target!';
+      });
+      container.appendChild(el);
+      document.getElementById('delayed-hover-status').textContent = 'Target is now visible!';
+    }, 2000);
+  </script>
+</body>
+</html>

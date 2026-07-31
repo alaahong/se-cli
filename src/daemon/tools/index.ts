@@ -36,6 +36,27 @@ import {
   browser_state_save,
   browser_state_load,
 } from './state';
+// v0.5: Interaction Completion
+import {
+  browser_hover,
+  browser_dblclick,
+  browser_drag,
+} from './interactions';
+import {
+  browser_dialog_accept,
+  browser_dialog_dismiss,
+} from './dialog';
+import { browser_upload } from './upload';
+import { browser_resize } from './resize';
+import {
+  browser_keydown,
+  browser_keyup,
+  browser_mousemove,
+  browser_mousedown,
+  browser_mouseup,
+  browser_mousewheel,
+  browser_actions_chain,
+} from './advanced-input';
 
 export const tools: Record<string, (driver: any, params: any, response: any) => Promise<void>> = {
   browser_goto,
@@ -73,4 +94,19 @@ export const tools: Record<string, (driver: any, params: any, response: any) => 
   browser_tab_select,
   browser_state_save,
   browser_state_load,
+  // v0.5: Interaction Completion
+  browser_hover,
+  browser_dblclick,
+  browser_drag,
+  browser_dialog_accept,
+  browser_dialog_dismiss,
+  browser_upload,
+  browser_resize,
+  browser_keydown,
+  browser_keyup,
+  browser_mousemove,
+  browser_mousedown,
+  browser_mouseup,
+  browser_mousewheel,
+  browser_actions_chain,
 };

@@ -1,4 +1,5 @@
 import { By } from 'selenium-webdriver';
+import type { WaitConfig } from '../../wait-config';
 
 export function safeFilename(filename: string): string {
   // Reject any path separator (both POSIX and Windows) so behavior is
@@ -125,4 +126,59 @@ export function byToString(target: string): string {
     return `By.css('[data-se-ref="${target}"]')`;
   }
   return `By.css('${target}')`;
+}
+
+/**
+ * Find an element, waiting for it to be located if a wait config is provided.
+ *
+ * First tries findElement directly (fast path for elements already in the DOM,
+ * including hidden ones). If that fails, falls back to a manual polling loop
+ * that retries findElement until the element appears or the timeout expires.
+ *
+ * This approach is more robust than until.elementLocated() across browsers,
+ * particularly on Firefox where elementLocated may not find hidden elements.
+ *
+ * For cross-frame refs, the wait is not applied (findElement is called directly).
+ */
+export async function findElementWithWait(
+  driver: any,
+  target: string,
+  wait?: WaitConfig,
+): Promise<any> {
+  // If no wait or wait state is 'none' or timeout <= 0, use regular findElement
+  if (!wait || wait.state === 'none' || wait.timeout <= 0) {
+    return findElement(driver, target);
+  }
+
+  // For cross-frame refs, fall back to regular findElement
+  // (frame switching + polling doesn't work reliably)
+  const frameRefMatch = target.match(/^f(\d+)e(\d+)$/);
+  if (frameRefMatch) {
+    return findElement(driver, target);
+  }
+
+  // Fast path: try to find the element immediately.
+  // This works for elements that are already in the DOM (even if hidden
+  // via display:none, visibility:hidden, etc.).
+  try {
+    return await findElement(driver, target);
+  } catch {
+    // Element not in DOM yet — fall through to polling loop
+  }
+
+  // Slow path: poll until the element appears in the DOM.
+  // Use a manual loop instead of until.elementLocated() for better
+  // cross-browser compatibility (Firefox's geckodriver may not find
+  // certain elements via elementLocated).
+  const by = await resolveTarget(target);
+  const deadline = Date.now() + wait.timeout;
+  const interval = 200; // poll every 200ms
+  while (Date.now() < deadline) {
+    try {
+      return await driver.findElement(by);
+    } catch {
+      await new Promise(resolve => setTimeout(resolve, interval));
+    }
+  }
+  throw new Error(`Element not found after ${wait.timeout}ms: ${target}`);
 }

@@ -111,9 +111,23 @@
             <tr><td><code>select &lt;ref&gt; &lt;value&gt;</code></td><td data-i18n="cmd.desc.select">Select dropdown option</td></tr>
             <tr><td><code>check &lt;ref&gt;</code></td><td data-i18n="cmd.desc.check">Check checkbox</td></tr>
             <tr><td><code>uncheck &lt;ref&gt;</code></td><td data-i18n="cmd.desc.uncheck">Uncheck checkbox</td></tr>
+            <tr><td><code>hover &lt;ref&gt;</code></td><td data-i18n="cmd.desc.hover" data-i18n-html>Mouse hover over element <span class="badge badge-version">v0.5</span></td></tr>
+            <tr><td><code>dblclick &lt;ref&gt;</code></td><td data-i18n="cmd.desc.dblclick" data-i18n-html>Double-click element <span class="badge badge-version">v0.5</span></td></tr>
+            <tr><td><code>drag &lt;start&gt; &lt;end&gt;</code></td><td data-i18n="cmd.desc.drag" data-i18n-html>Drag and drop element <span class="badge badge-version">v0.5</span></td></tr>
+            <tr><td><code>dialog-accept [text]</code></td><td data-i18n="cmd.desc.dialogAccept" data-i18n-html>Accept alert/confirm/prompt dialog <span class="badge badge-version">v0.5</span></td></tr>
+            <tr><td><code>dialog-dismiss</code></td><td data-i18n="cmd.desc.dialogDismiss" data-i18n-html>Dismiss dialog <span class="badge badge-version">v0.5</span></td></tr>
+            <tr><td><code>upload &lt;ref&gt; &lt;file&gt;</code></td><td data-i18n="cmd.desc.upload" data-i18n-html>Upload file to input element <span class="badge badge-version">v0.5</span></td></tr>
+            <tr><td><code>resize &lt;w&gt; &lt;h&gt;</code></td><td data-i18n="cmd.desc.resize" data-i18n-html>Set viewport size <span class="badge badge-version">v0.5</span></td></tr>
+            <tr><td><code>keydown &lt;key&gt;</code></td><td data-i18n="cmd.desc.keydown" data-i18n-html>Press and hold key <span class="badge badge-version">v0.5</span></td></tr>
+            <tr><td><code>keyup &lt;key&gt;</code></td><td data-i18n="cmd.desc.keyup" data-i18n-html>Release held key <span class="badge badge-version">v0.5</span></td></tr>
+            <tr><td><code>mousemove &lt;x&gt; &lt;y&gt;</code></td><td data-i18n="cmd.desc.mousemove" data-i18n-html>Move mouse to coordinates <span class="badge badge-version">v0.5</span></td></tr>
+            <tr><td><code>mousedown [button]</code></td><td data-i18n="cmd.desc.mousedown" data-i18n-html>Press mouse button (left/right/middle) <span class="badge badge-version">v0.5</span></td></tr>
+            <tr><td><code>mouseup [button]</code></td><td data-i18n="cmd.desc.mouseup" data-i18n-html>Release mouse button <span class="badge badge-version">v0.5</span></td></tr>
+            <tr><td><code>mousewheel &lt;dx&gt; &lt;dy&gt;</code></td><td data-i18n="cmd.desc.mousewheel" data-i18n-html>Scroll wheel by offsets <span class="badge badge-version">v0.5</span></td></tr>
+            <tr><td><code>actions-chain &lt;json&gt;</code></td><td data-i18n="cmd.desc.actionsChain" data-i18n-html>Chain multiple actions in one perform() <span class="badge badge-version">v0.5</span></td></tr>
           </tbody>
         </table>
-        <div class="alert alert-info"><span class="alert-icon">i</span><div data-i18n="cmd.alert.planned" data-i18n-html><strong>v0.5 planned.</strong> <code>hover</code>, <code>dblclick</code>, <code>drag</code>, <code>dialog-accept/dismiss</code>, <code>upload</code>, <code>resize</code>, and Actions-chain control are on the roadmap.</div></div>
+        <div class="alert alert-info"><span class="alert-icon">i</span><div data-i18n="cmd.alert.v05Shipped" data-i18n-html><strong>v0.5 shipped.</strong> All interaction commands consume the v0.4 wait/retry configuration. Use <code>actions-chain</code> to batch multiple steps into a single round-trip.</div></div>
       </div>
 
       <div class="cmd-panel" data-panel="snap">

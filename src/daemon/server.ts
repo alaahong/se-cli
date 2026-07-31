@@ -77,6 +77,12 @@ async function buildDriver(): Promise<void> {
   const seleniumBrowserName = browserName === 'edge' ? 'MicrosoftEdge' : browserName;
   const builder = new Builder().forBrowser(seleniumBrowserName);
 
+  // Set unhandledPromptBehavior to 'ignore' so that alerts/confirm/prompt dialogs
+  // are NOT auto-dismissed when subsequent WebDriver commands (e.g. applyTimeouts)
+  // are sent to the driver. This allows dialog-accept/dialog-dismiss to work
+  // correctly when a dialog is triggered via setTimeout in eval.
+  builder.getCapabilities().set('unhandledPromptBehavior', 'ignore');
+
   if (browserName === 'chrome') {
     const chromeArgs: string[] = [];
     if (!headed && !cdpEndpoint) {
