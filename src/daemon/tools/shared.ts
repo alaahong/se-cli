@@ -1,4 +1,5 @@
 import { By } from 'selenium-webdriver';
+import type { WaitConfig } from '../../wait-config';
 
 export function safeFilename(filename: string): string {
   // Reject any path separator (both POSIX and Windows) so behavior is
@@ -125,4 +126,36 @@ export function byToString(target: string): string {
     return `By.css('[data-se-ref="${target}"]')`;
   }
   return `By.css('${target}')`;
+}
+
+/**
+ * Find an element, waiting for it to be located if a wait config is provided.
+ * This handles the case where the element hasn't been added to the DOM yet
+ * (e.g. dynamically loaded content) by polling with until.elementLocated().
+ *
+ * For cross-frame refs, the wait is not applied (findElement is called directly).
+ */
+export async function findElementWithWait(
+  driver: any,
+  target: string,
+  wait?: WaitConfig,
+): Promise<any> {
+  // If no wait or wait state is 'none' or timeout <= 0, use regular findElement
+  if (!wait || wait.state === 'none' || wait.timeout <= 0) {
+    return findElement(driver, target);
+  }
+
+  // For cross-frame refs, fall back to regular findElement
+  // (until.elementLocated doesn't work across frame boundaries)
+  const frameRefMatch = target.match(/^f(\d+)e(\d+)$/);
+  if (frameRefMatch) {
+    return findElement(driver, target);
+  }
+
+  // Resolve the target to a By locator
+  const by = resolveTarget(target);
+
+  // Wait for the element to be located, then return it
+  const { until } = require('selenium-webdriver');
+  return driver.wait(until.elementLocated(by), wait.timeout);
 }

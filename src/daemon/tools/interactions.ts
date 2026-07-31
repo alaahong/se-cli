@@ -1,5 +1,5 @@
 import { Response } from '../../response';
-import { findElement, byToString } from './shared';
+import { findElement, findElementWithWait, byToString } from './shared';
 import { waitForElementState, type WaitConfig } from '../../wait-config';
 
 /**
@@ -10,7 +10,7 @@ export async function browser_hover(
   params: { target: string; _wait?: WaitConfig },
   response: Response,
 ): Promise<void> {
-  const el = await findElement(driver, params.target);
+  const el = await findElementWithWait(driver, params.target, params._wait);
 
   if (params._wait) {
     const waitCode = await waitForElementState(driver, el, params._wait.state, params._wait.timeout);
@@ -35,7 +35,7 @@ export async function browser_dblclick(
   params: { target: string; _wait?: WaitConfig },
   response: Response,
 ): Promise<void> {
-  const el = await findElement(driver, params.target);
+  const el = await findElementWithWait(driver, params.target, params._wait);
 
   if (params._wait) {
     const waitCode = await waitForElementState(driver, el, params._wait.state, params._wait.timeout);
@@ -60,8 +60,8 @@ export async function browser_drag(
   params: { start: string; end: string; _wait?: WaitConfig },
   response: Response,
 ): Promise<void> {
-  const startEl = await findElement(driver, params.start);
-  const endEl = await findElement(driver, params.end);
+  const startEl = await findElementWithWait(driver, params.start, params._wait);
+  const endEl = await findElementWithWait(driver, params.end, params._wait);
 
   if (params._wait) {
     const waitCode1 = await waitForElementState(driver, startEl, params._wait.state, params._wait.timeout);
