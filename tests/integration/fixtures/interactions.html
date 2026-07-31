@@ -148,7 +148,7 @@
   <div class="card">
     <h2>Delayed Hover Target</h2>
     <p class="status" id="delayed-hover-status">Target will appear in 2 seconds...</p>
-    <div class="hover-area hidden" id="delayed-hover-target" role="button" tabindex="0">Delayed Hover Target</div>
+    <div id="delayed-hover-container"></div>
     <p class="status" id="delayed-hover-result">No hover on delayed target</p>
   </div>
 
@@ -249,14 +249,21 @@
       document.getElementById('key-status').textContent = 'keyup: ' + e.key;
     });
 
-    // 9. Delayed Hover Target — becomes visible after 2 seconds
+    // 9. Delayed Hover Target — dynamically created after 2 seconds
     setTimeout(function() {
-      document.getElementById('delayed-hover-target').classList.remove('hidden');
+      var container = document.getElementById('delayed-hover-container');
+      var el = document.createElement('div');
+      el.className = 'hover-area';
+      el.id = 'delayed-hover-target';
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      el.textContent = 'Delayed Hover Target';
+      el.addEventListener('mouseenter', function() {
+        document.getElementById('delayed-hover-result').textContent = 'Hovered delayed target!';
+      });
+      container.appendChild(el);
       document.getElementById('delayed-hover-status').textContent = 'Target is now visible!';
     }, 2000);
-    document.getElementById('delayed-hover-target').addEventListener('mouseenter', function() {
-      document.getElementById('delayed-hover-result').textContent = 'Hovered delayed target!';
-    });
   </script>
 </body>
 </html>

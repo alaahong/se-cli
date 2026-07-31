@@ -852,9 +852,10 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
 
     (skip ? it.skip : it)('applies --wait=visible to hover on delayed element', async () => {
       await run(['open', INTERACTIONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
-      // #delayed-hover-target starts hidden (display:none) and becomes
-      // visible after 2 seconds. The --wait=visible flag polls until
-      // the element is visible before performing the hover action.
+      // #delayed-hover-target is not in the DOM initially.
+      // It is dynamically created and appended after 2 seconds.
+      // The --wait flag polls findElement until the element appears,
+      // then waits for it to be visible before performing the hover.
       const result = await run([
         'hover', '#delayed-hover-target',
         '--wait=visible', '--timeout=5000'
