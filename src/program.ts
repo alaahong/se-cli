@@ -245,6 +245,22 @@ Commands:
   config list             list all config values with sources
   config init            generate template .se-cli.json
 
+Interaction (v0.5):
+  hover <ref>             mouse hover over element
+  dblclick <ref>          double-click element
+  drag <start> <end>     drag and drop element
+  dialog-accept [text]    accept alert/confirm/prompt dialog
+  dialog-dismiss          dismiss dialog
+  upload <ref> <file>     upload file to input element
+  resize <w> <h>          set viewport size
+  keydown <key>          press and hold key
+  keyup <key>             release held key
+  mousemove <x> <y>      move mouse to coordinates
+  mousedown [button]      press mouse button (left/right/middle)
+  mouseup [button]        release mouse button
+  mousewheel <dx> <dy>   scroll wheel by offsets
+  actions-chain <json>    chain multiple actions in one perform()
+
 Flags:
   --raw                   output only the result value
   --json                  structured JSON output

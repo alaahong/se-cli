@@ -77,10 +77,26 @@ export const DEFAULTS: { wait: WaitConfig; timeouts: TimeoutConfig; perCommand: 
     select:   { wait: { state: 'visible+enabled' as WaitState } },
     check:    { wait: { state: 'visible+enabled' as WaitState } },
     uncheck:  { wait: { state: 'visible+enabled' as WaitState } },
+    // v0.5: interactive tools
+    hover:    { wait: { state: 'visible+enabled' as WaitState } },
+    dblclick: { wait: { state: 'visible+enabled' as WaitState } },
+    drag:     { wait: { state: 'visible+enabled' as WaitState } },
+    upload:   { wait: { state: 'visible+enabled' as WaitState } },
+    // v0.5: read-only / no-element tools
     snapshot: { wait: { state: 'none' } },
     eval:     { wait: { state: 'none' } },
     find:     { wait: { state: 'none' } },
     screenshot: { wait: { state: 'none' } },
+    'dialog-accept':  { wait: { state: 'none' } },
+    'dialog-dismiss': { wait: { state: 'none' } },
+    resize:   { wait: { state: 'none' } },
+    keydown:  { wait: { state: 'none' } },
+    keyup:    { wait: { state: 'none' } },
+    mousemove:  { wait: { state: 'none' } },
+    mousedown:  { wait: { state: 'none' } },
+    mouseup:    { wait: { state: 'none' } },
+    mousewheel: { wait: { state: 'none' } },
+    'actions-chain': { wait: { state: 'none' } },
   },
 };
 
@@ -314,13 +330,13 @@ export function resolveConfig(
 
 /**
  * Resolve 'auto' wait state based on command name.
- * - click/fill/select/check/uncheck → 'visible+enabled'
- * - snapshot/eval/find/screenshot → 'none'
- * - everything else → 'none'
+ * - click/fill/select/check/uncheck/hover/dblclick/drag/upload => 'visible+enabled'
+ * - snapshot/eval/find/screenshot/dialog/resize/keydown/keyup/mouse/actions-chain => 'none'
+ * - everything else => 'none'
  */
 function resolveAutoState(commandName?: string): WaitState {
   if (!commandName) return 'none';
-  const interactiveCommands = new Set(['click', 'fill', 'select', 'check', 'uncheck']);
+  const interactiveCommands = new Set(['click', 'fill', 'select', 'check', 'uncheck', 'hover', 'dblclick', 'drag', 'upload']);
   if (interactiveCommands.has(commandName)) return 'visible+enabled' as WaitState;
   return 'none';
 }

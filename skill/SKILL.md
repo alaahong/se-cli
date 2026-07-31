@@ -46,6 +46,57 @@ se-cli go-forward
 se-cli reload
 ```
 
+### Advanced Interaction (v0.5)
+
+Mouse and keyboard control via the Selenium Actions API. All commands consume
+the v0.4 wait/retry configuration and emit the equivalent Selenium code.
+
+```bash
+# Mouse actions
+se-cli hover <ref>                    # Mouse hover over element
+se-cli dblclick <ref>                 # Double-click element
+se-cli drag <start-ref> <end-ref>     # Drag and drop from one element to another
+se-cli mousemove <x> <y>             # Move mouse to absolute viewport coordinates
+se-cli mousedown [button]            # Press mouse button (left|right|middle, default: left)
+se-cli mouseup [button]              # Release mouse button (left|right|middle, default: left)
+se-cli mousewheel <dx> <dy>          # Scroll wheel by horizontal/vertical offsets
+
+# Keyboard actions
+se-cli keydown <key>                 # Press and hold a key (e.g. Shift, Control)
+se-cli keyup <key>                   # Release a held key
+
+# Dialog handling
+se-cli dialog-accept [text]          # Accept alert/confirm/prompt; optional text for prompt
+se-cli dialog-dismiss                # Dismiss alert/confirm/prompt
+
+# File upload
+se-cli upload <ref> <file>           # Send file path to <input type="file"> element
+
+# Viewport control
+se-cli resize <width> <height>       # Set browser window size in pixels
+
+# Actions chain — combine multiple actions into one perform() call
+se-cli actions-chain <json-array>
+```
+
+#### actions-chain
+
+The `actions-chain` command accepts a JSON array of action steps executed in a
+single `perform()` call, reducing daemon round-trips. Supported step types:
+`move`, `press`, `release`, `keydown`, `keyup`, `click`, `doubleClick`,
+`scroll`, `pause`.
+
+```bash
+# Drag via manual move + press + release
+se-cli actions-chain '[{"type":"move","target":"e1"},{"type":"press"},{"type":"move","x":200,"y":200},{"type":"release"}]'
+
+# Key chord: Ctrl+Shift+A
+se-cli actions-chain '[{"type":"keydown","key":"Control"},{"type":"keydown","key":"Shift"},{"type":"keydown","key":"a"},{"type":"keyup","key":"a"},{"type":"keyup","key":"Shift"},{"type":"keyup","key":"Control"}]'
+
+# Click + pause + scroll
+se-cli actions-chain '[{"type":"click","target":"e2"},{"type":"pause","duration":500},{"type":"scroll","x":0,"y":300}]'
+```
+
 ### Storage
 ```bash
 se-cli cookie-list
@@ -172,6 +223,49 @@ se-cli close
 se-cli open
 se-cli state-load --filename=session.json
 se-cli cookie-get auth_token
+```
+
+## Example: Advanced interactions (v0.5)
+
+```bash
+# Hover over a menu item to reveal a submenu
+se-cli open https://example.com
+se-cli snapshot
+se-cli hover e3
+se-cli snapshot
+
+# Double-click to select a word
+se-cli dblclick e5
+
+# Drag an element to a new position
+se-cli drag e1 e2
+
+# Handle a JavaScript confirm dialog
+se-cli click e4          # triggers window.confirm()
+se-cli dialog-accept
+
+# Upload a file
+se-cli upload e1 /path/to/document.pdf
+
+# Resize viewport for responsive testing
+se-cli resize 375 812    # iPhone 13 viewport
+
+# Fine-grained mouse control
+se-cli mousemove 100 200
+se-cli mousedown left
+se-cli mousemove 300 400
+se-cli mouseup left
+
+# Scroll down 500px
+se-cli mousewheel 0 500
+
+# Hold Shift and press a key
+se-cli keydown Shift
+se-cli press a
+se-cli keyup Shift
+
+# Chain multiple actions into one round-trip
+se-cli actions-chain '[{"type":"move","target":"e1"},{"type":"press"},{"type":"move","x":200,"y":200},{"type":"release"}]'
 ```
 
 ## Wait & Retry Configuration (v0.4)
