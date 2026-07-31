@@ -153,7 +153,7 @@ export async function findElementWithWait(
   }
 
   // Resolve the target to a By locator
-  const by = resolveTarget(target);
+  const by = await resolveTarget(target);
 
   // Wait for the element to be located, then return it
   const { until } = require('selenium-webdriver');
