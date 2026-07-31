@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="se-cli troubleshooting — error codes, daemon cleanup, driver version drift, and FAQ." />
+  <meta name="description" content="se-cli troubleshooting — error codes, daemon cleanup, driver version drift, and FAQ." data-i18n="trouble.metaDesc" />
   <meta name="theme-color" content="#22C55E" />
-  <title>Troubleshooting — se-cli Docs</title>
+  <title data-i18n="trouble.title">Troubleshooting — se-cli Docs</title>
   <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
   <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -37,18 +37,18 @@
 
   <div class="docs-layout">
     <aside class="docs-sidebar">
-      <h4>Get started</h4>
-      <a href="getting-started.html">Getting Started</a>
-      <a href="commands.html">Command Reference</a>
-      <a href="configuration.html">Configuration</a>
-      <h4>Guides</h4>
-      <a href="sessions.html">Sessions &amp; Browsers</a>
-      <a href="storage-state.html">Storage &amp; State</a>
-      <a href="snapshots-refs.html">Snapshots &amp; Refs</a>
-      <a href="codegen.html">Code Generation</a>
-      <a href="ai-agents.html">AI Agents</a>
-      <h4>Reference</h4>
-      <a href="troubleshooting.html" class="current">Troubleshooting</a>
+      <h4 data-i18n="sidebar.getStarted">Get started</h4>
+      <a href="getting-started.html" data-i18n="bc.gettingStarted">Getting Started</a>
+      <a href="commands.html" data-i18n="bc.commands">Command Reference</a>
+      <a href="configuration.html" data-i18n="bc.configuration">Configuration</a>
+      <h4 data-i18n="sidebar.guides">Guides</h4>
+      <a href="sessions.html" data-i18n="bc.sessions">Sessions &amp; Browsers</a>
+      <a href="storage-state.html" data-i18n="bc.storage">Storage &amp; State</a>
+      <a href="snapshots-refs.html" data-i18n="bc.snapshots">Snapshots &amp; Refs</a>
+      <a href="codegen.html" data-i18n="bc.codegen">Code Generation</a>
+      <a href="ai-agents.html" data-i18n="bc.ai">AI Agents</a>
+      <h4 data-i18n="sidebar.reference">Reference</h4>
+      <a href="troubleshooting.html" class="current" data-i18n="bc.troubleshooting">Troubleshooting</a>
     </aside>
 
     <main class="docs-content">
@@ -57,18 +57,18 @@
         <span class="breadcrumb-sep">/</span>
         <a href="index.html">Docs</a>
         <span class="breadcrumb-sep">/</span>
-        <span class="breadcrumb-current">Troubleshooting</span>
+        <span class="breadcrumb-current" data-i18n="bc.troubleshooting">Troubleshooting</span>
       </nav>
 
-      <h2 id="error-codes">Error codes</h2>
-      <p>se-cli returns structured errors with a <code>code</code> field. Here are the codes you will most often see and how to recover.</p>
+      <h2 id="error-codes" data-i18n="trouble.errorCodes">Error codes</h2>
+      <p data-i18n="trouble.errorCodesText" data-i18n-html>se-cli returns structured errors with a <code>code</code> field. Here are the codes you will most often see and how to recover.</p>
       <table class="cmd-table">
-        <thead><tr><th>Code</th><th>Meaning</th><th>Recovery</th></tr></thead>
+        <thead><tr><th data-i18n="trouble.thCode">Code</th><th data-i18n="trouble.thMeaning">Meaning</th><th data-i18n="trouble.thRecovery">Recovery</th></tr></thead>
         <tbody>
-          <tr><td><code>ELEMENT_NOT_FOUND</code></td><td>The ref/selector no longer matches an element (DOM rebuilt)</td><td>Run <code>se-cli snapshot</code> to refresh refs, then retry</td></tr>
-          <tr><td><code>DAEMON_DEAD</code></td><td>The daemon process crashed or was killed mid-session</td><td>Run <code>se-cli close</code> (or <code>kill-all</code>) then <code>se-cli open</code> again</td></tr>
-          <tr><td><code>VERSION_MISMATCH</code></td><td>CLI version differs from the running daemon version</td><td>Run <code>se-cli close &amp;&amp; se-cli open</code> so they match</td></tr>
-          <tr><td><code>UNSUPPORTED_BROWSER</code></td><td>Requested browser is not available on this platform</td><td>Install the browser or pick <code>--browser=chrome|edge|firefox</code></td></tr>
+          <tr><td><code>ELEMENT_NOT_FOUND</code></td><td data-i18n="trouble.tdElementNotFoundMeaning">The ref/selector no longer matches an element (DOM rebuilt)</td><td data-i18n="trouble.tdElementNotFoundRecovery" data-i18n-html>Run <code>se-cli snapshot</code> to refresh refs, then retry</td></tr>
+          <tr><td><code>DAEMON_DEAD</code></td><td data-i18n="trouble.tdDaemonDeadMeaning">The daemon process crashed or was killed mid-session</td><td data-i18n="trouble.tdDaemonDeadRecovery" data-i18n-html>Run <code>se-cli close</code> (or <code>kill-all</code>) then <code>se-cli open</code> again</td></tr>
+          <tr><td><code>VERSION_MISMATCH</code></td><td data-i18n="trouble.tdVersionMismatchMeaning">CLI version differs from the running daemon version</td><td data-i18n="trouble.tdVersionMismatchRecovery" data-i18n-html>Run <code>se-cli close &amp;&amp; se-cli open</code> so they match</td></tr>
+          <tr><td><code>UNSUPPORTED_BROWSER</code></td><td data-i18n="trouble.tdUnsupportedBrowserMeaning">Requested browser is not available on this platform</td><td data-i18n="trouble.tdUnsupportedBrowserRecovery" data-i18n-html>Install the browser or pick <code>--browser=chrome|edge|firefox</code></td></tr>
         </tbody>
       </table>
       <div class="code-block">
@@ -78,8 +78,8 @@ Element not found: [data-se-ref="e15"]
 Hint: run `se-cli snapshot` to refresh refs.</code></pre>
       </div>
 
-      <h2 id="daemon-stuck">Daemon is stuck / won't close</h2>
-      <p>If <code>close</code> hangs or <code>list</code> shows ghost sessions, escalate from graceful to forceful cleanup.</p>
+      <h2 id="daemon-stuck" data-i18n="trouble.daemonStuck">Daemon is stuck / won't close</h2>
+      <p data-i18n="trouble.daemonStuckText" data-i18n-html>If <code>close</code> hangs or <code>list</code> shows ghost sessions, escalate from graceful to forceful cleanup.</p>
       <div class="code-block">
         <div class="code-header"><span class="code-lang">bash</span></div>
 <pre><code># 1. graceful: close every session
@@ -93,49 +93,49 @@ rm -rf "$(./node_modules/.bin/se-cli config get cachePath)/ms-se-cli/daemon"/*.s
 # Linux/macOS socket dir is usually $TMPDIR/se-cli/
 rm -rf "${TMPDIR:-/tmp}/se-cli/"*</code></pre>
       </div>
-      <div class="alert alert-warning"><span class="alert-icon">!</span><div><strong>Avoid <code>kill -9</code> on the daemon PID.</strong> That bypasses <code>gracefulShutdown</code> and can leave the browser process orphaned. Prefer <code>kill-all</code>, which drives the quit path. Only delete <code>.session</code> files after <code>kill-all</code> returns.</div></div>
+      <div class="alert alert-warning"><span class="alert-icon">!</span><div data-i18n="trouble.daemonAlert" data-i18n-html><strong>Avoid <code>kill -9</code> on the daemon PID.</strong> That bypasses <code>gracefulShutdown</code> and can leave the browser process orphaned. Prefer <code>kill-all</code>, which drives the quit path. Only delete <code>.session</code> files after <code>kill-all</code> returns.</div></div>
 
-      <h2 id="driver-drift">Driver version drift</h2>
-      <div class="alert alert-info"><span class="alert-icon">i</span><div><strong>Let <code>selenium-manager</code> handle it.</strong> Driver mismatch after a browser auto-update is the classic Selenium headache. <code>selenium-manager</code> (bundled with <code>selenium-webdriver</code>) detects the installed browser version and downloads the matching driver automatically — do not pin a driver version unless you have a specific reason.</div></div>
-      <p>If you must pin (e.g. offline CI), set the matching variables before launching se-cli:</p>
+      <h2 id="driver-drift" data-i18n="trouble.driverDrift">Driver version drift</h2>
+      <div class="alert alert-info"><span class="alert-icon">i</span><div data-i18n="trouble.driverAlert" data-i18n-html><strong>Let <code>selenium-manager</code> handle it.</strong> Driver mismatch after a browser auto-update is the classic Selenium headache. <code>selenium-manager</code> (bundled with <code>selenium-webdriver</code>) detects the installed browser version and downloads the matching driver automatically — do not pin a driver version unless you have a specific reason.</div></div>
+      <p data-i18n="trouble.pinText">If you must pin (e.g. offline CI), set the matching variables before launching se-cli:</p>
       <div class="code-block">
         <div class="code-header"><span class="code-lang">bash</span></div>
 <pre><code># pin driver + browser version
 SE_BROWSER_VERSION=120 SE_DRIVER_VERSION=120.0.6099.71 \
 SE_OFFLINE=true se-cli open https://example.com</code></pre>
       </div>
-      <p>See the <a href="configuration.html#env-vars">Configuration</a> page for the full set of Selenium Manager variables.</p>
+      <p data-i18n="trouble.seeConfig" data-i18n-html>See the <a href="configuration.html#env-vars">Configuration</a> page for the full set of Selenium Manager variables.</p>
 
-      <h2 id="faq">FAQ</h2>
-      <p>Common questions about se-cli.</p>
+      <h2 id="faq" data-i18n="trouble.faq">FAQ</h2>
+      <p data-i18n="trouble.faqLead">Common questions about se-cli.</p>
       <div class="faq-list">
         <details class="faq-item" open>
-          <summary>How is se-cli different from Selenium MCP?</summary>
-          <p>Selenium MCP loads ~5KB of tool schemas per call and returns full accessibility trees. se-cli uses a CLI + daemon architecture: the CLI sends one JSON line, the daemon holds the WebDriver, and aria snapshots return compact YAML with element refs. No schemas enter the agent's context — typically 10× fewer tokens.</p>
+          <summary data-i18n="trouble.faq1Q">How is se-cli different from Selenium MCP?</summary>
+          <p data-i18n="trouble.faq1A" data-i18n-html>Selenium MCP loads ~5KB of tool schemas per call and returns full accessibility trees. se-cli uses a CLI + daemon architecture: the CLI sends one JSON line, the daemon holds the WebDriver, and aria snapshots return compact YAML with element refs. No schemas enter the agent's context — typically 10× fewer tokens.</p>
         </details>
         <details class="faq-item">
-          <summary>Which browsers are supported?</summary>
-          <p>Chrome, Edge, and Firefox are fully supported for both headless and headed modes. Chrome and Edge also support CDP attach via <code>--cdp=&lt;url&gt;</code>. Safari (<code>--browser=safari</code>) and Edge IE mode (<code>--browser=edge-ie</code>) are planned for v0.10.</p>
+          <summary data-i18n="trouble.faq2Q">Which browsers are supported?</summary>
+          <p data-i18n="trouble.faq2A" data-i18n-html>Chrome, Edge, and Firefox are fully supported for both headless and headed modes. Chrome and Edge also support CDP attach via <code>--cdp=&lt;url&gt;</code>. Safari (<code>--browser=safari</code>) and Edge IE mode (<code>--browser=edge-ie</code>) are planned for v0.10.</p>
         </details>
         <details class="faq-item">
-          <summary>Do I need to install browser drivers separately?</summary>
-          <p>No. <code>selenium-manager</code> (bundled with <code>selenium-webdriver</code>) automatically downloads the correct driver binary for your browser and platform.</p>
+          <summary data-i18n="trouble.faq3Q">Do I need to install browser drivers separately?</summary>
+          <p data-i18n="trouble.faq3A" data-i18n-html>No. <code>selenium-manager</code> (bundled with <code>selenium-webdriver</code>) automatically downloads the correct driver binary for your browser and platform.</p>
         </details>
         <details class="faq-item">
-          <summary>Can I use se-cli with my AI agent?</summary>
-          <p>Yes. se-cli works with any AI agent that can run shell commands — Claude Code, Cursor, Copilot CLI. Run <code>se-cli install --skills</code> (or place <code>skill/SKILL.md</code> manually) and it can start driving browsers immediately.</p>
+          <summary data-i18n="trouble.faq4Q">Can I use se-cli with my AI agent?</summary>
+          <p data-i18n="trouble.faq4A" data-i18n-html>Yes. se-cli works with any AI agent that can run shell commands — Claude Code, Cursor, Copilot CLI. Run <code>se-cli install --skills</code> (or place <code>skill/SKILL.md</code> manually) and it can start driving browsers immediately.</p>
         </details>
         <details class="faq-item">
-          <summary>How do sessions persist between commands?</summary>
-          <p>The daemon process holds the WebDriver instance and stays alive across CLI invocations. Session metadata is stored as <code>.session</code> JSON files in <code>&lt;cache&gt;/ms-se-cli/daemon/</code>. Use <code>close</code> to clean up, or <code>kill-all</code> to force-kill.</p>
+          <summary data-i18n="trouble.faq5Q">How do sessions persist between commands?</summary>
+          <p data-i18n="trouble.faq5A" data-i18n-html>The daemon process holds the WebDriver instance and stays alive across CLI invocations. Session metadata is stored as <code>.session</code> JSON files in <code>&lt;cache&gt;/ms-se-cli/daemon/</code>. Use <code>close</code> to clean up, or <code>kill-all</code> to force-kill.</p>
         </details>
         <details class="faq-item">
-          <summary>Is se-cli a replacement for Selenium WebDriver?</summary>
-          <p>No. se-cli is built on top of <code>selenium-webdriver</code>. It provides a CLI interface and daemon architecture on top of the WebDriver protocol, making it accessible to AI agents and shell scripts. Every action also emits the equivalent Selenium code for your test files.</p>
+          <summary data-i18n="trouble.faq6Q">Is se-cli a replacement for Selenium WebDriver?</summary>
+          <p data-i18n="trouble.faq6A" data-i18n-html>No. se-cli is built on top of <code>selenium-webdriver</code>. It provides a CLI interface and daemon architecture on top of the WebDriver protocol, making it accessible to AI agents and shell scripts. Every action also emits the equivalent Selenium code for your test files.</p>
         </details>
         <details class="faq-item">
-          <summary>What's the license?</summary>
-          <p>Apache License 2.0. See <a href="https://github.com/se-cli/se-cli/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a> for details.</p>
+          <summary data-i18n="trouble.faq7Q">What's the license?</summary>
+          <p data-i18n="trouble.faq7A" data-i18n-html>Apache License 2.0. See <a href="https://github.com/se-cli/se-cli/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a> for details.</p>
         </details>
       </div>
     </main>
@@ -160,5 +160,6 @@ SE_OFFLINE=true se-cli open https://example.com</code></pre>
   </footer>
 
   <script src="../assets/js/nav.js"></script>
+  <script src="../assets/js/i18n.js"></script>
 </body>
 </html>

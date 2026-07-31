@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="se-cli test pages — reference HTML pages for navigation, forms, storage, tabs, iframes, and Shadow DOM, used by the integration test suite." />
+  <meta name="description" content="se-cli test pages — reference HTML pages for navigation, forms, storage, tabs, iframes, and Shadow DOM, used by the integration test suite." data-i18n="tp.metaDesc" />
   <meta name="theme-color" content="#22C55E" />
-  <title>Test Pages — se-cli</title>
+  <title data-i18n="tp.pageTitle">Test Pages — se-cli</title>
   <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
   <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="../assets/img/apple-touch-icon.png" />
@@ -41,29 +41,29 @@
       <nav class="breadcrumb" aria-label="Breadcrumb">
         <a href="../index.html">Home</a>
         <span class="breadcrumb-sep">/</span>
-        <span class="breadcrumb-current">Test Pages</span>
+        <span class="breadcrumb-current" data-i18n="bc.testPages">Test Pages</span>
       </nav>
-      <h1>Test Pages</h1>
-      <p>Reference HTML pages used by the integration suite and browsable here for inspection. Serve the <code>site/</code> folder locally, then <code>se-cli open</code> any page below.</p>
+      <h1 data-i18n="tp.title">Test Pages</h1>
+      <p data-i18n="tp.subtitle" data-i18n-html>Reference HTML pages used by the integration suite and browsable here for inspection. Serve the <code>site/</code> folder locally, then <code>se-cli open</code> any page below.</p>
     </div>
   </header>
 
   <section class="section">
     <div class="container">
       <div class="env-note" style="max-width: 880px; margin: 0 auto 32px;">
-        <strong>Quick start.</strong> From the repo root, run <code>python3 -m http.server 8000 --directory site</code>, then open a page:
+        <p data-i18n="tp.quickStart" data-i18n-html><strong>Quick start.</strong> From the repo root, run <code>python3 -m http.server 8000 --directory site</code>, then open a page:</p>
         <div class="code-block" style="margin-top: 12px;"><div class="code-header"><span class="code-lang">bash</span></div>
 <pre><code>se-cli open http://localhost:8000/test-pages/forms.html
 se-cli snapshot</code></pre></div>
       </div>
 
       <div class="testpage-group">
-        <h3>📝 Basics &amp; Apps</h3>
+        <h3 data-i18n="tp.groupBasics">📝 Basics &amp; Apps</h3>
         <ul class="testpage-list">
           <li class="testpage-item">
             <div class="testpage-main">
-              <a href="example.html" class="testpage-name">Example Page</a>
-              <div class="testpage-desc">A minimal page with one heading and one link — the canonical "first snapshot" target.</div>
+              <a href="example.html" class="testpage-name" data-i18n="tp.exampleName">Example Page</a>
+              <div class="testpage-desc" data-i18n="tp.exampleDesc">A minimal page with one heading and one link — the canonical "first snapshot" target.</div>
             </div>
             <div class="testpage-cmd"><code>test-pages/example.html</code>
               <button class="copy-btn" aria-label="Copy path"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25z"/></svg></button>
@@ -71,8 +71,8 @@ se-cli snapshot</code></pre></div>
           </li>
           <li class="testpage-item">
             <div class="testpage-main">
-              <a href="todo.html" class="testpage-name">Todo App</a>
-              <div class="testpage-desc">Interactive todo application — the full add / check / clear flow used in the acceptance criteria.</div>
+              <a href="todo.html" class="testpage-name" data-i18n="tp.todoName">Todo App</a>
+              <div class="testpage-desc" data-i18n="tp.todoDesc">Interactive todo application — the full add / check / clear flow used in the acceptance criteria.</div>
             </div>
             <div class="testpage-cmd"><code>test-pages/todo.html</code>
               <button class="copy-btn" aria-label="Copy path"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25z"/></svg></button>
@@ -82,12 +82,12 @@ se-cli snapshot</code></pre></div>
       </div>
 
       <div class="testpage-group">
-        <h3>✍️ Forms &amp; Interaction</h3>
+        <h3 data-i18n="tp.groupForms">✍️ Forms &amp; Interaction</h3>
         <ul class="testpage-list">
           <li class="testpage-item">
             <div class="testpage-main">
-              <a href="forms.html" class="testpage-name">Form Elements</a>
-              <div class="testpage-desc">Inputs, selects, checkboxes, and radios — exercises <code>fill</code>, <code>select</code>, <code>check</code>, <code>uncheck</code>.</div>
+              <a href="forms.html" class="testpage-name" data-i18n="tp.formsName">Form Elements</a>
+              <div class="testpage-desc" data-i18n="tp.formsDesc" data-i18n-html>Inputs, selects, checkboxes, and radios — exercises <code>fill</code>, <code>select</code>, <code>check</code>, <code>uncheck</code>.</div>
             </div>
             <div class="testpage-cmd"><code>test-pages/forms.html</code>
               <button class="copy-btn" aria-label="Copy path"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25z"/></svg></button>
@@ -95,8 +95,8 @@ se-cli snapshot</code></pre></div>
           </li>
           <li class="testpage-item">
             <div class="testpage-main">
-              <a href="buttons.html" class="testpage-name">Button Test Page</a>
-              <div class="testpage-desc">Buttons with click handlers — exercises <code>click</code>, <code>dblclick</code>, and hover state changes.</div>
+              <a href="buttons.html" class="testpage-name" data-i18n="tp.buttonsName">Button Test Page</a>
+              <div class="testpage-desc" data-i18n="tp.buttonsDesc" data-i18n-html>Buttons with click handlers — exercises <code>click</code>, <code>dblclick</code>, and hover state changes.</div>
             </div>
             <div class="testpage-cmd"><code>test-pages/buttons.html</code>
               <button class="copy-btn" aria-label="Copy path"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25z"/></svg></button>
@@ -106,12 +106,12 @@ se-cli snapshot</code></pre></div>
       </div>
 
       <div class="testpage-group">
-        <h3>🧭 Navigation &amp; Tabs</h3>
+        <h3 data-i18n="tp.groupNav">🧭 Navigation &amp; Tabs</h3>
         <ul class="testpage-list">
           <li class="testpage-item">
             <div class="testpage-main">
-              <a href="links.html" class="testpage-name">Navigation Links</a>
-              <div class="testpage-desc">Links for testing <code>goto</code>, <code>go-back</code>, <code>go-forward</code>, and <code>reload</code>.</div>
+              <a href="links.html" class="testpage-name" data-i18n="tp.linksName">Navigation Links</a>
+              <div class="testpage-desc" data-i18n="tp.linksDesc" data-i18n-html>Links for testing <code>goto</code>, <code>go-back</code>, <code>go-forward</code>, and <code>reload</code>.</div>
             </div>
             <div class="testpage-cmd"><code>test-pages/links.html</code>
               <button class="copy-btn" aria-label="Copy path"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25z"/></svg></button>
@@ -119,8 +119,8 @@ se-cli snapshot</code></pre></div>
           </li>
           <li class="testpage-item">
             <div class="testpage-main">
-              <a href="tabs.html" class="testpage-name">Tabs Test Page</a>
-              <div class="testpage-desc">Links that open new tabs/windows — exercises <code>tab-list</code>, <code>tab-new</code>, <code>tab-select</code>, <code>tab-close</code>.</div>
+              <a href="tabs.html" class="testpage-name" data-i18n="tp.tabsName">Tabs Test Page</a>
+              <div class="testpage-desc" data-i18n="tp.tabsDesc" data-i18n-html>Links that open new tabs/windows — exercises <code>tab-list</code>, <code>tab-new</code>, <code>tab-select</code>, <code>tab-close</code>.</div>
             </div>
             <div class="testpage-cmd"><code>test-pages/tabs.html</code>
               <button class="copy-btn" aria-label="Copy path"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25z"/></svg></button>
@@ -130,12 +130,12 @@ se-cli snapshot</code></pre></div>
       </div>
 
       <div class="testpage-group">
-        <h3>🎯 Snapshot &amp; Structure</h3>
+        <h3 data-i18n="tp.groupSnap">🎯 Snapshot &amp; Structure</h3>
         <ul class="testpage-list">
           <li class="testpage-item">
             <div class="testpage-main">
-              <a href="snapshot.html" class="testpage-name">Snapshot Test Page</a>
-              <div class="testpage-desc">Rich ARIA structure — nav, tabs, menu, tree, table, alerts — for <code>snapshot</code> and <code>find</code> testing.</div>
+              <a href="snapshot.html" class="testpage-name" data-i18n="tp.snapshotName">Snapshot Test Page</a>
+              <div class="testpage-desc" data-i18n="tp.snapshotDesc" data-i18n-html>Rich ARIA structure — nav, tabs, menu, tree, table, alerts — for <code>snapshot</code> and <code>find</code> testing.</div>
             </div>
             <div class="testpage-cmd"><code>test-pages/snapshot.html</code>
               <button class="copy-btn" aria-label="Copy path"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25z"/></svg></button>
@@ -143,8 +143,8 @@ se-cli snapshot</code></pre></div>
           </li>
           <li class="testpage-item">
             <div class="testpage-main">
-              <a href="iframe.html" class="testpage-name">IFrame Test Page</a>
-              <div class="testpage-desc">Same-origin and cross-origin iframes — exercises recursive snapshot with cross-frame refs (<code>f3e15</code>).</div>
+              <a href="iframe.html" class="testpage-name" data-i18n="tp.iframeName">IFrame Test Page</a>
+              <div class="testpage-desc" data-i18n="tp.iframeDesc" data-i18n-html>Same-origin and cross-origin iframes — exercises recursive snapshot with cross-frame refs (<code>f3e15</code>).</div>
             </div>
             <div class="testpage-cmd"><code>test-pages/iframe.html</code>
               <button class="copy-btn" aria-label="Copy path"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25z"/></svg></button>
@@ -152,8 +152,8 @@ se-cli snapshot</code></pre></div>
           </li>
           <li class="testpage-item">
             <div class="testpage-main">
-              <a href="shadow-dom.html" class="testpage-name">Shadow DOM Test Page</a>
-              <div class="testpage-desc">Open shadow roots with interactive elements — exercises Shadow DOM traversal and ref assignment.</div>
+              <a href="shadow-dom.html" class="testpage-name" data-i18n="tp.shadowDomName">Shadow DOM Test Page</a>
+              <div class="testpage-desc" data-i18n="tp.shadowDomDesc">Open shadow roots with interactive elements — exercises Shadow DOM traversal and ref assignment.</div>
             </div>
             <div class="testpage-cmd"><code>test-pages/shadow-dom.html</code>
               <button class="copy-btn" aria-label="Copy path"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25z"/></svg></button>
@@ -163,12 +163,12 @@ se-cli snapshot</code></pre></div>
       </div>
 
       <div class="testpage-group">
-        <h3>💾 Storage</h3>
+        <h3 data-i18n="tp.groupStorage">💾 Storage</h3>
         <ul class="testpage-list">
           <li class="testpage-item">
             <div class="testpage-main">
-              <a href="storage.html" class="testpage-name">Storage Test Page</a>
-              <div class="testpage-desc">localStorage and sessionStorage entries — exercises <code>localstorage-*</code>, <code>sessionstorage-*</code>, and <code>state-save</code>/<code>load</code>.</div>
+              <a href="storage.html" class="testpage-name" data-i18n="tp.storageName">Storage Test Page</a>
+              <div class="testpage-desc" data-i18n="tp.storageDesc" data-i18n-html>localStorage and sessionStorage entries — exercises <code>localstorage-*</code>, <code>sessionstorage-*</code>, and <code>state-save</code>/<code>load</code>.</div>
             </div>
             <div class="testpage-cmd"><code>test-pages/storage.html</code>
               <button class="copy-btn" aria-label="Copy path"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25z"/></svg></button>
@@ -179,7 +179,7 @@ se-cli snapshot</code></pre></div>
 
       <div class="alert alert-info" style="max-width: 880px; margin: 32px auto 0;">
         <span class="alert-icon">ℹ</span>
-        <div>Each test page is a standalone light-themed HTML file with its own inline styles — they intentionally differ from this dark documentation site so they resemble real-world pages you'd automate. The integration suite drives them with se-cli itself (dogfooding).</div>
+        <div data-i18n="tp.note">Each test page is a standalone light-themed HTML file with its own inline styles — they intentionally differ from this dark documentation site so they resemble real-world pages you'd automate. The integration suite drives them with se-cli itself (dogfooding).</div>
       </div>
     </div>
   </section>
@@ -203,5 +203,6 @@ se-cli snapshot</code></pre></div>
   </footer>
 
   <script src="../assets/js/nav.js"></script>
+  <script src="../assets/js/i18n.js"></script>
 </body>
 </html>

@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="se-cli storage commands — cookies, localStorage, sessionStorage, and the state-save / state-load round-trip." />
+  <meta name="description" data-i18n="storage.metaDesc" content="se-cli storage commands — cookies, localStorage, sessionStorage, and the state-save / state-load round-trip." />
   <meta name="theme-color" content="#22C55E" />
-  <title>Storage &amp; State — se-cli Docs</title>
+  <title data-i18n="storage.title">Storage &amp; State — se-cli Docs</title>
   <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
   <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -37,38 +37,38 @@
 
   <div class="docs-layout">
     <aside class="docs-sidebar">
-      <h4>Get started</h4>
+      <h4 data-i18n="sidebar.getStarted">Get started</h4>
       <a href="getting-started.html">Getting Started</a>
       <a href="commands.html">Command Reference</a>
       <a href="configuration.html">Configuration</a>
-      <h4>Guides</h4>
+      <h4 data-i18n="sidebar.guides">Guides</h4>
       <a href="sessions.html">Sessions &amp; Browsers</a>
       <a href="storage-state.html" class="current">Storage &amp; State</a>
       <a href="snapshots-refs.html">Snapshots &amp; Refs</a>
       <a href="codegen.html">Code Generation</a>
       <a href="ai-agents.html">AI Agents</a>
-      <h4>Reference</h4>
+      <h4 data-i18n="sidebar.reference">Reference</h4>
       <a href="troubleshooting.html">Troubleshooting</a>
     </aside>
 
     <main class="docs-content">
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="../index.html">Home</a>
+        <a href="../index.html" data-i18n="bc.home">Home</a>
         <span class="breadcrumb-sep">/</span>
-        <a href="index.html">Docs</a>
+        <a href="index.html" data-i18n="bc.docs">Docs</a>
         <span class="breadcrumb-sep">/</span>
-        <span class="breadcrumb-current">Storage &amp; State</span>
+        <span class="breadcrumb-current" data-i18n="bc.storage">Storage &amp; State</span>
       </nav>
 
-      <h2 id="cookies">Cookies</h2>
-      <p>Cookie commands operate on the cookies for the current page's domain. <code>cookie-set</code> accepts a JSON object describing the cookie.</p>
+      <h2 id="cookies" data-i18n="storage.cookiesTitle">Cookies</h2>
+      <p data-i18n="storage.cookiesDesc" data-i18n-html>Cookie commands operate on the cookies for the current page's domain. <code>cookie-set</code> accepts a JSON object describing the cookie.</p>
       <table class="cmd-table">
-        <thead><tr><th>Command</th><th>Description</th></tr></thead>
+        <thead><tr><th data-i18n="storage.thCommand">Command</th><th data-i18n="storage.thDesc">Description</th></tr></thead>
         <tbody>
-          <tr><td><code>cookie-list</code></td><td>List all cookies for the current page</td></tr>
-          <tr><td><code>cookie-get &lt;name&gt;</code></td><td>Get a single cookie by name (returns JSON)</td></tr>
-          <tr><td><code>cookie-set &lt;json&gt;</code></td><td>Add or overwrite a cookie, e.g. <code>'{"name":"token","value":"abc"}'</code></td></tr>
-          <tr><td><code>cookie-delete &lt;name&gt;</code></td><td>Delete a cookie by name</td></tr>
+          <tr><td><code>cookie-list</code></td><td data-i18n="storage.cookieListDesc">List all cookies for the current page</td></tr>
+          <tr><td><code>cookie-get &lt;name&gt;</code></td><td data-i18n="storage.cookieGetDesc">Get a single cookie by name (returns JSON)</td></tr>
+          <tr><td><code>cookie-set &lt;json&gt;</code></td><td data-i18n="storage.cookieSetDesc" data-i18n-html>Add or overwrite a cookie, e.g. <code>'{"name":"token","value":"abc"}'</code></td></tr>
+          <tr><td><code>cookie-delete &lt;name&gt;</code></td><td data-i18n="storage.cookieDeleteDesc">Delete a cookie by name</td></tr>
         </tbody>
       </table>
       <div class="code-block">
@@ -79,16 +79,16 @@ se-cli cookie-list
 se-cli cookie-delete flag</code></pre>
       </div>
 
-      <h2 id="localstorage">localStorage &amp; sessionStorage</h2>
-      <p>The storage families mirror each other — replace <code>localstorage</code> with <code>sessionstorage</code> for the sessionStorage equivalent. Both run in the page context via the daemon.</p>
+      <h2 id="localstorage" data-i18n="storage.lsTitle">localStorage &amp; sessionStorage</h2>
+      <p data-i18n="storage.lsDesc" data-i18n-html>The storage families mirror each other — replace <code>localstorage</code> with <code>sessionstorage</code> for the sessionStorage equivalent. Both run in the page context via the daemon.</p>
       <table class="cmd-table">
-        <thead><tr><th>Command</th><th>Description</th></tr></thead>
+        <thead><tr><th data-i18n="storage.thCommand2">Command</th><th data-i18n="storage.thDesc2">Description</th></tr></thead>
         <tbody>
-          <tr><td><code>localstorage-get &lt;key&gt;</code></td><td>Read a value</td></tr>
-          <tr><td><code>localstorage-set &lt;key&gt; &lt;val&gt;</code></td><td>Write a value</td></tr>
-          <tr><td><code>localstorage-delete &lt;key&gt;</code></td><td>Delete a value</td></tr>
-          <tr><td><code>localstorage-clear</code></td><td>Clear all localStorage</td></tr>
-          <tr><td><code>sessionstorage-get/set/delete/clear</code></td><td>Same operations for sessionStorage</td></tr>
+          <tr><td><code>localstorage-get &lt;key&gt;</code></td><td data-i18n="storage.lsGetDesc">Read a value</td></tr>
+          <tr><td><code>localstorage-set &lt;key&gt; &lt;val&gt;</code></td><td data-i18n="storage.lsSetDesc">Write a value</td></tr>
+          <tr><td><code>localstorage-delete &lt;key&gt;</code></td><td data-i18n="storage.lsDeleteDesc">Delete a value</td></tr>
+          <tr><td><code>localstorage-clear</code></td><td data-i18n="storage.lsClearDesc">Clear all localStorage</td></tr>
+          <tr><td><code>sessionstorage-get/set/delete/clear</code></td><td data-i18n="storage.ssDesc">Same operations for sessionStorage</td></tr>
         </tbody>
       </table>
       <div class="code-block">
@@ -101,11 +101,11 @@ se-cli sessionstorage-set flash "welcome"
 se-cli localstorage-clear</code></pre>
       </div>
 
-      <h2 id="state">State save &amp; load</h2>
-      <p><code>state-save</code> exports cookies + localStorage + sessionStorage into a single JSON file. <code>state-load</code> restores them in reverse order (storage first, then cookies). This lets you capture an authenticated session and replay it on another machine or CI run — far more portable than a <code>--profile</code> directory.</p>
+      <h2 id="state" data-i18n="storage.stateTitle">State save &amp; load</h2>
+      <p data-i18n="storage.stateDesc" data-i18n-html><code>state-save</code> exports cookies + localStorage + sessionStorage into a single JSON file. <code>state-load</code> restores them in reverse order (storage first, then cookies). This lets you capture an authenticated session and replay it on another machine or CI run — far more portable than a <code>--profile</code> directory.</p>
       <div class="example-grid">
         <div class="example-card">
-          <div class="example-header"><div class="example-header-icon">💾</div><h3>Capture an authed session</h3></div>
+          <div class="example-header"><div class="example-header-icon">💾</div><h3 data-i18n="storage.captureCard">Capture an authed session</h3></div>
           <div class="example-body"><div class="code-block"><div class="code-header"><span class="code-lang">bash</span></div>
 <pre><code># Log in through the UI once
 se-cli open https://app.example.com/login
@@ -120,7 +120,7 @@ se-cli close</code></pre></div></div>
         </div>
 
         <div class="example-card">
-          <div class="example-header"><div class="example-header-icon">▶️</div><h3>Restore in CI</h3></div>
+          <div class="example-header"><div class="example-header-icon">▶️</div><h3 data-i18n="storage.restoreCard">Restore in CI</h3></div>
           <div class="example-body"><div class="code-block"><div class="code-header"><span class="code-lang">bash</span></div>
 <pre><code># Fresh browser, skip the login flow
 se-cli open https://app.example.com
@@ -129,8 +129,8 @@ se-cli snapshot
 # Already logged in — dashboard visible.</code></pre></div></div>
         </div>
       </div>
-      <div class="alert alert-warning"><span class="alert-icon">!</span><div><strong>Domain matching.</strong> Cookies are scoped by domain. <code>state-load</code> only restores cookies for the page's current domain — navigate to the right origin before loading.</div></div>
-      <p>Pair state with <a href="sessions.html#profiles">persistent profiles</a> when you need both browser-level and storage-level persistence, or see <a href="troubleshooting.html">Troubleshooting</a> if a save round-trip behaves unexpectedly.</p>
+      <div class="alert alert-warning"><span class="alert-icon">!</span><div data-i18n="storage.alertDomain" data-i18n-html><strong>Domain matching.</strong> Cookies are scoped by domain. <code>state-load</code> only restores cookies for the page's current domain — navigate to the right origin before loading.</div></div>
+      <p data-i18n="storage.pairState" data-i18n-html>Pair state with <a href="sessions.html#profiles">persistent profiles</a> when you need both browser-level and storage-level persistence, or see <a href="troubleshooting.html">Troubleshooting</a> if a save round-trip behaves unexpectedly.</p>
     </main>
   </div>
 
@@ -153,5 +153,6 @@ se-cli snapshot
   </footer>
 
   <script src="../assets/js/nav.js"></script>
+  <script src="../assets/js/i18n.js"></script>
 </body>
 </html>

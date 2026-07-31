@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="se-cli for AI agents — SKILL.md install, Claude Code / Cursor integration, the CLI-vs-MCP token tradeoff, and the planned MCP Server." />
+  <meta name="description" data-i18n="ai.metaDesc" content="se-cli for AI agents — SKILL.md install, Claude Code / Cursor integration, the CLI-vs-MCP token tradeoff, and the planned MCP Server." />
   <meta name="theme-color" content="#22C55E" />
-  <title>AI Agents — se-cli Docs</title>
+  <title data-i18n="ai.title">AI Agents — se-cli Docs</title>
   <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
   <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -37,37 +37,37 @@
 
   <div class="docs-layout">
     <aside class="docs-sidebar">
-      <h4>Get started</h4>
+      <h4 data-i18n="sidebar.getStarted">Get started</h4>
       <a href="getting-started.html">Getting Started</a>
       <a href="commands.html">Command Reference</a>
       <a href="configuration.html">Configuration</a>
-      <h4>Guides</h4>
+      <h4 data-i18n="sidebar.guides">Guides</h4>
       <a href="sessions.html">Sessions &amp; Browsers</a>
       <a href="storage-state.html">Storage &amp; State</a>
       <a href="snapshots-refs.html">Snapshots &amp; Refs</a>
       <a href="codegen.html">Code Generation</a>
       <a href="ai-agents.html" class="current">AI Agents</a>
-      <h4>Reference</h4>
+      <h4 data-i18n="sidebar.reference">Reference</h4>
       <a href="troubleshooting.html">Troubleshooting</a>
     </aside>
 
     <main class="docs-content">
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="../index.html">Home</a>
+        <a href="../index.html" data-i18n="bc.home">Home</a>
         <span class="breadcrumb-sep">/</span>
-        <a href="index.html">Docs</a>
+        <a href="index.html" data-i18n="bc.docs">Docs</a>
         <span class="breadcrumb-sep">/</span>
-        <span class="breadcrumb-current">AI Agents</span>
+        <span class="breadcrumb-current" data-i18n="bc.ai">AI Agents</span>
       </nav>
 
-      <h2 id="agent-flow">Agent integration flow</h2>
-      <p>se-cli works with any AI agent that can run shell commands — Claude Code, Cursor, Copilot CLI, and more. There is no MCP server required for the CLI path: install once, drop in <code>SKILL.md</code>, and the agent drives the browser like a human would.</p>
+      <h2 id="agent-flow" data-i18n="ai.flowTitle">Agent integration flow</h2>
+      <p data-i18n="ai.flowDesc" data-i18n-html>se-cli works with any AI agent that can run shell commands — Claude Code, Cursor, Copilot CLI, and more. There is no MCP server required for the CLI path: install once, drop in <code>SKILL.md</code>, and the agent drives the browser like a human would.</p>
       <div class="agent-flow">
         <div class="agent-step">
           <div class="agent-step-num">1</div>
           <div class="agent-step-body">
-            <h3>Install the CLI</h3>
-            <p>One global install — no per-agent setup or MCP server configuration needed.</p>
+            <h3 data-i18n="ai.step1Title">Install the CLI</h3>
+            <p data-i18n="ai.step1Desc">One global install — no per-agent setup or MCP server configuration needed.</p>
             <div class="code-block"><div class="code-header"><span class="code-lang">bash</span></div>
 <pre><code>npm install -g @browsers-cli/se-cli</code></pre></div>
           </div>
@@ -75,8 +75,8 @@
         <div class="agent-step">
           <div class="agent-step-num">2</div>
           <div class="agent-step-body">
-            <h3>Install the skill (recommended)</h3>
-            <p><code>install --skills</code> copies <code>SKILL.md</code> into your agent's skills directory so it learns the command syntax instantly. Targets Claude Code, Cursor, and a generic <code>.agents/skills/</code> path.</p>
+            <h3 data-i18n="ai.step2Title">Install the skill (recommended)</h3>
+            <p data-i18n="ai.step2Desc" data-i18n-html><code>install --skills</code> copies <code>SKILL.md</code> into your agent's skills directory so it learns the command syntax instantly. Targets Claude Code, Cursor, and a generic <code>.agents/skills/</code> path.</p>
             <div class="code-block"><div class="code-header"><span class="code-lang">bash</span></div>
 <pre><code>se-cli install --skills
 
@@ -88,8 +88,8 @@ cp skill/SKILL.md .claude/skills/se-cli/</code></pre></div>
         <div class="agent-step">
           <div class="agent-step-num">3</div>
           <div class="agent-step-body">
-            <h3>Agent drives the browser</h3>
-            <p>The agent calls <code>se-cli</code> commands like a human would — open, snapshot, interact, close.</p>
+            <h3 data-i18n="ai.step3Title">Agent drives the browser</h3>
+            <p data-i18n="ai.step3Desc" data-i18n-html>The agent calls <code>se-cli</code> commands like a human would — open, snapshot, interact, close.</p>
             <div class="code-block"><div class="code-header"><span class="code-lang">agent conversation</span></div>
 <pre><code>User: "Check that the login page works"
 Agent: I'll navigate and test the login flow.
@@ -105,30 +105,30 @@ Agent: I'll navigate and test the login flow.
         <div class="agent-step">
           <div class="agent-step-num">4</div>
           <div class="agent-step-body">
-            <h3>Why CLI beats MCP for coding agents</h3>
-            <p>No tool schemas pollute the context window. No JSON-RPC envelope overhead. Just clean shell commands and compact YAML output — typically ~12× fewer tokens than Selenium MCP per interaction.</p>
+            <h3 data-i18n="ai.step4Title">Why CLI beats MCP for coding agents</h3>
+            <p data-i18n="ai.step4Desc">No tool schemas pollute the context window. No JSON-RPC envelope overhead. Just clean shell commands and compact YAML output — typically ~12× fewer tokens than Selenium MCP per interaction.</p>
           </div>
         </div>
       </div>
 
-      <h2 id="token-compare">MCP vs CLI token cost</h2>
-      <p>For a coding agent that already runs shell commands, the CLI path is dramatically cheaper. The MCP Server (below) is for autonomous workflows that need a persistent tool server instead of a shell.</p>
+      <h2 id="token-compare" data-i18n="ai.tokenCompareTitle">MCP vs CLI token cost</h2>
+      <p data-i18n="ai.tokenCompareDesc">For a coding agent that already runs shell commands, the CLI path is dramatically cheaper. The MCP Server (below) is for autonomous workflows that need a persistent tool server instead of a shell.</p>
       <div class="table-wrap">
         <table class="cmp-table">
-          <thead><tr><th>Aspect</th><th>Selenium MCP</th><th>se-cli (CLI)</th></tr></thead>
+          <thead><tr><th data-i18n="ai.thAspect">Aspect</th><th>Selenium MCP</th><th>se-cli (CLI)</th></tr></thead>
           <tbody>
-            <tr><td>Tokens / call</td><td>~5,000</td><td>~400</td></tr>
-            <tr><td>Schema in context</td><td>~5KB, always loaded</td><td>None</td></tr>
-            <tr><td>Output format</td><td>JSON-RPC envelope + full tree</td><td>Compact YAML + refs</td></tr>
-            <tr><td>Agent requirement</td><td>MCP client</td><td>Any shell-capable agent</td></tr>
-            <tr><td>Persistent server</td><td>Yes</td><td>No (daemon holds state)</td></tr>
-            <tr><td>Best for</td><td>Autonomous long-running workflows</td><td>Coding agents (Claude Code, Cursor)</td></tr>
+            <tr><td data-i18n="ai.cmpTokens">Tokens / call</td><td data-i18n="ai.cmpTokensMcp">~5,000</td><td data-i18n="ai.cmpTokensCli">~400</td></tr>
+            <tr><td data-i18n="ai.cmpSchema">Schema in context</td><td data-i18n="ai.cmpSchemaMcp">~5KB, always loaded</td><td data-i18n="ai.cmpSchemaCli">None</td></tr>
+            <tr><td data-i18n="ai.cmpOutput">Output format</td><td data-i18n="ai.cmpOutputMcp">JSON-RPC envelope + full tree</td><td data-i18n="ai.cmpOutputCli">Compact YAML + refs</td></tr>
+            <tr><td data-i18n="ai.cmpAgent">Agent requirement</td><td data-i18n="ai.cmpAgentMcp">MCP client</td><td data-i18n="ai.cmpAgentCli">Any shell-capable agent</td></tr>
+            <tr><td data-i18n="ai.cmpServer">Persistent server</td><td data-i18n="ai.cmpServerMcp">Yes</td><td data-i18n="ai.cmpServerCli">No (daemon holds state)</td></tr>
+            <tr><td data-i18n="ai.cmpBestFor">Best for</td><td data-i18n="ai.cmpBestForMcp">Autonomous long-running workflows</td><td data-i18n="ai.cmpBestForCli">Coding agents (Claude Code, Cursor)</td></tr>
           </tbody>
         </table>
       </div>
 
-      <h2 id="mcp-server">MCP Server <span class="badge badge-must">Planned · v0.9</span></h2>
-      <p>se-cli will also ship as an MCP Server via <code>@modelcontextprotocol/sdk</code>, dual-tracking the CLI: both share the same underlying tool implementation. This covers autonomous agents that prefer a persistent tool server over shell commands.</p>
+      <h2 id="mcp-server" data-i18n="ai.mcpServerTitle" data-i18n-html>MCP Server <span class="badge badge-must">Planned · v0.9</span></h2>
+      <p data-i18n="ai.mcpServerDesc" data-i18n-html>se-cli will also ship as an MCP Server via <code>@modelcontextprotocol/sdk</code>, dual-tracking the CLI: both share the same underlying tool implementation. This covers autonomous agents that prefer a persistent tool server over shell commands.</p>
       <div class="code-block">
         <div class="code-header"><span class="code-lang">planned · v0.9</span></div>
 <pre><code># stdio transport (default) — local agent
@@ -138,13 +138,13 @@ se-cli mcp
 se-cli mcp --transport=http --port=8765</code></pre>
       </div>
       <ul>
-        <li>All CLI tools wrapped as <code>registerTool</code> calls</li>
-        <li><code>run-code "async driver =&gt; ..."</code> for arbitrary Selenium snippets</li>
-        <li><code>generate-locator &lt;ref&gt;</code> for best-available locators</li>
-        <li>Role-based codegen (<code>By.role()</code>) via the shared codegen module</li>
-        <li>SKILL.md frontmatter compliance (<code>name</code>, <code>description</code>, <code>license</code>, <code>compatibility</code>)</li>
+        <li data-i18n="ai.mcpFeature1" data-i18n-html>All CLI tools wrapped as <code>registerTool</code> calls</li>
+        <li data-i18n="ai.mcpFeature2" data-i18n-html><code>run-code "async driver =&gt; ..."</code> for arbitrary Selenium snippets</li>
+        <li data-i18n="ai.mcpFeature3" data-i18n-html><code>generate-locator &lt;ref&gt;</code> for best-available locators</li>
+        <li data-i18n="ai.mcpFeature4" data-i18n-html>Role-based codegen (<code>By.role()</code>) via the shared codegen module</li>
+        <li data-i18n="ai.mcpFeature5" data-i18n-html>SKILL.md frontmatter compliance (<code>name</code>, <code>description</code>, <code>license</code>, <code>compatibility</code>)</li>
       </ul>
-      <div class="alert alert-info"><span class="alert-icon">i</span><div><strong>Dual-track strategy.</strong> CLI + SKILLS stays the token-efficient path for coding agents; the MCP Server adds persistent-state tooling for autonomous workflows. Track progress on the <a href="../roadmap/index.html">roadmap</a>.</div></div>
+      <div class="alert alert-info"><span class="alert-icon">i</span><div data-i18n="ai.dualTrackAlert" data-i18n-html><strong>Dual-track strategy.</strong> CLI + SKILLS stays the token-efficient path for coding agents; the MCP Server adds persistent-state tooling for autonomous workflows. Track progress on the <a href="../roadmap/index.html">roadmap</a>.</div></div>
     </main>
   </div>
 
@@ -167,5 +167,6 @@ se-cli mcp --transport=http --port=8765</code></pre>
   </footer>
 
   <script src="../assets/js/nav.js"></script>
+  <script src="../assets/js/i18n.js"></script>
 </body>
 </html>
