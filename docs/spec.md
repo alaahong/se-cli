@@ -466,27 +466,79 @@ All Actions commands automatically consume the v0.4 wait/retry configuration.
 - [x] Unit tests for each tool
 - [x] Integration tests (`tests/integration/fixtures/interactions.html`)
 
-### v0.6: Web-First Assertions (Core, Playwright port: medium complexity × high importance)
+### v0.6: Web-First Assertions ✅
 
-Playwright's `expect(locator).toBeVisible()` retry-until-timeout assertion is the key to CI-friendly tests.
-CLI form with exit codes:
+Playwright's `expect(locator).toBeVisible()` retry-until-timeout assertion is the key to CI-friendly
+tests. se-cli ports this to a CLI-native `expect` command set with CI-friendly exit codes. All
+assertions consume the v0.4 wait/retry configuration layer and reuse `driver.wait(until.condition, timeout)`
+internally, so polling, timeout, and retry behavior stay consistent with the interactive commands.
+
+**Command set**:
 
 ```
-se-cli expect <ref|sel> visible   [--timeout=5000] [--not]
-se-cli expect <ref>     hidden
-se-cli expect <ref>     enabled | disabled
-se-cli expect <ref>     checked | unchecked
-se-cli expect <ref>     text "expected"  [--exact]
-se-cli expect <ref>     value "expected"
-se-cli expect <ref>     count N
-se-cli expect <ref>     attribute <name> <value>
-se-cli expect title "..."  |  expect url "..."
+se-cli expect <ref|selector> visible | hidden     [--not] [--timeout=N]
+se-cli expect <ref>           enabled | disabled  [--not] [--timeout=N]
+se-cli expect <ref>           checked | unchecked [--not] [--timeout=N]
+se-cli expect <ref>           text     "expected" [--exact] [--not] [--timeout=N]
+se-cli expect <ref>           value    "expected" [--exact] [--not] [--timeout=N]
+se-cli expect <ref>           count    N          [--not] [--timeout=N]
+se-cli expect <ref>           attribute <name> <value> [--exact] [--not] [--timeout=N]
+se-cli expect title "..."                          [--exact] [--not] [--timeout=N]
+se-cli expect url    "..."                         [--exact] [--not] [--timeout=N]
 ```
 
-- [ ] Exit codes: success 0, failure 1 (CI/scripts can chain with `&&`)
-- [ ] Default to v0.4 `--timeout`; assertion internals use `driver.wait(until.condition, timeout)`
-- [ ] Code generation: `await driver.wait(ExpectedConditions.textToBe(locator, "expected"), 5000);`
-- [ ] `--not` flag inverts the assertion
+**Key design decisions**:
+
+- **Retry-until-timeout polling**: every assertion is evaluated by `driver.wait(until.condition, timeout)`,
+  polling the page at a fixed interval until the condition holds or the timeout elapses. Defaults inherit
+  from v0.4 (`--timeout=5000`, `--retry-interval=100`); override per-command with `--timeout=N`.
+- **CI-friendly exit codes**: `0` = assertion passed, `1` = assertion failed. Shell scripts and CI
+  pipelines can chain assertions with `&&` / `||` without parsing output:
+  ```bash
+  se-cli expect e1 visible && se-cli expect e1 text "Saved"
+  ```
+- **`ASSERTION_FAILED` error code**: failed assertions return `{ ok:false, code:"ASSERTION_FAILED", error:"<details>" }`
+  through the protocol (see §4.3). The CLI renders a friendly message and exits `1`; `--json` surfaces the
+  structured error for programmatic consumers.
+- **`AssertionError` class**: a dedicated error class (`src/daemon/tools/expect.ts`) carries the expected
+  vs. actual values, the matcher name, and the `--not` state, so error output can explain *why* the assertion
+  failed (e.g. `expected text to equal "Saved", received "Saving..."`).
+- **`--not` flag**: inverts the assertion. `expect e1 visible --not` asserts the element is *not* visible;
+  internally the condition is wrapped with `until.not(...)` so polling semantics are unchanged.
+- **`--exact` flag**: applies to `text`, `value`, `attribute`, `title`, and `url` matchers. Default matching
+  is **substring** (Playwright-compatible); `--exact` switches to strict equality. `count` ignores `--exact`.
+- **Integration with v0.4 wait configuration**: assertions resolve the same 4-tier config (`--flag` > `ENV` >
+  `.se-cli.json` > built-in default). The default wait state for assertions is `attached` (the element must
+  exist in the DOM before its visibility/state/text can be polled); visibility matchers additionally poll
+  for `visible`/`hidden` themselves.
+
+**Code generation**: emitted code reflects the effective matcher, flags, and timeout:
+```js
+await driver.wait(until.elementIsVisible(el), 5000);              // expect e1 visible
+await driver.wait(until.elementTextContains(el, "Saved"), 5000);  // expect e1 text "Saved"
+await driver.wait(until.elementTextIs(el, "Saved"), 5000);        // expect e1 text "Saved" --exact
+await driver.wait(until.not(until.elementIsVisible(el)), 5000);   // expect e1 visible --not
+```
+
+**Implementation status (v0.6)**:
+- [x] `expect <ref|selector> visible|hidden [--not] [--timeout=N]` (`src/daemon/tools/expect.ts`)
+- [x] `expect <ref> enabled|disabled|checked|unchecked [--not] [--timeout=N]`
+- [x] `expect <ref> text "expected" [--exact] [--not] [--timeout=N]`
+- [x] `expect <ref> value "expected" [--exact] [--not] [--timeout=N]`
+- [x] `expect <ref> count N [--not] [--timeout=N]`
+- [x] `expect <ref> attribute <name> <value> [--exact] [--not] [--timeout=N]`
+- [x] `expect title "..." [--exact] [--not] [--timeout=N]`
+- [x] `expect url "..." [--exact] [--not] [--timeout=N]`
+- [x] Retry-until-timeout polling (default 5000ms / 100ms interval) via `driver.wait()`
+- [x] CI-friendly exit codes (0 = pass, 1 = fail)
+- [x] `ASSERTION_FAILED` protocol error code
+- [x] `AssertionError` class with expected/actual/matcher metadata
+- [x] `--not` flag inverts the assertion
+- [x] `--exact` flag switches substring → exact match
+- [x] Integration with v0.4 wait configuration (default state: `attached`)
+- [x] Code generation for all matchers
+- [x] Unit tests (`tests/unit/v0.6-assertions.test.ts`)
+- [x] Integration tests (`tests/integration/fixtures/assertions.html`)
 
 ### v0.7: Network & Debugging (Core)
 

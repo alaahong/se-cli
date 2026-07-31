@@ -102,6 +102,7 @@ const IFRAME_URL   = () => server.url('iframe.html');       // iframes: recursiv
 const SHADOW_URL   = () => server.url('shadow-dom.html');   // shadow DOM: open shadow roots with interactive elements
 const WAIT_URL     = () => server.url('wait.html');          // wait & retry: delayed visibility/enablement, dynamic element, flaky button
 const INTERACTIONS_URL = () => server.url('interactions.html'); // v0.5: hover, dblclick, drag, dialogs, upload, resize, mouse/keyboard actions
+const ASSERTIONS_URL = () => server.url('assertions.html');     // v0.6: web-first assertions
 
 describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   // Skip if E2E is not enabled, or if this browser wasn't resolved
@@ -871,6 +872,124 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
         `document.getElementById('delayed-hover-result').textContent`
       ], { SE_CLI_SESSION: S() })).trim();
       expect(status).toBe('Hovered delayed target!');
+    });
+  });
+
+  // --- v0.6: Web-First Assertions ---
+
+  describe('v0.6: Web-First Assertions', () => {
+
+    (skip ? it.skip : it)('asserts element is visible', async () => {
+      await run(['open', ASSERTIONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['expect', '#visible-element', 'visible'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('visible');
+    });
+
+    (skip ? it.skip : it)('asserts element is hidden', async () => {
+      await run(['open', ASSERTIONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['expect', '#display-none-element', 'hidden'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('hidden');
+    });
+
+    (skip ? it.skip : it)('asserts element is enabled', async () => {
+      await run(['open', ASSERTIONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['expect', '#enabled-input', 'enabled'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('enabled');
+    });
+
+    (skip ? it.skip : it)('asserts element is disabled', async () => {
+      await run(['open', ASSERTIONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['expect', '#disabled-input', 'disabled'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('disabled');
+    });
+
+    (skip ? it.skip : it)('asserts checkbox is checked', async () => {
+      await run(['open', ASSERTIONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['expect', '#checked-box', 'checked'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('checked');
+    });
+
+    (skip ? it.skip : it)('asserts checkbox is unchecked', async () => {
+      await run(['open', ASSERTIONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['expect', '#unchecked-box', 'unchecked'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('unchecked');
+    });
+
+    (skip ? it.skip : it)('asserts element text contains expected', async () => {
+      await run(['open', ASSERTIONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['expect', '#text-element', 'text', 'Hello'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('text');
+    });
+
+    (skip ? it.skip : it)('asserts element text with --exact', async () => {
+      await run(['open', ASSERTIONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['expect', '#text-element', 'text', 'Hello World', '--exact'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('text');
+    });
+
+    (skip ? it.skip : it)('asserts input value', async () => {
+      await run(['open', ASSERTIONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['expect', '#value-input', 'value', 'test@example.com'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('value');
+    });
+
+    (skip ? it.skip : it)('asserts element count', async () => {
+      await run(['open', ASSERTIONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['expect', '.count-item', 'count', '3'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('count');
+    });
+
+    (skip ? it.skip : it)('asserts element attribute', async () => {
+      await run(['open', ASSERTIONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['expect', '#attr-element', 'attribute', 'data-role', 'button'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('attribute');
+    });
+
+    (skip ? it.skip : it)('asserts page title', async () => {
+      await run(['open', ASSERTIONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['expect', 'title', 'Assertion Test Page'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('title');
+    });
+
+    (skip ? it.skip : it)('asserts page url', async () => {
+      await run(['open', ASSERTIONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['expect', 'url', 'assertions.html'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('url');
+    });
+
+    (skip ? it.skip : it)('asserts --not visible on hidden element', async () => {
+      await run(['open', ASSERTIONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['expect', '#display-none-element', 'visible', '--not'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('not visible');
+    });
+
+    (skip ? it.skip : it)('asserts --not text when text does not contain expected', async () => {
+      await run(['open', ASSERTIONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['expect', '#text-element', 'text', 'Goodbye', '--not'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('text');
+    });
+
+    (skip ? it.skip : it)('assertion failure exits with code 1', async () => {
+      await run(['open', ASSERTIONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      // This should fail because the visible element is not hidden
+      try {
+        await run(['expect', '#visible-element', 'hidden'], { SE_CLI_SESSION: S() });
+        // If we get here, the assertion didn't fail — that's a test failure
+        expect(true).toBe(false);
+      } catch (e: any) {
+        // The error should contain assertion failure message
+        expect(e.message).toContain('hidden');
+      }
+    });
+
+    (skip ? it.skip : it)('assertion with --timeout waits for dynamic element', async () => {
+      await run(['open', ASSERTIONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      // #dynamic-element appears after 2 seconds
+      // --timeout=5000 gives enough time for the element to appear
+      const result = await run([
+        'expect', '#dynamic-element', 'visible', '--timeout=5000'
+      ], { SE_CLI_SESSION: S() });
+      expect(result).toContain('visible');
     });
   });
 });

@@ -181,7 +181,7 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
   // Parse flags from rest using minimist
   // Include wait/retry flags in the known options
   const parsed = parseArgs(rest, {
-    boolean: ['submit', 'no-wait'],
+    boolean: ['submit', 'no-wait', 'not', 'exact'],
     string: [
       'filename', 'depth', 'regex',
       // v0.4 wait/retry flags
@@ -263,6 +263,18 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
     'mouseup': () => ({ toolName: 'browser_mouseup', toolParams: { button: positional[0] } }),
     'mousewheel': () => ({ toolName: 'browser_mousewheel', toolParams: { dx: parseInt(positional[0]), dy: parseInt(positional[1]) } }),
     'actions-chain': () => ({ toolName: 'browser_actions_chain', toolParams: { actions: positional[0] } }),
+    // v0.6: Web-First Assertions
+    'expect': () => ({
+      toolName: 'browser_expect',
+      toolParams: {
+        target: positional[0],
+        assertion: positional[1],
+        expected: positional[2],
+        attributeValue: positional[3],
+        not: parsed.not || false,
+        exact: parsed.exact || false,
+      },
+    }),
   };
   const factory = commands[cmd];
   if (!factory) throw new Error(`Unknown command: ${cmd}`);

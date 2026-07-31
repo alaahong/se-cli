@@ -261,6 +261,21 @@ Interaction (v0.5):
   mousewheel <dx> <dy>   scroll wheel by offsets
   actions-chain <json>    chain multiple actions in one perform()
 
+Assertions (v0.6):
+  expect <ref> visible    assert element is visible (exit 0/1)
+  expect <ref> hidden     assert element is hidden
+  expect <ref> enabled    assert element is enabled
+  expect <ref> disabled   assert element is disabled
+  expect <ref> checked    assert checkbox is checked
+  expect <ref> unchecked  assert checkbox is unchecked
+  expect <ref> text "..."  assert element text [--exact] [--not]
+  expect <ref> value "..." assert input value [--exact] [--not]
+  expect <ref> count N     assert matching element count
+  expect <ref> attribute <name> <value>  assert attribute value
+  expect title "..."       assert page title [--exact] [--not]
+  expect url "..."         assert page URL [--exact] [--not]
+  Flags: --not (invert), --exact (strict match), --timeout=<ms>
+
 Flags:
   --raw                   output only the result value
   --json                  structured JSON output

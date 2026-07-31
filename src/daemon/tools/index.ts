@@ -57,6 +57,8 @@ import {
   browser_mousewheel,
   browser_actions_chain,
 } from './advanced-input';
+// v0.6: Web-First Assertions
+import { browser_expect } from './expect';
 
 export const tools: Record<string, (driver: any, params: any, response: any) => Promise<void>> = {
   browser_goto,
@@ -109,4 +111,6 @@ export const tools: Record<string, (driver: any, params: any, response: any) => 
   browser_mouseup,
   browser_mousewheel,
   browser_actions_chain,
+  // v0.6: Web-First Assertions
+  browser_expect,
 };

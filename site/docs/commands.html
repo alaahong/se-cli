@@ -72,6 +72,7 @@
         <button class="cmd-tab" data-tab="storage" role="tab" data-i18n="cmd.tab.storage">Storage</button>
         <button class="cmd-tab" data-tab="tabs" role="tab" data-i18n="cmd.tab.tabs">Tabs</button>
         <button class="cmd-tab" data-tab="config" role="tab" data-i18n="cmd.tab.config">Config</button>
+        <button class="cmd-tab" data-tab="assert" role="tab">Assertions <span class="ver-badge">v0.6</span></button>
         <button class="cmd-tab" data-tab="flags" role="tab" data-i18n="cmd.tab.flags">Flags</button>
       </div>
 
@@ -201,6 +202,29 @@
         <div class="alert alert-info"><span class="alert-icon">i</span><div data-i18n="cmd.alert.config" data-i18n-html><strong>v0.4.</strong> See the <a href="configuration.html">Configuration</a> page for the 4-tier priority system and wait/retry flags.</div></div>
       </div>
 
+      <div class="cmd-panel" data-panel="assert">
+        <table class="cmd-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>expect &lt;ref&gt; visible</code></td><td>Assert element is visible (exit 0/1)</td></tr>
+            <tr><td><code>expect &lt;ref&gt; hidden</code></td><td>Assert element is hidden</td></tr>
+            <tr><td><code>expect &lt;ref&gt; enabled</code></td><td>Assert element is enabled</td></tr>
+            <tr><td><code>expect &lt;ref&gt; disabled</code></td><td>Assert element is disabled</td></tr>
+            <tr><td><code>expect &lt;ref&gt; checked</code></td><td>Assert checkbox is checked</td></tr>
+            <tr><td><code>expect &lt;ref&gt; unchecked</code></td><td>Assert checkbox is unchecked</td></tr>
+            <tr><td><code>expect &lt;ref&gt; text "..."</code></td><td>Assert element text (substring match)</td></tr>
+            <tr><td><code>expect &lt;ref&gt; value "..."</code></td><td>Assert input value</td></tr>
+            <tr><td><code>expect &lt;ref&gt; count N</code></td><td>Assert matching element count</td></tr>
+            <tr><td><code>expect &lt;ref&gt; attribute &lt;name&gt; &lt;value&gt;</code></td><td>Assert attribute value</td></tr>
+            <tr><td><code>expect title "..."</code></td><td>Assert page title</td></tr>
+            <tr><td><code>expect url "..."</code></td><td>Assert page URL</td></tr>
+            <tr><td><code>--not</code></td><td>Invert assertion (e.g. expect NOT visible)</td></tr>
+            <tr><td><code>--exact</code></td><td>Strict match instead of substring</td></tr>
+            <tr><td><code>--timeout=&lt;ms&gt;</code></td><td>Polling timeout (default 5000ms)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
       <div class="cmd-panel" data-panel="flags">
         <table class="cmd-table">
           <thead><tr><th data-i18n="cmd.col.flag">Flag</th><th data-i18n="cmd.col.description">Description</th></tr></thead>
@@ -225,6 +249,8 @@
             <tr><td><code>--page-load-timeout=&lt;ms&gt;</code></td><td data-i18n="cmd.desc.pageLoadTimeout" data-i18n-html><code>driver.manage().timeouts().pageLoadTimeout()</code> (v0.4)</td></tr>
             <tr><td><code>--script-timeout=&lt;ms&gt;</code></td><td data-i18n="cmd.desc.scriptTimeout" data-i18n-html><code>setScriptTimeout</code> for async <code>eval</code> (v0.4)</td></tr>
             <tr><td><code>--no-wait</code></td><td data-i18n="cmd.desc.noWait" data-i18n-html>Shorthand for <code>--wait=none --timeout=0</code> (v0.4)</td></tr>
+            <tr><td><code>--not</code></td><td>Invert assertion (v0.6)</td></tr>
+            <tr><td><code>--exact</code></td><td>Strict match for assertions (v0.6)</td></tr>
           </tbody>
         </table>
       </div>

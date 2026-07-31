@@ -13,6 +13,7 @@ se-cli open
 se-cli goto https://example.com
 se-cli snapshot
 se-cli click e3
+se-cli expect e3 visible
 se-cli close
 ```
 
@@ -96,6 +97,49 @@ se-cli actions-chain '[{"type":"keydown","key":"Control"},{"type":"keydown","key
 # Click + pause + scroll
 se-cli actions-chain '[{"type":"click","target":"e2"},{"type":"pause","duration":500},{"type":"scroll","x":0,"y":300}]'
 ```
+
+### Web-First Assertions (v0.6)
+
+Playwright-style retry-until-timeout assertions with CI-friendly exit codes
+(0 = pass, 1 = fail).
+
+```bash
+# Visibility assertions
+se-cli expect <ref> visible          # Assert element is visible
+se-cli expect <ref> hidden           # Assert element is hidden
+
+# State assertions
+se-cli expect <ref> enabled           # Assert element is enabled
+se-cli expect <ref> disabled          # Assert element is disabled
+se-cli expect <ref> checked           # Assert checkbox is checked
+se-cli expect <ref> unchecked         # Assert checkbox is unchecked
+
+# Content assertions
+se-cli expect <ref> text "Expected"       # Assert text contains (substring)
+se-cli expect <ref> text "Exact" --exact  # Assert exact text match
+se-cli expect <ref> value "Expected"       # Assert input value contains
+se-cli expect <ref> attribute href "https://example.com"  # Assert attribute
+
+# Count assertion
+se-cli expect <selector> count 3    # Assert N matching elements
+
+# Page-level assertions
+se-cli expect title "My Page"       # Assert page title
+se-cli expect url "example.com"     # Assert URL contains
+
+# Inversion with --not
+se-cli expect <ref> visible --not   # Assert element is NOT visible
+se-cli expect <ref> text "error" --not  # Assert text does NOT contain "error"
+
+# Timeout for async assertions (default 5000ms)
+se-cli expect <ref> visible --timeout=10000  # Wait up to 10s for element to appear
+```
+
+Assertion failures exit with code 1 (CI-friendly). Assertion success exits with
+code 0.
+
+Assertions poll the condition until it passes or the timeout expires (default
+5s). Use `--timeout=0` or `--no-wait` for a single check without polling.
 
 ### Storage
 ```bash
