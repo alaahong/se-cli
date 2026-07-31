@@ -94,11 +94,38 @@ src/
 
 ### Release Workflow
 
-1. Push a version tag (e.g., `v0.3.0`) or trigger `create-release.yml` manually with a version number
-2. `create-release.yml` verifies `package.json` version matches the release tag, runs quality gates (lint, type check, build, unit tests), and creates a draft GitHub Release with auto-generated notes and npm tarball
-3. Publishing the Release triggers `publish.yml` which publishes to npm as `@browsers-cli/se-cli` with provenance
+**Branch convention**: Every release MUST be conducted on a dedicated `release/v<x.y.z>` branch (e.g., `release/v0.4.0`). Do NOT use `chore/bump-version-*` or `main` directly for releases.
+
+**Release steps**:
+
+1. **Create release branch** from latest `upstream/main`:
+   ```bash
+   git fetch upstream
+   git checkout -b release/v<x.y.z> upstream/main
+   ```
+2. **Bump version** in `package.json` to `<x.y.z>` on the release branch
+3. **Push and create PR** targeting `main`:
+   ```bash
+   git push origin release/v<x.y.z>
+   # Create PR titled: "chore: release v<x.y.z>"
+   ```
+4. **Wait for CI** — all checks (lint, type check, unit tests, integration tests across Chrome/Edge/Firefox) must pass
+5. **Merge the PR** (squash merge) into `main`
+6. **Trigger `create-release.yml`** via `workflow_dispatch` with `version: "<x.y.z>"`, or push tag `v<x.y.z>`
+7. `create-release.yml` verifies `package.json` version matches, runs quality gates, creates a draft GitHub Release
+8. **Publish the Release** on GitHub — this triggers `publish.yml` which publishes to npm as `@browsers-cli/se-cli` with provenance
+9. **Register the release** in the [Release Log](#release-log) table below
 
 **CRITICAL**: The `package.json` version on `main` branch must match the release version before triggering `create-release.yml`.
+
+### Release Log
+
+| Version | Release Branch | PR | Release URL | npm | Date |
+|---------|---------------|-----|-------------|-----|------|
+| 0.1.1 | `release/v0.1.1` | — | [v0.1.1](https://github.com/se-cli/se-cli/releases/tag/v0.1.1) | `@browsers-cli/se-cli@0.1.1` | 2026-07-29 |
+| 0.2.0 | `release/v0.2.0` | — | [v0.2.0](https://github.com/se-cli/se-cli/releases/tag/v0.2.0) | `@browsers-cli/se-cli@0.2.0` | 2026-07-29 |
+| 0.3.0 | `release/v0.3.0` | — | [v0.3.0](https://github.com/se-cli/se-cli/releases/tag/v0.3.0) | `@browsers-cli/se-cli@0.3.0` | 2026-07-30 |
+| 0.4.0 | `release/v0.4.0` | [#62](https://github.com/se-cli/se-cli/pull/62) | [v0.4.0](https://github.com/se-cli/se-cli/releases/tag/v0.4.0) | `@browsers-cli/se-cli@0.4.0` | 2026-07-31 |
 
 ### Dependency Update Workflow
 
