@@ -126,7 +126,7 @@ src/
 | 0.2.0 | `release/v0.2.0` | — | [v0.2.0](https://github.com/se-cli/se-cli/releases/tag/v0.2.0) | `@browsers-cli/se-cli@0.2.0` | 2026-07-29 |
 | 0.3.0 | `release/v0.3.0` | — | [v0.3.0](https://github.com/se-cli/se-cli/releases/tag/v0.3.0) | `@browsers-cli/se-cli@0.3.0` | 2026-07-30 |
 | 0.4.0 | `release/v0.4.0` | [#62](https://github.com/se-cli/se-cli/pull/62) | [v0.4.0](https://github.com/se-cli/se-cli/releases/tag/v0.4.0) | `@browsers-cli/se-cli@0.4.0` | 2026-07-31 |
-| 0.5.0 | `release/v0.5.0` | — | [v0.5.0](https://github.com/se-cli/se-cli/releases/tag/v0.5.0) | `@browsers-cli/se-cli@0.5.0` | 2026-07-31 |
+| 0.5.0 | `release/v0.5.0` | [#65](https://github.com/se-cli/se-cli/pull/65) | [v0.5.0](https://github.com/se-cli/se-cli/releases/tag/v0.5.0) | `@browsers-cli/se-cli@0.5.0` | 2026-07-31 |
 
 ### Dependency Update Workflow
 
