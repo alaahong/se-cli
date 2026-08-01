@@ -634,6 +634,7 @@ never match — emphasized as a differentiated stronghold rather than a passing 
 - [ ] **--browser=safari**: real Safari via `safaridriver` (macOS only, no headless/BiDi/CDP)
 - [ ] **--endpoint=<url>**: connect to Selenium Grid 4 or remote WebDriver
 - [ ] **--browser-binary=<path>**: custom browser binary (360, UC, QQ, Brave, Electron-embedded, QtWebEngine, domestic browsers)
+- [ ] **--browser=electron --app-binary=<path>**: Electron app testing via ChromeDriver with Electron binary (issue #73)
 - [ ] **--driver-binary=<path>**: custom driver binary (bypass selenium-manager)
 - [ ] **--browser-args="<args>"**: pass-through browser launch arguments
 - [ ] **--browser-prefs=<json>**: Chromium prefs injection
@@ -671,6 +672,8 @@ Recording and visualization capabilities for development and debugging workflows
 High implementation complexity but significant differentiation potential.
 
 - [ ] **se-cli record**: recording mode — user actions generate a complete test file
+- [ ] **export --format=pytest|junit5|mocha**: multi-framework test code export from recorded sessions (issue #75)
+- [ ] **--report=junit|allure|html**: built-in test report generation for CI integration (issue #74)
 - [ ] **tracing-start / tracing-stop**: operation tracing and storage (simplified; see "Will Never Implement")
 - [ ] **video-start / video-stop**: video recording via CDP or ffmpeg frame capture
 - [ ] **video-chapter <title>**: mark chapters in recordings
@@ -687,15 +690,58 @@ Depends on se-cli CLI being globally installed.
 - [ ] **MCP Server auto-registration**: write `.vscode/mcp.json` on install
 - [ ] **attach --extension**: connect to real browser via extension
 
+### v0.13: BiDi Expansion & Hardening (Core)
+
+Expand WebDriver BiDi protocol coverage and harden the daemon for production reliability.
+After all feature releases (v0.8–v0.12) are shipped, this version focuses on deepening
+BiDi integration and optimizing performance/stability.
+
+**BiDi Protocol Expansion** (issue #76):
+
+- [ ] **browsingContext module**: `captureScreenshot` (cross-browser), `print` (print-to-PDF
+  via BiDi, not CDP), `setViewport`, `setBypassCSP`, `handleUserPrompt`, download tracking
+  (`downloadWillBegin`/`downloadEnd` events)
+- [ ] **input module**: `setFiles` and `fileDialogOpened` for reliable file upload handling
+  without CDP
+- [ ] **script module**: `addPreloadScript`/`removePreloadScript` — inject scripts before
+  page scripts run, `getRealms` for sandboxed execution
+- [ ] **emulation module**: BiDi-native geolocation/locale/timezone/network conditions
+  (cross-browser alternative to CDP `Emulation.*`); migrate v0.8 from CDP-first to BiDi-first
+- [ ] **browser module**: `createUserContext`/`removeUserContext` for container/cookie
+  isolation (like Chrome profiles), `setDownloadBehavior`
+- [ ] **storage module**: cookie management with `PartitionKey` support
+- [ ] New CLI commands: `preload add/remove/list`, `download-list`, `context-new/close/list`
+
+**Performance Optimization** (issue #77):
+
+- [ ] **Daemon startup**: lazy-load driver on first command, cache compiled TypeScript,
+  parallelize selenium-manager with session init
+- [ ] **Snapshot efficiency**: optimize for large DOMs (>5000 elements), incremental
+  snapshots (`snapshot --diff`), Web Worker serialization
+- [ ] **Memory management**: circular buffers for console/network, LRU eviction,
+  `--max-buffer=<n>` flag, stale element ref GC
+- [ ] **Response optimization**: gzip compression for >4KB payloads, batched element queries
+
+**Stability Hardening** (issue #78):
+
+- [ ] **Error recovery**: driver crash detection with auto-restart, stale element ref
+  auto-refresh, BiDi WebSocket auto-reconnect
+- [ ] **Session resilience**: session file validation, zombie process cleanup,
+  port/pipe conflict resolution, graceful BiDi/CDP degradation
+- [ ] **Retry enhancement**: circuit breaker pattern, exponential backoff
+  (`--retry-backoff=exponential`), idempotent retry, per-tool retry policy
+- [ ] **CI hardening**: standardized exit codes (0/1/2/3/4), structured error JSON
+  with remediation hints, `--ci` flag for minimal timestamped logging
+
 ### Long-term Goals (no version commitment)
 
 - [ ] **Multi-language SDK**: Python/Java client bindings (CLI stays Node)
 - [ ] **Simplified Trace Viewer**: GUI playback for recorded traces (aligned with issue #24)
-- [ ] **DOM mutation listener**: via BiDi DOM mutation events
-- [ ] **Script preload**: BiDi script pinning and preloading
+- [ ] **DOM mutation listener**: via BiDi DOM mutation events (investigated in v0.13, issue #76)
+- [ ] **Script preload**: BiDi script pinning and preloading (investigated in v0.13, issue #76)
 - [ ] **Multi-language SKILL.md**: localized skill files
 - [ ] **pytest-selenium / JUnit5 hooks**: test framework integration (attach to test pause points, issue #22)
-- [ ] **Appium mobile testing completion**: iOS/Android bidirectional, Appium Grid
+- [ ] **Appium mobile testing completion**: iOS/Android bidirectional, Appium Grid (issue #79)
 - [ ] **Selenium Grid 4 hub/node management CLI**: deploy, autoscale, node health check
 
 ### Will Never Implement (explicitly abandoned)
