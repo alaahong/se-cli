@@ -19,7 +19,7 @@ The se-cli ecosystem consists of three independent repositories (following the P
 |------|------------|---------|
 | [`se-cli/se-cli`](https://github.com/se-cli/se-cli) | `@browsers-cli/se-cli` | Core CLI + daemon + MCP server implementation |
 | [`se-cli/se-mcp`](https://github.com/se-cli/se-mcp) | `@browsers-cli/se-mcp` | Thin MCP server wrapper package for MCP clients |
-| [`se-cli/se-extension-vscode`](https://github.com/se-cli/se-extension-vscode) | VS Code Marketplace | VS Code extension — MCP registration, commands, webview |
+| [`se-cli/se-extension-vscode`](https://github.com/se-cli/se-extension-vscode) | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=se-cli.se-extension-vscode) | VS Code extension — MCP registration, commands, webview |
 
 ### URL Reference Rules (CRITICAL)
 
