@@ -540,21 +540,60 @@ await driver.wait(until.not(until.elementIsVisible(el)), 5000);   // expect e1 v
 - [x] Unit tests (`tests/unit/v0.6-assertions.test.ts`)
 - [x] Integration tests (`tests/integration/fixtures/assertions.html`)
 
-### v0.7: Network & Debugging (Core)
+### v0.7: Network & Debugging ✅
 
 Leverage Selenium BiDi protocol (available in selenium-webdriver@4.46.0) for network
 interception, console log capture, and request monitoring. BiDi works on Chrome/Edge/Firefox.
-CDP used as Chromium-only enhancement.
 
-- [ ] **route <pattern> --status= / --body= / --headers=**: network interception via BiDi `Network.addIntercept`
-- [ ] **route-list**: list active route rules
-- [ ] **unroute [id]**: remove route rule
-- [ ] **console [level]**: capture browser console messages via `driver.script().addConsoleMessageHandler()`
-- [ ] **requests**: list network requests via BiDi `beforeRequestSent`/`responseCompleted` events
-- [ ] **request <index>**: show request details
-- [ ] **js-error**: capture JavaScript errors via `driver.script().addJavaScriptErrorHandler()`
-- [ ] **highlight <ref> [--style=]**: persistent element highlighting via CSS overlay injection
-- [ ] **highlight --hide**: remove highlights
+**Commands**:
+```bash
+se-cli highlight [ref] [--style="..."] [--hide] [--all]
+se-cli console [level] [--since=5m] [--clear]
+se-cli requests [--filter="api"] [--status=500] [--method=POST] [--clear]
+se-cli request <index>
+se-cli route <pattern> [--status=401] [--body="..."] [--headers='{"Content-Type":"application/json"}']
+se-cli route-list
+se-cli unroute <index> | --all
+```
+
+**Architecture**:
+- **BiDi initialization**: Lazy on first network/debug command via `ensureBidiInitialized()` in
+  `src/daemon/tools/network-state.ts`. Subsequent calls are no-ops.
+- **Console capture**: Uses `selenium-webdriver/bidi/logInspector` to subscribe to
+  `onConsoleEntry` and `onJavascriptException` events. Messages buffered in-memory (max 1000 entries).
+- **Network monitoring**: Uses `selenium-webdriver/bidi/network` to subscribe to
+  `beforeRequestSent`, `responseCompleted`, and `fetchError` events. Requests buffered
+  in-memory (max 500 entries) with request/response headers, body, status, and duration.
+- **Route interception**: Uses `network.addIntercept()` with `AddInterceptParameters` and
+  `InterceptPhase.BEFORE_REQUEST_SENT`. Mock responses provided via `ProvideResponseParameters`.
+- **Element highlighting**: Pure CSS injection via `driver.executeScript()` — no BiDi/CDP needed.
+  Applies `outline` style and tracks highlights in a registry.
+
+**Code generation**:
+```javascript
+// highlight e1
+await driver.executeScript(
+  "arguments[0].style.outline = arguments[1]; arguments[0].dataset.seHighlight = '1';",
+  el, '3px solid red'
+);
+```
+
+**Implementation status (v0.7)**:
+- [x] `highlight [ref] [--style=] [--hide] [--all]` (`src/daemon/tools/highlight.ts`)
+- [x] `console [level] [--since=] [--clear]` (`src/daemon/tools/console.ts`)
+- [x] `requests [--filter=] [--status=] [--method=] [--clear]` (`src/daemon/tools/requests.ts`)
+- [x] `request <index>` — show request details (`src/daemon/tools/requests.ts`)
+- [x] `route <pattern> [--status=] [--body=] [--headers=]` (`src/daemon/tools/route.ts`)
+- [x] `route-list` — list active routes (`src/daemon/tools/route.ts`)
+- [x] `unroute <index> | --all` — remove route(s) (`src/daemon/tools/route.ts`)
+- [x] BiDi state manager (`src/daemon/tools/network-state.ts`)
+- [x] Console + JS exception capture via BiDi LogInspector
+- [x] Network request/response capture via BiDi Network events
+- [x] Route interception via BiDi addIntercept + provideResponse
+- [x] In-memory buffers with truncation (1000 console entries, 500 network requests)
+- [x] Code generation for all commands
+- [x] Unit tests (`tests/unit/v0.7-network-debug.test.ts`)
+- [x] Integration tests (`tests/integration/fixtures/network-debug.html`)
 
 ### v0.8: Device & Environment Emulation (Core, Playwright port: low complexity × medium importance)
 

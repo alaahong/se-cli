@@ -4,6 +4,7 @@ import { StringDecoder } from 'string_decoder';
 import { Registry, SessionConfig } from '../registry';
 import { baseDaemonDir } from '../config';
 import type { ClientMessage, ServerMessage } from '../protocol';
+import { resetAll as resetNetworkDebugState } from './tools/network-state';
 
 const args = process.argv.slice(2);
 const sessionName = args[0];
@@ -176,6 +177,10 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
       try { if (driver) driver.quit(); } catch {}
       driver = null;
       driverInitError = null;
+      // Reset v0.7 network/debug state so BiDi listeners are re-initialized
+      // on the new driver. Without this, console/requests/routes commands
+      // would use stale listeners after a driver crash.
+      resetNetworkDebugState();
     }
     return { ok: false, error: e.message, code };
   }

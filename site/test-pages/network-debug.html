@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Network Debug Test Page</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 20px auto; }
+    #console-output { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; min-height: 100px; }
+    .highlight-target { padding: 10px; margin: 5px 0; border: 1px solid #ccc; }
+    button { padding: 8px 16px; margin: 4px; cursor: pointer; }
+    #status { font-weight: bold; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>Network Debug Test Page</h1>
+
+  <!-- Highlight test targets -->
+  <div id="highlight-region">
+    <div class="highlight-target" data-se-ref="e1" id="target1">Target 1 — Highlight Me</div>
+    <div class="highlight-target" data-se-ref="e2" id="target2">Target 2 — Highlight Me Too</div>
+    <div class="highlight-target" data-se-ref="e3" id="target3">Target 3 — Also Highlightable</div>
+  </div>
+
+  <!-- Console log test buttons -->
+  <div id="console-region">
+    <h2>Console Log Test</h2>
+    <button id="btn-log" data-se-ref="e4" onclick="console.log('Hello from console.log')">console.log()</button>
+    <button id="btn-warn" data-se-ref="e5" onclick="console.warn('Warning message')">console.warn()</button>
+    <button id="btn-error" data-se-ref="e6" onclick="console.error('Error message')">console.error()</button>
+    <button id="btn-js-error" data-se-ref="e7" onclick="triggerError()">Trigger JS Error</button>
+  </div>
+
+  <!-- Network request test buttons -->
+  <div id="network-region">
+    <h2>Network Request Test</h2>
+    <button id="btn-fetch-json" data-se-ref="e8" onclick="fetchJSON()">Fetch JSON</button>
+    <button id="btn-fetch-api" data-se-ref="e9" onclick="fetchAPI()">Fetch API</button>
+    <button id="btn-fetch-404" data-se-ref="e10" onclick="fetch404()">Fetch 404</button>
+    <button id="btn-fetch-post" data-se-ref="e11" onclick="fetchPOST()">POST Request</button>
+    <div id="status">Ready</div>
+  </div>
+
+  <!-- Route mock test -->
+  <div id="route-region">
+    <h2>Route Mock Test</h2>
+    <button id="btn-mock-fetch" data-se-ref="e12" onclick="fetchMockedAPI()">Fetch Mocked API</button>
+    <div id="mock-result">No result yet</div>
+    <button id="btn-mock-headers" data-se-ref="e13" onclick="fetchMockedHeaders()">Fetch Mocked Headers</button>
+    <div id="headers-result">No headers yet</div>
+  </div>
+
+  <script>
+    // Console error trigger
+    function triggerError() {
+      undefinedFunction();
+    }
+
+    // Network request helpers
+    async function fetchJSON() {
+      document.getElementById('status').textContent = 'Fetching...';
+      try {
+        const res = await fetch('/api/json');
+        const data = await res.json();
+        document.getElementById('status').textContent = 'OK: ' + JSON.stringify(data);
+      } catch (e) {
+        document.getElementById('status').textContent = 'Error: ' + e.message;
+      }
+    }
+
+    async function fetchAPI() {
+      document.getElementById('status').textContent = 'Fetching API...';
+      try {
+        const res = await fetch('/api/data');
+        const data = await res.json();
+        document.getElementById('status').textContent = 'API OK: ' + JSON.stringify(data);
+      } catch (e) {
+        document.getElementById('status').textContent = 'API Error: ' + e.message;
+      }
+    }
+
+    async function fetch404() {
+      document.getElementById('status').textContent = 'Fetching 404...';
+      try {
+        const res = await fetch('/api/notfound');
+        document.getElementById('status').textContent = 'Status: ' + res.status;
+      } catch (e) {
+        document.getElementById('status').textContent = 'Error: ' + e.message;
+      }
+    }
+
+    async function fetchPOST() {
+      document.getElementById('status').textContent = 'POSTing...';
+      try {
+        const res = await fetch('/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: 'test', value: 42 }),
+        });
+        const data = await res.json();
+        document.getElementById('status').textContent = 'POST OK: ' + JSON.stringify(data);
+      } catch (e) {
+        document.getElementById('status').textContent = 'POST Error: ' + e.message;
+      }
+    }
+
+    async function fetchMockedAPI() {
+      document.getElementById('mock-result').textContent = 'Fetching...';
+      try {
+        const res = await fetch('/api/mock-endpoint');
+        const text = await res.text();
+        document.getElementById('mock-result').textContent = 'Status: ' + res.status + ', Body: ' + text;
+      } catch (e) {
+        document.getElementById('mock-result').textContent = 'Error: ' + e.message;
+      }
+    }
+
+    async function fetchMockedHeaders() {
+      document.getElementById('headers-result').textContent = 'Fetching...';
+      try {
+        const res = await fetch('/api/mock-endpoint');
+        const customHeader = res.headers.get('X-Custom-Header') || '(none)';
+        const contentType = res.headers.get('Content-Type') || '(none)';
+        document.getElementById('headers-result').textContent =
+          'X-Custom-Header: ' + customHeader + ', Content-Type: ' + contentType;
+      } catch (e) {
+        document.getElementById('headers-result').textContent = 'Error: ' + e.message;
+      }
+    }
+
+    // Log initial console messages
+    console.log('Page loaded');
+    console.info('Info message on load');
+    console.warn('Warning on load');
+  </script>
+</body>
+</html>

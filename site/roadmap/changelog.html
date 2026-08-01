@@ -156,13 +156,14 @@
         <div class="roadmap-item roadmap-item-long">
           <div class="roadmap-version roadmap-version-long">v0.7</div>
           <div class="roadmap-body">
-            <h3 data-i18n="cl.v07Title" data-i18n-html>Network &amp; Debugging <span class="badge badge-core">Core</span> <span class="matrix-status-planned">planned</span></h3>
-            <span class="roadmap-meta" data-i18n="cl.v07Meta">planned · BiDi + CDP</span>
-            <p data-i18n="cl.v07Lead">Leverages the Selenium BiDi protocol (selenium-webdriver@4.46.0) for cross-browser network interception and log capture; CDP used as a Chromium-only enhancement.</p>
+            <h3 data-i18n="cl.v07Title" data-i18n-html>Network &amp; Debugging <span class="badge badge-core">Core</span> <span class="matrix-status-released">✓ shipped</span></h3>
+            <span class="roadmap-meta" data-i18n="cl.v07Meta">2026-08-01 · BiDi network &amp; debug</span>
+            <p data-i18n="cl.v07Lead">Leverages the Selenium BiDi protocol (selenium-webdriver@4.46.0) for cross-browser network interception, console log capture, and request inspection — plus persistent element highlighting for visual debugging.</p>
             <ul>
-              <li data-i18n="cl.v07L1" data-i18n-html><code>route &lt;pattern&gt; --status=/--body=/--headers=</code>, <code>route-list</code>, <code>unroute [id]</code> via BiDi <code>Network.addIntercept</code>.</li>
-              <li data-i18n="cl.v07L2" data-i18n-html><code>console [level]</code>, <code>requests</code>, <code>request &lt;index&gt;</code>, <code>js-error</code>.</li>
-              <li data-i18n="cl.v07L3" data-i18n-html><code>highlight &lt;ref&gt; [--style=]</code> persistent element highlighting via CSS overlay; <code>highlight --hide</code> to clear.</li>
+              <li data-i18n="cl.v07L1" data-i18n-html><code>route &lt;pattern&gt; --status=/--body=/--headers=</code>, <code>route-list</code>, <code>unroute &lt;index&gt;</code> / <code>unroute --all</code> via BiDi <code>Network.addIntercept</code>.</li>
+              <li data-i18n="cl.v07L2" data-i18n-html><code>console [level]</code> — captures <code>console.log</code>/<code>error</code>/<code>warn</code>/<code>info</code> and JS exceptions via BiDi <code>log.entryAdded</code>; <code>--since=5m</code> time filter, <code>--clear</code>, <code>js-error</code> sub-filter.</li>
+              <li data-i18n="cl.v07L3" data-i18n-html><code>requests</code> — list all buffered network requests with <code>--filter</code>, <code>--status</code>, <code>--method</code>, <code>--clear</code>; <code>request &lt;index&gt;</code> shows full details (headers, body, response).</li>
+              <li data-i18n="cl.v07L4" data-i18n-html><code>highlight &lt;ref&gt; [--style=]</code> persistent element highlighting via CSS overlay; <code>highlight &lt;ref&gt; --hide</code> removes one; <code>highlight --hide --all</code> clears all; bare <code>highlight</code> lists active highlights.</li>
             </ul>
           </div>
         </div>
