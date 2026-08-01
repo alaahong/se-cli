@@ -84,6 +84,12 @@ async function buildDriver(): Promise<void> {
   // correctly when a dialog is triggered via setTimeout in eval.
   builder.getCapabilities().set('unhandledPromptBehavior', 'ignore');
 
+  // Enable BiDi (WebSocket) so v0.7 Network & Debugging commands work.
+  // Without this, selenium-webdriver's BiDi modules fail with
+  // "Cannot read properties of undefined (reading 'replace')" when trying
+  // to get the WebSocket URL from session capabilities.
+  builder.getCapabilities().set('webSocketUrl', true);
+
   if (browserName === 'chrome') {
     const chromeArgs: string[] = [];
     if (!headed && !cdpEndpoint) {

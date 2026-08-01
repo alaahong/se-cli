@@ -1060,7 +1060,8 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
       const color = (await run(['--raw', 'eval',
         `getComputedStyle(document.getElementById('target2')).outlineColor`
       ], { SE_CLI_SESSION: S() })).trim();
-      expect(color).toContain('blue');
+      // Browsers return RGB values (e.g. 'rgb(0, 0, 255)') not color names
+      expect(color).toMatch(/0,\s*0,\s*255/);
     });
 
     (skip ? it.skip : it)('lists active highlights', async () => {
