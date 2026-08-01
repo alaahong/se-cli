@@ -11,12 +11,9 @@
   <a href="https://www.npmjs.com/package/@browsers-cli/se-cli"><img src="https://img.shields.io/npm/v/@browsers-cli/se-cli?color=22C55E&label=npm" alt="npm version" /></a>
   <a href="https://github.com/se-cli/se-cli/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/se-cli/se-cli/ci.yml?branch=main&label=CI&color=22C55E" alt="CI" /></a>
   <a href="#"><img src="https://img.shields.io/badge/coverage-95%25%2B-22C55E" alt="Coverage" /></a>
-  <a href="#"><img src="https://img.shields.io/badge/tests-768-22C55E" alt="Tests" /></a>
-  <a href="https://www.npmjs.com/package/@browsers-cli/se-cli"><img src="https://img.shields.io/node/v/@browsers-cli/se-cli?color=22C55E" alt="Node.js" /></a>
-  <a href="#"><img src="https://img.shields.io/badge/TypeScript-5.4%2B-3178C6" alt="TypeScript" /></a>
-  <a href="#"><img src="https://img.shields.io/badge/tested%20with-Vitest-6ECC52" alt="Vitest" /></a>
   <a href="https://github.com/se-cli/se-cli/blob/main/LICENSE"><img src="https://img.shields.io/github/license/se-cli/se-cli?color=22C55E" alt="License" /></a>
   <a href="https://github.com/se-cli/se-cli"><img src="https://img.shields.io/github/stars/se-cli/se-cli?style=social" alt="Stars" /></a>
+  <a href="https://www.npmjs.com/package/@browsers-cli/se-cli"><img src="https://img.shields.io/npm/dm/@browsers-cli/se-cli?color=22C55E&label=downloads" alt="npm downloads" /></a>
 </p>
 
 ---
