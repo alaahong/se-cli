@@ -11,7 +11,7 @@
   <meta property="og:type" content="website" />
   <meta property="og:title" content="se-cli — Token-efficient Selenium for AI agents" />
   <meta property="og:description" content="A short-lived CLI + long-lived daemon that drives Chrome, Edge, and Firefox. Aria snapshots and ref references keep token cost low." />
-  <meta property="og:image" content="assets/img/og-image.png" />
+  <meta property="og:image" content="https://se-cli.github.io/se-cli/assets/img/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:url" content="https://se-cli.github.io/se-cli/" />
@@ -20,7 +20,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="se-cli — Token-efficient Selenium for AI agents" />
   <meta name="twitter:description" content="A short-lived CLI + long-lived daemon that drives Chrome, Edge, and Firefox. Aria snapshots and ref references keep token cost low." />
-  <meta name="twitter:image" content="assets/img/og-image.png" />
+  <meta name="twitter:image" content="https://se-cli.github.io/se-cli/assets/img/og-image.png" />
 
   <title data-i18n="home.title">se-cli — Token-efficient Selenium for AI agents</title>
 
@@ -35,9 +35,43 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" /></noscript>
   <link rel="stylesheet" href="assets/css/style.css" />
   <link rel="stylesheet" href="assets/css/home.css" />
+  <link rel="canonical" href="https://se-cli.github.io/se-cli/" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "se-cli",
+    "alternateName": "@browsers-cli/se-cli",
+    "description": "Token-efficient Selenium browser automation CLI for AI agents and humans. Short-lived CLI + long-lived daemon drives Chrome, Edge, and Firefox with aria snapshots and element refs.",
+    "url": "https://se-cli.github.io/se-cli/",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Windows, macOS, Linux",
+    "softwareVersion": "0.7.1",
+    "license": "https://www.apache.org/licenses/LICENSE-2.0",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Organization",
+      "name": "se-cli",
+      "url": "https://github.com/se-cli/se-cli"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "se-cli",
+      "url": "https://github.com/se-cli/se-cli"
+    },
+    "featureList": "Multi-browser automation for Chrome, Edge, and Firefox; compact aria snapshots with element refs; named parallel sessions; CDP attach; Selenium code generation; MCP server"
+  }
+  </script>
 </head>
 <body>
   <nav class="nav" id="nav">
@@ -392,8 +426,8 @@ se-cli close</code></pre>
     </div>
   </footer>
 
-  <script src="assets/js/nav.js"></script>
-  <script src="assets/js/i18n.js"></script>
-  <script src="assets/js/home.js"></script>
+  <script src="assets/js/nav.js" defer></script>
+  <script src="assets/js/i18n.js" defer></script>
+  <script src="assets/js/home.js" defer></script>
 </body>
 </html>

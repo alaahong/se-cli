@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://se-cli.github.io/se-cli/sitemap.xml
