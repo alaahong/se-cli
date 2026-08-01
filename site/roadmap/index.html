@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="se-cli roadmap — version timeline from v0.1 MVP through v0.12, feature classification, guiding principles, long-term goals, and the will-never-implement boundary." data-i18n="rm.metaDesc" />
+  <meta name="description" content="se-cli roadmap — version timeline from v0.1 MVP through v0.13, feature classification, guiding principles, long-term goals, and the will-never-implement boundary." data-i18n="rm.metaDesc" />
   <meta name="theme-color" content="#22C55E" />
   <title data-i18n="rm.pageTitle">Roadmap — se-cli</title>
   <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
@@ -96,7 +96,7 @@
       </div>
 
       <h2 class="section-title" style="margin-top:64px;" data-i18n="rm.versionTimeline">Version Timeline</h2>
-      <p class="section-lead" data-i18n="rm.versionTimelineLead">v0.1–v0.7 are shipped. v0.8+ are planned, sequenced by dependency and value.</p>
+      <p class="section-lead" data-i18n="rm.versionTimelineLead">v0.1–v0.7 are shipped. v0.8–v0.13 are planned, sequenced by dependency and value.</p>
 
       <div class="timeline">
         <div class="timeline-item done">
@@ -175,7 +175,7 @@
           <div class="timeline-version roadmap-version-long">v0.10</div>
           <div class="timeline-body">
             <h3 data-i18n="rm.v010Title" data-i18n-html>Remote, Grid &amp; Custom Browsers <span class="badge badge-core">Core</span> <span class="matrix-status-planned">planned</span></h3>
-            <p data-i18n="rm.v010Desc" data-i18n-html>The Selenium moat. Real Safari via <code>safaridriver</code>, Selenium Grid 4 (<code>--endpoint</code>), custom browser/driver binaries, cloud browsers (Browserbase/Sauce/BrowserStack), Grid sharding, <code>pdf</code> export, and Edge IE mode for legacy scenarios.</p>
+            <p data-i18n="rm.v010Desc" data-i18n-html>The Selenium moat. Real Safari via <code>safaridriver</code>, Selenium Grid 4 (<code>--endpoint</code>), custom browser/driver binaries, <code>--browser=electron</code> with <code>--app-binary</code> for Electron app testing, cloud browsers (Browserbase/Sauce/BrowserStack), Grid sharding, <code>pdf</code> export, and Edge IE mode for legacy scenarios.</p>
           </div>
         </div>
 
@@ -183,7 +183,7 @@
           <div class="timeline-version roadmap-version-long">v0.11</div>
           <div class="timeline-body">
             <h3 data-i18n="rm.v011Title" data-i18n-html>Recording &amp; Visualization <span class="badge badge-marginal">Marginal</span> <span class="matrix-status-planned">planned</span></h3>
-            <p data-i18n="rm.v011Desc" data-i18n-html><code>record</code> mode that emits a complete test file, simplified tracing, video capture (CDP or ffmpeg), video chapters, and a <code>show</code> dashboard for multi-session monitoring and page annotation.</p>
+            <p data-i18n="rm.v011Desc" data-i18n-html><code>record</code> mode that emits a complete test file, multi-framework test code export (<code>export --format=pytest|junit5|mocha</code>), built-in test report generation (<code>--report=junit|allure|html</code>), simplified tracing, video capture (CDP or ffmpeg), video chapters, and a <code>show</code> dashboard for multi-session monitoring and page annotation.</p>
           </div>
         </div>
 
@@ -192,6 +192,14 @@
           <div class="timeline-body">
             <h3 data-i18n="rm.v012Title" data-i18n-html>VSCode Extension <span class="badge badge-marginal">Marginal</span> <span class="matrix-status-planned">planned</span></h3>
             <p data-i18n="rm.v012Desc" data-i18n-html>A separate npm package (<code>@browsers-cli/se-cli-vscode</code>): Task Provider, screenshot/snapshot Webview, MCP Server auto-registration into <code>.vscode/mcp.json</code>, and <code>attach --extension</code> to connect to a real browser.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item planned">
+          <div class="timeline-version roadmap-version-long">v0.13</div>
+          <div class="timeline-body">
+            <h3 data-i18n="rm.v013Title" data-i18n-html>BiDi Expansion &amp; Hardening <span class="badge badge-core">Core</span> <span class="matrix-status-planned">planned</span></h3>
+            <p data-i18n="rm.v013Desc" data-i18n-html>Expand WebDriver BiDi coverage beyond v0.7 network/console — <code>browsingContext</code> (viewport, print, CSP bypass, downloads), <code>input</code> (file dialogs), <code>script</code> (preload scripts), <code>emulation</code> (cross-browser alternative to CDP). Plus daemon performance optimization (startup, snapshot efficiency, memory) and stability hardening (error recovery, session resilience, circuit breaker retry).</p>
           </div>
         </div>
       </div>
@@ -205,7 +213,7 @@
         <div class="arch-card"><h3 data-i18n="rm.ltPreload">Script preload</h3><p data-i18n="rm.ltPreloadDesc">BiDi script pinning and preloading before page scripts run.</p></div>
         <div class="arch-card"><h3 data-i18n="rm.ltLocalized">Localized SKILL.md</h3><p data-i18n="rm.ltLocalizedDesc">Multi-language skill files for non-English agents.</p></div>
         <div class="arch-card"><h3 data-i18n="rm.ltHooks">Test-framework hooks</h3><p data-i18n="rm.ltHooksDesc" data-i18n-html><code>pytest-selenium</code> / JUnit5 integration — attach to test pause points (issue #22).</p></div>
-        <div class="arch-card"><h3 data-i18n="rm.ltAppium">Appium mobile</h3><p data-i18n="rm.ltAppiumDesc">iOS/Android bidirectional, Appium Grid.</p></div>
+        <div class="arch-card"><h3 data-i18n="rm.ltAppium">Appium mobile</h3><p data-i18n="rm.ltAppiumDesc" data-i18n-html>iOS/Android bidirectional, Appium Grid (issue #79).</p></div>
         <div class="arch-card"><h3 data-i18n="rm.ltGrid">Grid management CLI</h3><p data-i18n="rm.ltGridDesc">Selenium Grid 4 hub/node deploy, autoscale, health checks.</p></div>
       </div>
 
@@ -233,7 +241,7 @@
         <a href="changelog.html" class="doc-card">
           <div class="doc-card-icon">📋</div>
           <h3 data-i18n="rm.changelog">Changelog</h3>
-          <p data-i18n="rm.changelogCardDesc">Detailed per-release notes — dates, full feature lists, and shipped vs. planned status for v0.1 through v0.12.</p>
+          <p data-i18n="rm.changelogCardDesc">Detailed per-release notes — dates, full feature lists, and shipped vs. planned status for v0.1 through v0.13.</p>
           <span class="doc-card-arrow" data-i18n="rm.readChangelog">Read changelog →</span>
         </a>
       </div>

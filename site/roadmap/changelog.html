@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="se-cli changelog — detailed per-release notes for v0.1 through v0.12, with dates, feature lists, and shipped vs. planned status." data-i18n="cl.metaDesc" />
+  <meta name="description" content="se-cli changelog — detailed per-release notes for v0.1 through v0.13, with dates, feature lists, and shipped vs. planned status." data-i18n="cl.metaDesc" />
   <meta name="theme-color" content="#22C55E" />
   <title data-i18n="cl.pageTitle">Changelog — se-cli Roadmap</title>
   <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
@@ -46,7 +46,7 @@
         <span class="breadcrumb-current" data-i18n="bc.changelog">Changelog</span>
       </nav>
       <h1 data-i18n="cl.title">Changelog</h1>
-      <p data-i18n="cl.subtitle">Per-release notes from the v0.1 MVP through the planned v0.12 VSCode extension. Shipped releases are solid; planned releases are dashed.</p>
+      <p data-i18n="cl.subtitle">Per-release notes from the v0.1 MVP through the planned v0.13 BiDi expansion &amp; hardening. Shipped releases are solid; planned releases are dashed.</p>
     </div>
   </header>
 
@@ -241,6 +241,20 @@
               <li data-i18n="cl.v012L2" data-i18n-html><strong>Webview</strong>: browser screenshot and aria snapshot preview via <code>postMessage</code>.</li>
               <li data-i18n="cl.v012L3" data-i18n-html><strong>MCP Server auto-registration</strong>: write <code>.vscode/mcp.json</code> on install.</li>
               <li data-i18n="cl.v012L4" data-i18n-html><code>attach --extension</code>: connect to a real browser through the extension.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="roadmap-item roadmap-item-long">
+          <div class="roadmap-version roadmap-version-long">v0.13</div>
+          <div class="roadmap-body">
+            <h3 data-i18n="cl.v013Title" data-i18n-html>BiDi Expansion &amp; Hardening <span class="badge badge-core">Core</span> <span class="matrix-status-planned">planned</span></h3>
+            <span class="roadmap-meta" data-i18n="cl.v013Meta">planned · issues #76 #77 #78</span>
+            <p data-i18n="cl.v013Lead" data-i18n-html>Expand WebDriver BiDi coverage beyond v0.7 and harden the daemon for production reliability.</p>
+            <ul>
+              <li data-i18n="cl.v013L1" data-i18n-html><strong>BiDi protocol expansion</strong>: <code>browsingContext</code> (viewport, print, CSP bypass, downloads), <code>input</code> (file dialogs), <code>script</code> (preload scripts), <code>emulation</code> (cross-browser alternative to CDP).</li>
+              <li data-i18n="cl.v013L2" data-i18n-html><strong>Performance optimization</strong>: lazy driver loading, incremental snapshots (<code>snapshot --diff</code>), memory-efficient buffers, gzip compression.</li>
+              <li data-i18n="cl.v013L3" data-i18n-html><strong>Stability hardening</strong>: driver crash auto-recovery, BiDi WebSocket reconnection, circuit breaker retry, standardized exit codes.</li>
             </ul>
           </div>
         </div>
