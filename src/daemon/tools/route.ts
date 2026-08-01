@@ -80,9 +80,11 @@ export async function browser_route(
 
   // Register the BiDi intercept directly (bypasses selenium-webdriver wrapper
   // that crashes on error responses).
+  // Use type: 'pattern' for glob matching (* and ? wildcards).
+  // type: 'string' would require an exact URL match and rejects wildcards.
   const interceptResponse = await bidiSend(driver, 'network.addIntercept', {
     phases: ['beforeRequestSent'],
-    urlPatterns: [{ type: 'string', pattern: params.pattern }],
+    urlPatterns: [{ type: 'pattern', pattern: params.pattern }],
   });
 
   const interceptId = interceptResponse.result?.intercept;
