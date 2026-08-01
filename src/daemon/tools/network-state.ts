@@ -14,14 +14,15 @@
 // ── Helpers ────────────────────────────────────────────────────────────
 
 /**
- * Simple glob matching: * matches any characters except /, ** matches any.
- * Used by route interception to match request URLs against patterns.
+ * Simple glob matching compatible with BiDi string patterns.
+ * In BiDi, `*` matches ANY characters (including `/`), `?` matches
+ * a single character. This differs from shell glob where `*` excludes `/`.
  */
 export function matchesGlob(url: string, pattern: string): boolean {
   const regex = pattern
-    .replace(/\*\*/g, '.*')  // ** → .* (any characters including /)
-    .replace(/\*/g, '[^/]*')  // * → [^/]* (any chars except /)
-    .replace(/\?/g, '.');     // ? → . (single char)
+    .replace(/[.+^${}()|[\]\\]/g, '\\$&')  // escape regex special chars
+    .replace(/\*/g, '.*')   // * → .* (any characters including /)
+    .replace(/\?/g, '.');    // ? → . (single char)
   return new RegExp(regex, 'i').test(url);
 }
 

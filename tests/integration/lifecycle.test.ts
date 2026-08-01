@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, beforeEach, beforeAll, afterAll } from 'vitest';
+﻿import { describe, it, expect, afterEach, beforeEach, beforeAll, afterAll } from 'vitest';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
@@ -1209,7 +1209,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
       await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
       await new Promise(r => setTimeout(r, 500));
       const result = await run([
-        'route', '**/api/mock-endpoint**', '--status=200', '--body={"mocked":true}'
+        'route', '*/api/mock-endpoint*', '--status=200', '--body={"mocked":true}'
       ], { SE_CLI_SESSION: S() });
       expect(result).toContain('Route');
       expect(result).toContain('mock-endpoint');
@@ -1220,7 +1220,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
     (skip ? it.skip : it)('removes route by index with unroute', async () => {
       await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
       await new Promise(r => setTimeout(r, 500));
-      await run(['route', '**/api/mock-endpoint**', '--status=404'], { SE_CLI_SESSION: S() });
+      await run(['route', '*/api/mock-endpoint*', '--status=404'], { SE_CLI_SESSION: S() });
       const result = await run(['unroute', '0'], { SE_CLI_SESSION: S() });
       expect(result).toContain('Removed');
       const list = await run(['--raw', 'route-list'], { SE_CLI_SESSION: S() });
@@ -1230,8 +1230,8 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
     (skip ? it.skip : it)('removes all routes with unroute --all', async () => {
       await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
       await new Promise(r => setTimeout(r, 500));
-      await run(['route', '**/api/json**', '--status=200'], { SE_CLI_SESSION: S() });
-      await run(['route', '**/api/data**', '--status=404'], { SE_CLI_SESSION: S() });
+      await run(['route', '*/api/json*', '--status=200'], { SE_CLI_SESSION: S() });
+      await run(['route', '*/api/data*', '--status=404'], { SE_CLI_SESSION: S() });
       const result = await run(['unroute', '--all'], { SE_CLI_SESSION: S() });
       expect(result).toContain('Removed all');
       const list = await run(['--raw', 'route-list'], { SE_CLI_SESSION: S() });
@@ -1296,7 +1296,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
       await new Promise(r => setTimeout(r, 500));
       // Set up a route mock that returns 401 with a custom body
       await run([
-        'route', '**/api/mock-endpoint**', '--status=401', `--body={"error":"mocked"}`,
+        'route', '*/api/mock-endpoint*', '--status=401', `--body={"error":"mocked"}`,
       ], { SE_CLI_SESSION: S() });
       await new Promise(r => setTimeout(r, 500));
       // Trigger the fetch — the mock should intercept it
@@ -1326,7 +1326,7 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
       await new Promise(r => setTimeout(r, 500));
       // Set up a route mock with custom headers
       await run([
-        'route', '**/api/mock-endpoint**', '--status=200',
+        'route', '*/api/mock-endpoint*', '--status=200',
         '--body={"ok":true}',
         '--headers={"X-Custom-Header":"test-value","Content-Type":"application/json"}',
       ], { SE_CLI_SESSION: S() });
@@ -1341,3 +1341,4 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
     });
   });
 });
+
