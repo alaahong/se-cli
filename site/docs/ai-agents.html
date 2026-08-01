@@ -3,14 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" data-i18n="ai.metaDesc" content="se-cli for AI agents — SKILL.md install, Claude Code / Cursor integration, the CLI-vs-MCP token tradeoff, and the planned MCP Server." />
+  <meta name="description" data-i18n="ai.metaDesc" content="se-cli for AI agents — SKILL.md install, Claude Code / Cursor integration, the CLI-vs-MCP token tradeoff, and the MCP Server." />
   <meta name="theme-color" content="#22C55E" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="AI Agents — se-cli Docs" />
+  <meta property="og:description" content="se-cli for AI agents — SKILL.md install, Claude Code / Cursor integration, the CLI-vs-MCP token tradeoff, and the MCP Server." />
+  <meta property="og:url" content="https://se-cli.github.io/se-cli/docs/ai-agents.html" />
+  <meta property="og:image" content="https://se-cli.github.io/se-cli/assets/img/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="canonical" href="https://se-cli.github.io/se-cli/docs/ai-agents.html" />
   <title data-i18n="ai.title">AI Agents — se-cli Docs</title>
   <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
   <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/favicon-32.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" /></noscript>
   <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
 <body>
@@ -128,15 +137,15 @@ Agent: I'll navigate and test the login flow.
         </table>
       </div>
 
-      <h2 id="mcp-server" data-i18n="ai.mcpServerTitle" data-i18n-html>MCP Server <span class="badge badge-must">Planned · v0.9</span></h2>
-      <p data-i18n="ai.mcpServerDesc" data-i18n-html>se-cli will also ship as an MCP Server via <code>@modelcontextprotocol/sdk</code>, dual-tracking the CLI: both share the same underlying tool implementation. This covers autonomous agents that prefer a persistent tool server over shell commands.</p>
+      <h2 id="mcp-server" data-i18n="ai.mcpServerTitle" data-i18n-html>MCP Server <span class="badge badge-must">Shipped · v0.7.1</span></h2>
+      <p data-i18n="ai.mcpServerDesc" data-i18n-html>se-cli ships as an MCP Server via <code>@modelcontextprotocol/sdk</code>, dual-tracking the CLI: both share the same underlying tool implementation. This covers autonomous agents that prefer a persistent tool server over shell commands.</p>
       <div class="code-block">
-        <div class="code-header"><span class="code-lang">planned · v0.9</span></div>
+        <div class="code-header"><span class="code-lang">shipped · v0.7.1</span></div>
 <pre><code># stdio transport (default) — local agent
-se-cli mcp
+se-cli mcp-server
 
-# streamable HTTP transport (optional) — remote agent
-se-cli mcp --transport=http --port=8765</code></pre>
+# thin npm wrapper (recommended for MCP clients)
+npx @browsers-cli/se-mcp</code></pre>
       </div>
       <ul>
         <li data-i18n="ai.mcpFeature1" data-i18n-html>All CLI tools wrapped as <code>registerTool</code> calls</li>
@@ -167,7 +176,7 @@ se-cli mcp --transport=http --port=8765</code></pre>
     </div>
   </footer>
 
-  <script src="../assets/js/nav.js"></script>
-  <script src="../assets/js/i18n.js"></script>
+  <script src="../assets/js/nav.js" defer></script>
+  <script src="../assets/js/i18n.js" defer></script>
 </body>
 </html>
