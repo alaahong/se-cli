@@ -61,6 +61,7 @@ export class Session {
     const child: ChildProcess = spawn(process.execPath, args, {
       detached: true,
       stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
     });
 
     await new Promise<void>((resolve, reject) => {
