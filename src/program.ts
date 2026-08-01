@@ -61,6 +61,13 @@ export async function main(argv: string[]): Promise<void> {
     return;
   }
 
+  // MCP Server mode — start a long-lived MCP server over stdio
+  if (cmd === 'mcp-server') {
+    const { startMcpServer } = require('./mcp-server');
+    startMcpServer(workspaceDir);
+    return;
+  }
+
   if (cmd === 'install') {
     const target = args._[1] || 'claude'; // 默认 claude
     const targetMap: Record<string, string> = {
@@ -214,6 +221,7 @@ function printHelp(): void {
 Usage:
   se-cli open [url] [--browser=chrome|edge|firefox] [--headed] [--cdp=url] [--profile=path] [--persistent]
   se-cli install [claude|cursor|generic]
+  se-cli mcp-server               start MCP server (stdio mode for VS Code / AI agents)
   se-cli close
   se-cli list
   se-cli close-all
@@ -244,6 +252,10 @@ Commands:
   config set <key> <val>  set config value in .se-cli.json
   config list             list all config values with sources
   config init            generate template .se-cli.json
+
+MCP Server:
+  mcp-server              start MCP server in stdio mode (for VS Code / AI agents)
+                          exposes all browser commands as MCP tools
 
 Interaction (v0.5):
   hover <ref>             mouse hover over element

@@ -1,0 +1,54 @@
+{
+  "name": "se-cli-mcp",
+  "displayName": "se-cli — Browser Automation MCP Server",
+  "description": "Token-efficient Selenium browser automation for AI agents. Exposes all se-cli commands as MCP tools for VS Code Copilot, Claude, and other MCP-aware clients.",
+  "version": "0.7.0",
+  "publisher": "se-cli",
+  "license": "Apache-2.0",
+  "homepage": "https://se-cli.github.io/se-cli/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/se-cli/se-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/se-cli/se-cli/issues"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Testing",
+    "Other"
+  ],
+  "keywords": [
+    "mcp",
+    "selenium",
+    "browser-automation",
+    "ai-agent",
+    "webdriver",
+    "copilot",
+    "model-context-protocol"
+  ],
+  "engines": {
+    "vscode": "^1.103.0"
+  },
+  "icon": "icon.png",
+  "activationEvents": [],
+  "main": "./extension.js",
+  "contributes": {
+    "mcpServers": [
+      {
+        "label": "se-cli",
+        "command": "npx",
+        "args": ["-y", "@browsers-cli/se-cli", "mcp-server"],
+        "env": {},
+        "scope": "workspace"
+      }
+    ]
+  },
+  "scripts": {
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^3.0.0"
+  }
+}

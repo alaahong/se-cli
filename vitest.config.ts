@@ -17,6 +17,7 @@ export default defineConfig({
         "src/cli.ts",
         "src/protocol.ts",
         "src/daemon/server.ts",
+        "src/mcp-server.ts",
       ],
       thresholds: {
         statements: 95,

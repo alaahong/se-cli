@@ -382,3 +382,44 @@ Selenium code reflects the effective strategy:
 await driver.wait(until.elementIsVisible(el), 5000);
 await driver.wait(until.elementIsEnabled(el), 5000);
 ```
+
+## MCP Server Mode
+
+se-cli can run as an MCP (Model Context Protocol) server, exposing all browser automation
+commands as MCP tools for VS Code Copilot and other MCP-aware AI agents.
+
+### Quick Setup
+
+**Workspace config (`.vscode/mcp.json`):**
+
+```json
+{
+  "servers": {
+    "se-cli": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@browsers-cli/se-cli", "mcp-server"]
+    }
+  }
+}
+```
+
+**Or start manually for debugging:**
+
+```bash
+se-cli mcp-server
+```
+
+### Available MCP Tools
+
+All 40+ CLI commands are exposed as MCP tools with `browser_` prefix:
+
+- `browser_open` / `browser_close` / `browser_list_sessions`
+- `browser_navigate` / `browser_go_back` / `browser_go_forward` / `browser_reload`
+- `browser_click` / `browser_fill` / `browser_type` / `browser_press`
+- `browser_snapshot` / `browser_find` / `browser_screenshot` / `browser_eval`
+- `browser_expect` (assertions) / `browser_highlight` / `browser_console`
+- `browser_requests` / `browser_route` / `browser_unroute`
+- `browser_cookie_*` / `browser_*storage_*` / `browser_tab_*` / `browser_state_*`
+
+Each tool accepts a `session` parameter for named session isolation.

@@ -609,22 +609,40 @@ Selenium has no native equivalent, but CDP makes this trivial to port.
 - [ ] `emulate --reset` — restore all emulation
 - [ ] Emulation state integrated into `state-save` (persist emulate configuration)
 
-### v0.9: MCP Server & AI Ecosystem (Must-Have)
+### v0.9: MCP Server & AI Ecosystem (Must-Have) ✅ (partially implemented)
 
 Expose se-cli as an MCP Server for AI agent integration. Playwright already provides
 `@playwright/mcp`; se-cli must follow to stay competitive. Dual-track strategy:
 CLI+SKILLS (token-efficient for coding agents) and MCP Server (persistent state for
 autonomous workflows). Both share the same underlying tool implementation.
 
-- [ ] **se-cli mcp**: start MCP Server using `@modelcontextprotocol/sdk`
-- [ ] **MCP tool exposure**: all CLI tools wrapped as `registerTool` calls
-- [ ] **stdio transport** (default): local agent communication
+**Implemented (early delivery — prioritized per user request)**:
+
+- [x] **se-cli mcp-server**: start MCP Server using custom JSON-RPC 2.0 over stdio
+  (no external SDK dependency — keeps bundle size minimal)
+- [x] **MCP tool exposure**: all 40+ CLI tools wrapped as MCP tool definitions with
+  JSON Schema input validation (`src/mcp-server.ts`)
+- [x] **stdio transport** (default): local agent communication via line-delimited JSON-RPC
+- [x] **VS Code workspace config**: `.vscode/mcp.json` for project-level MCP server registration
+- [x] **VS Code extension manifest**: `vscode-extension/` with `contributes.mcpServers` for
+  marketplace discovery (search `@mcp se-cli` in Extensions view)
+- [x] **Tool-to-CLI mapping**: `mapToolToCliArgs()` translates MCP tool calls to daemon CLI args
+- [x] **Session sharing**: MCP server delegates to the same daemon architecture as CLI,
+  so browser state persists across both interaction modes
+- [x] **Protocol compliance**: `initialize` / `tools/list` / `tools/call` methods,
+  `notifications/initialized` handshake, MCP protocol version `2025-06-18`
+- [x] **Unit tests**: 105 test cases covering tool definitions, CLI mapping, and edge cases
+  (`tests/unit/mcp-server.test.ts`)
+
+**Remaining (future enhancement)**:
+
 - [ ] **Streamable HTTP transport** (optional): remote agent communication
 - [ ] **run-code "async driver => ..."**: execute arbitrary Selenium code snippets
 - [ ] **generate-locator <ref>**: generate best locator expression (By.role/By.css)
 - [ ] **Role-based locator code generation**: enhance codegen with `By.role()` output
 - [ ] **SKILL.md frontmatter compliance**: add `name`, `description`, `license`, `compatibility` metadata per Agent Skills spec
 - [ ] **install --skills enhancement**: multi-target discovery (Claude Code, Cursor, generic)
+- [ ] **VS Code extension publishing**: package and publish to VS Code Marketplace
 
 ### v0.10: Remote, Grid & Custom Browsers (Core, Selenium moat)
 
@@ -760,9 +778,123 @@ BiDi integration and optimizing performance/stability.
 | Daemon orphan processes | resource leak | selfDestructOnIdle + heartbeat + liveness cleanup during list |
 | Selenium driver version drift | driver mismatch after browser update | rely on selenium-manager auto-management; on startup failure suggest install-browser |
 
-## 10. References
+## 10. MCP Server Integration
+
+The MCP (Model Context Protocol) server provides an alternative interface to se-cli's
+browser automation capabilities, optimized for IDE-integrated AI agents like VS Code Copilot.
+
+### 10.1 Architecture
+
+The MCP server shares the same daemon process as the CLI interface, allowing state
+persistence across both interaction modes:
+
+```
+┌─────────────────┐     stdio (JSON-RPC)      ┌──────────────────────┐
+│  VS Code /      │ ─── line-delimited JSON ─▶ │  se-cli MCP Server   │
+│  Copilot /      │ ◀── JSON-RPC response ──── │  (long-lived stdio)  │
+│  MCP Client     │                            └──────────┬───────────┘
+└─────────────────┘                                       │
+                                                          │ Session.run()
+                                                          ▼
+┌─────────────────┐     Unix socket / pipe   ┌──────────────────────┐
+│  se-cli CLI     │ ─── line-delimited JSON ─▶│  se-cli daemon       │
+│  (short-lived)  │ ◀── single response ───── │  (holds WebDriver)   │
+└─────────────────┘                           └──────────┬───────────┘
+                                                          │ W3C WebDriver HTTP
+                                                          ▼
+                                                    ┌──────────┐
+                                                    │ Browser  │
+                                                    │(Chrome/  │
+                                                    │ Edge/FF) │
+                                                    └──────────┘
+```
+
+- **MCP Server Process**: Long-lived stdio process implementing JSON-RPC 2.0
+- **Communication**: Line-delimited JSON over stdio (stdin/stdout)
+- **Tool Definitions**: 40+ browser automation commands exposed as MCP tools
+- **Session Management**: Shares daemon state with CLI commands via `Session.run()`
+
+### 10.2 Implementation Details
+
+The MCP server is implemented in `src/mcp-server.ts` with key components:
+
+- **`McpServer` class**: Handles JSON-RPC communication, readline-based stdin parsing,
+  session lifecycle, and tool dispatch
+- **`mapToolToCliArgs()`**: Converts MCP tool calls (e.g. `browser_click`) to CLI command
+  args (e.g. `['click', 'e1', '-s', 'mySession']`) that are forwarded to the daemon
+- **`toolDefinitions`**: JSON Schema for all 40+ exposed MCP tools, covering session
+  management, navigation, interaction, assertions, network/debugging, storage, tabs, and state
+- **Protocol compliance**: `initialize` / `tools/list` / `tools/call` methods,
+  `notifications/initialized` handshake, MCP protocol version `2025-06-18`
+
+### 10.3 VS Code Integration
+
+Three installation paths for VS Code users:
+
+**Option 1: Workspace `.vscode/mcp.json`** (recommended for projects)
+```json
+{
+  "servers": {
+    "se-cli": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@browsers-cli/se-cli", "mcp-server"]
+    }
+  }
+}
+```
+
+**Option 2: User `settings.json`** (global, all workspaces)
+```json
+{
+  "mcp.servers": {
+    "se-cli": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@browsers-cli/se-cli", "mcp-server"]
+    }
+  }
+}
+```
+
+**Option 3: VS Code Extension** (marketplace discovery)
+
+The `vscode-extension/` directory contains a VS Code extension manifest with
+`contributes.mcpServers` that enables discovery via the Extensions view
+(`Ctrl+Shift+X`, search `@mcp se-cli`).
+
+### 10.4 Tool Catalog
+
+All 40+ MCP tools map 1:1 to se-cli CLI commands:
+
+| Category | MCP Tools | CLI Commands |
+|----------|-----------|-------------|
+| Session | `browser_open`, `browser_close`, `browser_list_sessions`, `browser_close_all` | `open`, `close`, `list`, `close-all` |
+| Navigation | `browser_navigate`, `browser_go_back`, `browser_go_forward`, `browser_reload`, `browser_get_title`, `browser_get_url` | `goto`, `go-back`, `go-forward`, `reload`, `title`, `url` |
+| Interaction | `browser_click`, `browser_fill`, `browser_type`, `browser_press`, `browser_select`, `browser_check`, `browser_uncheck` | `click`, `fill`, `type`, `press`, `select`, `check`, `uncheck` |
+| Advanced Interaction | `browser_hover`, `browser_dblclick`, `browser_drag`, `browser_upload`, `browser_resize` | `hover`, `dblclick`, `drag`, `upload`, `resize` |
+| Assertions | `browser_expect` | `expect` |
+| Snapshot | `browser_snapshot`, `browser_find` | `snapshot`, `find` |
+| Save & Execute | `browser_screenshot`, `browser_eval` | `screenshot`, `eval` |
+| Storage | `browser_cookie_*`, `browser_*storage_*` | `cookie-*`, `*storage-*` |
+| Tabs | `browser_tab_*` | `tab-*` |
+| State | `browser_state_save`, `browser_state_load` | `state-save`, `state-load` |
+| Network & Debug | `browser_highlight`, `browser_console`, `browser_requests`, `browser_request`, `browser_route`, `browser_route_list`, `browser_unroute` | `highlight`, `console`, `requests`, `request`, `route`, `route-list`, `unroute` |
+
+### 10.5 Design Decision: Custom JSON-RPC vs `@modelcontextprotocol/sdk`
+
+se-cli implements JSON-RPC 2.0 directly instead of depending on `@modelcontextprotocol/sdk`:
+
+- **Zero extra dependency**: keeps npm install fast and bundle size small
+- **Full control**: custom readline-based stdio parsing with `StringDecoder` for UTF-8 safety
+  (consistent with the daemon's socket protocol in §4.3)
+- **Protocol compliance**: implements the same MCP protocol version (`2025-06-18`) and methods
+- **Test coverage**: 105 unit tests validate tool definitions and CLI argument mapping
+
+## 11. References
 
 - playwright-cli source (d:\code\opensource\playwright-cli) — architecture reference
 - [Playwright aria snapshot algorithm](https://playwright.dev/docs/aria-snapshots) — algorithm inspiration
 - [Selenium 4 WebDriver BiDi](https://www.selenium.dev/documentation/webdriver/bidi/) — foundation for v0.4+ network capabilities
 - [W3C ARIA 1.2](https://www.w3.org/TR/wai-aria-1.2/) — role determination spec
+- [MCP Protocol Specification](https://modelcontextprotocol.io/specification) — MCP protocol reference
