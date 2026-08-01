@@ -442,11 +442,14 @@ se-cli can be used as an MCP (Model Context Protocol) server, allowing VS Code C
     "se-cli": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@browsers-cli/se-cli", "mcp-server"]
+      "args": ["-y", "@browsers-cli/se-mcp"]
     }
   }
 }
 ```
+
+> **Tip**: `@browsers-cli/se-mcp` is a thin wrapper that delegates to `@browsers-cli/se-cli mcp-server`.
+> You can also use `"args": ["-y", "@browsers-cli/se-cli", "mcp-server"]` directly.
 
 **Option 2: User settings (`settings.json`)**
 
@@ -456,7 +459,7 @@ se-cli can be used as an MCP (Model Context Protocol) server, allowing VS Code C
     "se-cli": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@browsers-cli/se-cli", "mcp-server"]
+      "args": ["-y", "@browsers-cli/se-mcp"]
     }
   }
 }
@@ -464,7 +467,9 @@ se-cli can be used as an MCP (Model Context Protocol) server, allowing VS Code C
 
 **Option 3: VS Code Extension (marketplace discovery)**
 
-Search `@mcp se-cli` in VS Code Extensions view (`Ctrl+Shift+X`) and install.
+Install the [se-cli VS Code extension](https://github.com/se-cli/se-extension-vscode) — search `@mcp se-cli`
+in VS Code Extensions view (`Ctrl+Shift+X`). The extension auto-registers the MCP server, provides
+commands, a webview panel for snapshot/screenshot preview, and a status bar indicator.
 
 Once enabled, all 40+ browser automation commands are available as MCP tools:
 - `browser_open`, `browser_close`, `browser_navigate`
@@ -610,10 +615,10 @@ Features are classified as **Must-Have** (基础底座), **Core** (差异化), o
 - **v0.6** ✅: Web-First Assertions — `expect <ref> visible|hidden|enabled|disabled|checked|unchecked|text|value|count|attribute`, `expect title|url`, `--not` inversion, `--exact` strict match, `--timeout` polling, CI-friendly exit codes
 - **v0.7** ✅: Network & debugging — BiDi `route`/`unroute`/`route-list`, `console`, `requests`/`request`, `highlight` with `--style`/`--hide`/`--all`
 - **v0.8** (Core, Playwright port): Device & environment emulation — `device`, `device-list`, `emulate --throttle-network/--throttle-cpu/--offline`, geolocation/timezone/locale/viewport/UA override
-- **v0.9** (Must-Have, partially implemented ✅): MCP Server & AI ecosystem — `se-cli mcp-server` with 40+ tools, VS Code `.vscode/mcp.json` config, VS Code extension manifest. Remaining: `run-code`, `generate-locator`, Streamable HTTP transport, extension marketplace publishing
+- **v0.9** (Must-Have, partially implemented ✅): MCP Server & AI ecosystem — `se-cli mcp-server` with 40+ tools, VS Code `.vscode/mcp.json` config, separate [`se-mcp`](https://github.com/se-cli/se-mcp) wrapper package. Remaining: `run-code`, `generate-locator`, Streamable HTTP transport
 - **v0.10** (Core, Selenium moat): Remote, Grid & custom browsers — `--browser=safari`, `--endpoint`, `--browser-binary`, `--driver-binary`, `--capabilities`, cloud browser integration, `pdf`, `--browser=edge-ie` for legacy IE scenarios
 - **v0.11** (Marginal): Recording & visualization — `record`, `tracing-start/stop`, `video-start/stop`, `show` dashboard, `--annotate`
-- **v0.12** (Marginal): VSCode extension — Task Provider, Webview, MCP auto-registration
+- **v0.12** (Marginal, initial impl ✅): VSCode extension — [`se-extension-vscode`](https://github.com/se-cli/se-extension-vscode) with MCP registration, commands, webview, status bar. Remaining: Task Provider, `attach --extension`
 
 **Will never implement**: native aria ref engine (staying on `data-se-ref`), Playwright-level full tracing parity, real IE 11 (replaced by Edge IE mode in v0.10).
 

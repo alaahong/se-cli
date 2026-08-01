@@ -398,11 +398,16 @@ commands as MCP tools for VS Code Copilot and other MCP-aware AI agents.
     "se-cli": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@browsers-cli/se-cli", "mcp-server"]
+      "args": ["-y", "@browsers-cli/se-mcp"]
     }
   }
 }
 ```
+
+> `@browsers-cli/se-mcp` is a thin wrapper that delegates to `@browsers-cli/se-cli mcp-server`.
+> You can also use `"args": ["-y", "@browsers-cli/se-cli", "mcp-server"]` directly.
+> A VS Code extension ([`se-extension-vscode`](https://github.com/se-cli/se-extension-vscode)) is also available
+> for marketplace discovery, commands, and webview preview.
 
 **Or start manually for debugging:**
 
