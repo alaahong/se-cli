@@ -330,6 +330,19 @@ describe('Session', () => {
         'default',
       );
     });
+
+    it('rejects on invalid JSON response from daemon', async () => {
+      const session = new Session('/workspace', 'default');
+      const promise = session.run(['title'], '/cwd');
+      const sock = mockState.sockets[0];
+
+      // Simulate daemon sending non-JSON data
+      sock.emit('connect');
+      sock.emit('data', Buffer.from('not valid json\n'));
+
+      // sendAndClose should reject with a SyntaxError (JSON parse error)
+      await expect(promise).rejects.toThrow(SyntaxError);
+    });
   });
 
   // ── stop() ───────────────────────────────────────────────────────
@@ -377,6 +390,33 @@ describe('Session', () => {
       await promise;
 
       // deleteSession should still be called
+      expect(mockState.registry.deleteSession).toHaveBeenCalledWith(
+        'mockhash123',
+        'default',
+      );
+    });
+
+    it('retries canConnect up to 10 times while daemon is shutting down', async () => {
+      const session = new Session('/workspace', 'default');
+      const promise = session.stop();
+
+      // sendAndClose succeeds
+      const sock0 = mockState.sockets[0];
+      sock0.emit('connect');
+      sock0.emit('data', Buffer.from(JSON.stringify({ ok: true }) + '\n'));
+
+      // Daemon is slow to exit — canConnect returns true for several iterations
+      // then finally returns false (socket error)
+      for (let i = 1; i <= 5; i++) {
+        const sock = await waitForSocket(i);
+        // Simulate connect success (daemon still alive)
+        sock.emit('connect');
+      }
+      // On the 6th attempt, daemon is finally dead
+      const sock6 = await waitForSocket(6);
+      sock6.emit('error', new Error('connect ECONNREFUSED'));
+
+      await promise;
       expect(mockState.registry.deleteSession).toHaveBeenCalledWith(
         'mockhash123',
         'default',
