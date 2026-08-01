@@ -252,7 +252,13 @@ function makeNetworkDriver(): any {
   const mockBidi = {
     subscribe: vi.fn(async (eventType: string) => { currentSubscription = eventType; }),
     socket: Promise.resolve({ on: onFn }),
-    send: vi.fn(async () => ({ result: {} })),
+    send: vi.fn(async (params: any) => {
+      // Return intercept ID for addIntercept, empty result for others
+      if (params.method === 'network.addIntercept') {
+        return { result: { intercept: 'mock-intercept-id' } };
+      }
+      return { result: {} };
+    }),
   };
   return {
     getBidi: vi.fn(async () => mockBidi),

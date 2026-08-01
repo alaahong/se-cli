@@ -11,6 +11,20 @@
  * command, and remain active for the daemon's lifetime.
  */
 
+// ── Helpers ────────────────────────────────────────────────────────────
+
+/**
+ * Simple glob matching: * matches any characters except /, ** matches any.
+ * Used by route interception to match request URLs against patterns.
+ */
+export function matchesGlob(url: string, pattern: string): boolean {
+  const regex = pattern
+    .replace(/\*\*/g, '.*')  // ** → .* (any characters including /)
+    .replace(/\*/g, '[^/]*')  // * → [^/]* (any chars except /)
+    .replace(/\?/g, '.');     // ? → . (single char)
+  return new RegExp(regex, 'i').test(url);
+}
+
 // ── Types ──────────────────────────────────────────────────────────────
 
 export interface ConsoleEntry {
@@ -57,6 +71,7 @@ const MAX_RESPONSE_BODY_BYTES = 100 * 1024; // 100KB
 
 let logInspector: any = null;
 let network: any = null;
+let bidi: any = null;
 let bidiInitialized = false;
 let initPromise: Promise<void> | null = null;
 
@@ -121,14 +136,63 @@ async function doInit(driver: any): Promise<void> {
   const { Network: getNetworkInstance } = require('selenium-webdriver/bidi/network');
   network = await getNetworkInstance(driver);
 
+  // Cache the BiDi connection for direct command sending (route intercepts,
+  // provideResponse, continueRequest). This avoids the selenium-webdriver
+  // wrapper which crashes on error responses (e.g., "Cannot read properties
+  // of undefined (reading 'intercept')" when the browser doesn't support
+  // network.addIntercept).
+  bidi = await driver.getBidi();
+
   // Subscribe to beforeRequestSent
   // Selenium BiDi wraps raw events in BeforeRequestSent/ResponseStarted objects:
   //   event.request is a RequestData instance with:
   //     .request = request ID string
   //     .url, .method, .headers (array of Header instances)
-  await network.beforeRequestSent((event: any) => {
+  //
+  // This handler serves double duty:
+  //   1. Route interception — if an active route matches the URL, provide a
+  //      mock response via BiDi and skip tracking.
+  //   2. Request tracking — add to the network buffer for later retrieval.
+  await network.beforeRequestSent(async (event: any) => {
     if (!event || !event.request) return;
     const req = event.request;
+    const url = req.url || '';
+
+    // ── Route interception ──────────────────────────────
+    // Check active routes before tracking. If a route matches, provide
+    // a mock response and skip tracking the request.
+    const matchedRoute = getRoutes().find(r => r.active && matchesGlob(url, r.pattern));
+    if (matchedRoute && matchedRoute.status !== null && bidi) {
+      const requestId = req.request || req.id;
+      try {
+        const params: Record<string, any> = {
+          request: requestId,
+          statusCode: matchedRoute.status,
+        };
+        if (matchedRoute.body) {
+          params.body = { type: 'string', value: matchedRoute.body };
+        }
+        if (matchedRoute.headers) {
+          params.headers = Object.entries(matchedRoute.headers).map(
+            ([k, v]) => ({ name: k, value: { type: 'string', value: v } }),
+          );
+        }
+        await bidi.send({ method: 'network.provideResponse', params });
+      } catch {
+        // If providing response fails, continue the request normally
+        try {
+          await bidi.send({
+            method: 'network.continueRequest',
+            params: { request: requestId },
+          });
+        } catch {
+          // Ignore — request will timeout
+        }
+      }
+      return; // Don't track intercepted requests
+    }
+
+    // ── Request tracking ────────────────────────────────
     // Normalize headers: Selenium wraps them as Header[] instances,
     // but raw BiDi events may provide plain objects. Handle both.
     let rawHeaders: Record<string, string> = {};
@@ -400,6 +464,7 @@ export function resetBidiState(): void {
   initPromise = null;
   logInspector = null;
   network = null;
+  bidi = null;
 }
 
 /**

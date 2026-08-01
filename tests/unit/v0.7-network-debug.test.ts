@@ -132,7 +132,13 @@ function makeBiDiMockDriver(overrides: Record<string, any> = {}): any {
     socket: Promise.resolve({
       on: vi.fn(),
     }),
-    send: vi.fn(async () => ({ result: {} })),
+    send: vi.fn(async (params: any) => {
+      // Return intercept ID for addIntercept, empty result for others
+      if (params.method === 'network.addIntercept') {
+        return { result: { intercept: 'mock-intercept-id' } };
+      }
+      return { result: {} };
+    }),
   }));
   return driver;
 }

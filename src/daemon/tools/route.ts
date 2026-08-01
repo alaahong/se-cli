@@ -20,20 +20,30 @@ import {
   deactivateRoute,
   removeRoute,
   removeAllRoutes,
-  getNetwork,
-  type RouteEntry,
 } from './network-state';
 
 /**
- * Simple glob matching: * matches any characters except /, ** matches any.
+ * Send a BiDi command directly via the WebSocket connection.
+ *
+ * This bypasses selenium-webdriver's wrapper methods (network.addIntercept,
+ * network.removeIntercept, etc.) which crash with
+ * "Cannot read properties of undefined (reading 'intercept')" when the
+ * browser returns an error response (no `result` field).
+ *
+ * Direct BiDi sends let us check for `response.error` and provide
+ * meaningful error messages.
  */
-function matchesGlob(url: string, pattern: string): boolean {
-  // Convert glob to regex
-  const regex = pattern
-    .replace(/\*\*/g, '.*')  // ** → .* (any characters including /)
-    .replace(/\*/g, '[^/]*')  // * → [^/]* (any chars except /)
-    .replace(/\?/g, '.');     // ? → . (single char)
-  return new RegExp(regex, 'i').test(url);
+async function bidiSend(driver: any, method: string, params: Record<string, any>): Promise<any> {
+  const bidi = await driver.getBidi();
+  const response = await bidi.send({ method, params });
+
+  if (response.error) {
+    throw new Error(
+      `BiDi ${method} failed: ${response.error}${response.message ? ' — ' + response.message : ''}`,
+    );
+  }
+
+  return response;
 }
 
 export async function browser_route(
@@ -47,11 +57,6 @@ export async function browser_route(
   response: Response,
 ): Promise<void> {
   await ensureBidiInitialized(driver);
-
-  const network = getNetwork();
-  if (!network) {
-    throw new Error('BiDi Network not initialized. Ensure the browser supports BiDi.');
-  }
 
   // Parse parameters
   const status = params.status ? parseInt(params.status) : null;
@@ -73,63 +78,24 @@ export async function browser_route(
     );
   }
 
-  // Build BiDi intercept parameters using the correct Selenium 4.46 API.
-  const { AddInterceptParameters } = require('selenium-webdriver/bidi/addInterceptParameters');
-  const { InterceptPhase } = require('selenium-webdriver/bidi/interceptPhase');
-
-  const interceptParams = new AddInterceptParameters(InterceptPhase.BEFORE_REQUEST_SENT);
-  interceptParams.urlStringPattern(params.pattern);
-
-  // Register the intercept
-  const interceptId = await network.addIntercept(interceptParams);
-
-  // Set up a response handler that intercepts matching requests and
-  // provides a mock response. The handler checks routeEntry.active so
-  // it can be deactivated by unroute without removing the listener
-  // (Selenium BiDi doesn't support removing individual listeners).
-  const { ProvideResponseParameters } = require('selenium-webdriver/bidi/provideResponseParameters');
-  const { BytesValue, Header } = require('selenium-webdriver/bidi/networkTypes');
-
-  // Store route index for the handler closure to check active status
-  const routeEntry = addRoute(interceptId, params.pattern, status, body, headers);
-  const routeIndex = routeEntry.index;
-
-  await network.beforeRequestSent(async (event: any) => {
-    if (!event || !event.request) return;
-
-    // Check if this route is still active (not unrouter)
-    const currentRoute = getRoute(routeIndex);
-    if (!currentRoute || !currentRoute.active) return;
-
-    const url = event.request.url || '';
-    if (matchesGlob(url, params.pattern)) {
-      try {
-        const requestId = event.request.request || event.request.id;
-        const provideParams = new ProvideResponseParameters(requestId);
-        provideParams.statusCode(status);
-        if (body) {
-          provideParams.body(new BytesValue(BytesValue.Type.STRING, body));
-        }
-        if (headers) {
-          const headerList = Object.entries(headers).map(
-            ([k, v]) => new Header(k, new BytesValue(BytesValue.Type.STRING, v)),
-          );
-          provideParams.headers(headerList);
-        }
-        await network.provideResponse(provideParams);
-      } catch {
-        // If providing response fails, continue the request normally
-        try {
-          const { ContinueRequestParameters } = require('selenium-webdriver/bidi/continueRequestParameters');
-          const requestId = event.request.request || event.request.id;
-          const continueParams = new ContinueRequestParameters(requestId);
-          await network.continueRequest(continueParams);
-        } catch {
-          // Ignore — request will timeout
-        }
-      }
-    }
+  // Register the BiDi intercept directly (bypasses selenium-webdriver wrapper
+  // that crashes on error responses).
+  const interceptResponse = await bidiSend(driver, 'network.addIntercept', {
+    phases: ['beforeRequestSent'],
+    urlPatterns: [{ type: 'string', pattern: params.pattern }],
   });
+
+  const interceptId = interceptResponse.result?.intercept;
+  if (!interceptId) {
+    throw new Error(
+      'Route intercept did not return an intercept ID. The browser may not support BiDi network interception.',
+    );
+  }
+
+  // Add to route registry. The beforeRequestSent handler in doInit
+  // (network-state.ts) checks active routes and provides mock responses
+  // when matching requests are intercepted.
+  const routeEntry = addRoute(interceptId, params.pattern, status, body, headers);
 
   const statusStr = ` → ${status}`;
   const bodyStr = body ? ` ${body.slice(0, 60)}${body.length > 60 ? '...' : ''}` : '';
@@ -170,11 +136,6 @@ export async function browser_unroute(
 ): Promise<void> {
   await ensureBidiInitialized(driver);
 
-  const network = getNetwork();
-  if (!network) {
-    throw new Error('BiDi Network not initialized.');
-  }
-
   if (params.all) {
     const removed = removeAllRoutes();
     // Deactivate all routes so handler closures stop processing
@@ -184,7 +145,7 @@ export async function browser_unroute(
     // Remove all intercepts from BiDi
     for (const route of removed) {
       try {
-        await network.removeIntercept(route.interceptId);
+        await bidiSend(driver, 'network.removeIntercept', { intercept: route.interceptId });
       } catch {
         // Ignore — intercept may already be gone
       }
@@ -212,7 +173,7 @@ export async function browser_unroute(
   }
 
   try {
-    await network.removeIntercept(removed.interceptId);
+    await bidiSend(driver, 'network.removeIntercept', { intercept: removed.interceptId });
   } catch {
     // Ignore — intercept may already be gone
   }
