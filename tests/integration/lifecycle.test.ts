@@ -1098,10 +1098,13 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
     // ── console ────────────────────────────────────────────
 
     (skip ? it.skip : it)('captures console messages from page load', async () => {
-      // Initialize BiDi listeners before navigating so we capture page-load logs.
-      // The first network/debug command triggers lazy BiDi initialization.
-      await run(['console', '--clear'], { SE_CLI_SESSION: S() });
+      // Open page first to start the browser session
       await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      // Initialize BiDi listeners and clear buffer (lazy init on first network command)
+      await run(['console', '--clear'], { SE_CLI_SESSION: S() });
+      // Re-navigate to trigger page-load console messages with BiDi active
+      await run(['open', NETWORK_DEBUG_URL()], { SE_CLI_SESSION: S() });
       // Wait briefly for BiDi events to arrive
       await new Promise(r => setTimeout(r, 1000));
       const result = await run(['--raw', 'console'], { SE_CLI_SESSION: S() });
