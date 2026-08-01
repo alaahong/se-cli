@@ -276,6 +276,27 @@ Assertions (v0.6):
   expect url "..."         assert page URL [--exact] [--not]
   Flags: --not (invert), --exact (strict match), --timeout=<ms>
 
+Network & Debugging (v0.7):
+  highlight [ref]           outline element (default: 3px solid red)
+  highlight <ref> --style="2px solid blue"
+  highlight <ref> --hide    remove single highlight
+  highlight --hide --all    remove all highlights
+  console                   all buffered messages
+  console error             error-level only
+  console js-error          JS exceptions only
+  console --since=5m        messages from last 5 minutes
+  console --clear           clear buffer after output
+  requests                  list all network requests
+  requests --filter="api"   filter by URL substring
+  requests --status=500     filter by status code
+  requests --method=POST    filter by HTTP method
+  requests --clear          clear request buffer
+  request <index>           show request details (headers, body, response)
+  route <pattern> --status=401 --body='{"error":"invalid"}'
+  route-list                list active route mocks
+  unroute <index>           remove specific route
+  unroute --all             remove all routes
+
 Flags:
   --raw                   output only the result value
   --json                  structured JSON output

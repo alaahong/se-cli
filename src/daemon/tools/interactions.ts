@@ -23,7 +23,7 @@ export async function browser_hover(
   const title = await driver.getTitle();
   const url = await driver.getCurrentUrl();
   response.addPage({ url, title });
-  response.addCode(`await driver.actions().move({ origin: ${byToString(params.target).replace(/By\.css\(|\)/g, '').replace(/'/g, '')} }).perform();`);
+  response.addCode(`const el = await driver.findElement(${byToString(params.target)});\nawait driver.actions({ bridge: true }).move({ origin: el }).perform();`);
   response.addResult('hovered');
 }
 
@@ -48,7 +48,7 @@ export async function browser_dblclick(
   const title = await driver.getTitle();
   const url = await driver.getCurrentUrl();
   response.addPage({ url, title });
-  response.addCode(`await driver.actions().doubleClick(${byToString(params.target)}).perform();`);
+  response.addCode(`const el = await driver.findElement(${byToString(params.target)});\nawait driver.actions({ bridge: true }).doubleClick(el).perform();`);
   response.addResult('double-clicked');
 }
 
@@ -76,6 +76,6 @@ export async function browser_drag(
   const title = await driver.getTitle();
   const url = await driver.getCurrentUrl();
   response.addPage({ url, title });
-  response.addCode(`await driver.actions().dragAndDrop(${byToString(params.start)}, ${byToString(params.end)}).perform();`);
+  response.addCode(`const src = await driver.findElement(${byToString(params.start)});\nconst dst = await driver.findElement(${byToString(params.end)});\nawait driver.actions({ bridge: true }).dragAndDrop(src, dst).perform();`);
   response.addResult('dragged');
 }

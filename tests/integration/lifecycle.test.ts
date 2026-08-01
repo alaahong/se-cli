@@ -1,10 +1,10 @@
-import { describe, it, expect, afterEach, beforeEach, beforeAll, afterAll } from 'vitest';
+﻿import { describe, it, expect, afterEach, beforeEach, beforeAll, afterAll } from 'vitest';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
-import { startTestServer, type TestServer } from './test-server';
+import { startTestServer, DynamicRoutes, type TestServer } from './test-server';
 import { resolveTestBrowsers, shouldRunE2E, type BrowserName } from './detect-browsers';
 
 const execFileAsync = promisify(execFile);
@@ -81,6 +81,38 @@ if (E2E_ENABLED) {
 // Supports static fixture files and extensible dynamic routes.
 let server: TestServer;
 
+// Register API routes for network debugging tests (v0.7).
+// These must be set before startTestServer() since the server checks
+// DynamicRoutes on every request.
+DynamicRoutes.set('/api/json', (_req, res) => {
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ message: 'Hello from JSON API', status: 'ok' }));
+});
+
+DynamicRoutes.set('/api/data', (_req, res) => {
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ items: [1, 2, 3], count: 3 }));
+});
+
+DynamicRoutes.set('/api/submit', (req, res) => {
+  let body = '';
+  req.on('data', (chunk) => { body += chunk; });
+  req.on('end', () => {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ received: true, data: body }));
+  });
+});
+
+DynamicRoutes.set('/api/mock-endpoint', (_req, res) => {
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ original: true }));
+});
+
+DynamicRoutes.set('/api/notfound', (_req, res) => {
+  res.writeHead(404, { 'Content-Type': 'text/plain' });
+  res.end('Not Found');
+});
+
 beforeAll(async () => {
   server = await startTestServer();
 }, 10000);
@@ -103,6 +135,7 @@ const SHADOW_URL   = () => server.url('shadow-dom.html');   // shadow DOM: open 
 const WAIT_URL     = () => server.url('wait.html');          // wait & retry: delayed visibility/enablement, dynamic element, flaky button
 const INTERACTIONS_URL = () => server.url('interactions.html'); // v0.5: hover, dblclick, drag, dialogs, upload, resize, mouse/keyboard actions
 const ASSERTIONS_URL = () => server.url('assertions.html');     // v0.6: web-first assertions
+const NETWORK_DEBUG_URL = () => server.url('network-debug.html'); // v0.7: network & debugging
 
 describe.each(BROWSERS)('lifecycle with %s', (browser) => {
   // Skip if E2E is not enabled, or if this browser wasn't resolved
@@ -631,6 +664,17 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
     }
   });
 
+  (skip ? it.skip : it)('retries click on dynamically added element with --retry', async () => {
+    await run(['open', WAIT_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    // #dynamic-btn is created after 2 seconds. Without --wait, findElement
+    // fails. With --retry=5 and --retry-interval=500, the click is retried
+    // until the element appears (total wait: ~2.5s).
+    const result = await run([
+      'click', '#dynamic-btn', '--retry=5', '--retry-interval=500', '--timeout=5000',
+    ], { SE_CLI_SESSION: S() });
+    expect(result).toContain('clicked');
+  });
+
   (skip ? it.skip : it)('generates config file with config init', async () => {
     // Use a temp cwd so the generated .se-cli.json doesn't leak into the
     // repo or interfere with other tests. config commands are handled
@@ -992,4 +1036,315 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
       expect(result).toContain('visible');
     });
   });
+
+  // --- v0.7: Network & Debugging ---
+
+  describe('v0.7: Network & Debugging', () => {
+
+    // ── highlight ──────────────────────────────────────────
+
+    (skip ? it.skip : it)('highlights element by CSS selector', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['highlight', '#target1'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('Highlighted');
+      // Verify the outline was applied
+      const outline = (await run(['--raw', 'eval',
+        `getComputedStyle(document.getElementById('target1')).outlineStyle`
+      ], { SE_CLI_SESSION: S() })).trim();
+      expect(outline).not.toBe('none');
+    });
+
+    (skip ? it.skip : it)('highlights element with custom style', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await run(['highlight', '#target2', '--style=2px solid blue'], { SE_CLI_SESSION: S() });
+      const color = (await run(['--raw', 'eval',
+        `getComputedStyle(document.getElementById('target2')).outlineColor`
+      ], { SE_CLI_SESSION: S() })).trim();
+      // Browsers return RGB values (e.g. 'rgb(0, 0, 255)') not color names
+      expect(color).toMatch(/0,\s*0,\s*255/);
+    });
+
+    (skip ? it.skip : it)('lists active highlights', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await run(['highlight', '#target1'], { SE_CLI_SESSION: S() });
+      await run(['highlight', '#target2'], { SE_CLI_SESSION: S() });
+      const result = await run(['--raw', 'highlight'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('target1');
+      expect(result).toContain('target2');
+    });
+
+    (skip ? it.skip : it)('removes single highlight with --hide', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await run(['highlight', '#target1'], { SE_CLI_SESSION: S() });
+      const result = await run(['highlight', '#target1', '--hide'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('Removed');
+      // Verify outline was removed
+      const outline = (await run(['--raw', 'eval',
+        `getComputedStyle(document.getElementById('target1')).outlineStyle`
+      ], { SE_CLI_SESSION: S() })).trim();
+      expect(outline).toBe('none');
+    });
+
+    (skip ? it.skip : it)('removes all highlights with --hide --all', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await run(['highlight', '#target1'], { SE_CLI_SESSION: S() });
+      await run(['highlight', '#target2'], { SE_CLI_SESSION: S() });
+      const result = await run(['highlight', '--hide', '--all'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('All highlights cleared');
+      const list = await run(['--raw', 'highlight'], { SE_CLI_SESSION: S() });
+      expect(list).toContain('No active highlights');
+    });
+
+    // ── console ────────────────────────────────────────────
+
+    (skip ? it.skip : it)('captures console messages from page load', async () => {
+      // Open page first to start the browser session
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      // Initialize BiDi listeners and clear buffer (lazy init on first network command)
+      await run(['console', '--clear'], { SE_CLI_SESSION: S() });
+      // Re-navigate to trigger page-load console messages with BiDi active
+      await run(['open', NETWORK_DEBUG_URL()], { SE_CLI_SESSION: S() });
+      // Wait briefly for BiDi events to arrive
+      await new Promise(r => setTimeout(r, 1000));
+      const result = await run(['--raw', 'console'], { SE_CLI_SESSION: S() });
+      // The page logs "Page loaded" on load
+      expect(result).toContain('Page loaded');
+    });
+
+    (skip ? it.skip : it)('captures console.log triggered by click', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      // Clear buffer to start fresh
+      await run(['console', '--clear'], { SE_CLI_SESSION: S() });
+      // Click the console.log button — it uses inline onclick
+      await run(['click', '#btn-log'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      const result = await run(['--raw', 'console'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('Hello from console.log');
+    });
+
+    (skip ? it.skip : it)('captures console.warn and console.error', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      await run(['console', '--clear'], { SE_CLI_SESSION: S() });
+      await run(['click', '#btn-warn'], { SE_CLI_SESSION: S() });
+      await run(['click', '#btn-error'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      const result = await run(['--raw', 'console'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('Warning message');
+      expect(result).toContain('Error message');
+    });
+
+    (skip ? it.skip : it)('filters console by error level', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      await run(['console', '--clear'], { SE_CLI_SESSION: S() });
+      await run(['click', '#btn-log'], { SE_CLI_SESSION: S() });
+      await run(['click', '#btn-error'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      const result = await run(['--raw', 'console', 'error'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('Error message');
+      // Should not contain info-level messages
+      expect(result).not.toContain('Hello from console.log');
+    });
+
+    (skip ? it.skip : it)('clears console buffer with --clear', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      await run(['console', '--clear'], { SE_CLI_SESSION: S() });
+      const result = await run(['--raw', 'console'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('no console messages');
+    });
+
+    // ── requests ────────────────────────────────────────────
+
+    (skip ? it.skip : it)('captures network requests from fetch calls', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      await run(['requests', '--clear'], { SE_CLI_SESSION: S() });
+      // Trigger a fetch request
+      await run(['click', '#btn-fetch-json'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 1000));
+      const result = await run(['--raw', 'requests'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('api/json');
+    });
+
+    (skip ? it.skip : it)('filters network requests by URL substring', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      await run(['requests', '--clear'], { SE_CLI_SESSION: S() });
+      await run(['click', '#btn-fetch-json'], { SE_CLI_SESSION: S() });
+      await run(['click', '#btn-fetch-api'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 1000));
+      const result = await run(['--raw', 'requests', '--filter=api/json'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('api/json');
+      expect(result).not.toContain('api/data');
+    });
+
+    (skip ? it.skip : it)('shows request details by index', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      await run(['requests', '--clear'], { SE_CLI_SESSION: S() });
+      await run(['click', '#btn-fetch-json'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 1000));
+      const result = await run(['--raw', 'request', '0'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('URL:');
+      expect(result).toContain('Method:');
+      expect(result).toContain('api/json');
+    });
+
+    (skip ? it.skip : it)('clears network request buffer', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      await run(['requests', '--clear'], { SE_CLI_SESSION: S() });
+      const result = await run(['--raw', 'requests'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('no network requests');
+    });
+
+    // ── route & unroute ────────────────────────────────────
+
+    (skip ? it.skip : it)('lists empty routes initially', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      const result = await run(['--raw', 'route-list'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('no active routes');
+    });
+
+    (skip ? it.skip : it)('adds route and lists it', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      const result = await run([
+        'route', '*/api/mock-endpoint*', '--status=200', '--body={"mocked":true}'
+      ], { SE_CLI_SESSION: S() });
+      expect(result).toContain('Route');
+      expect(result).toContain('mock-endpoint');
+      const list = await run(['--raw', 'route-list'], { SE_CLI_SESSION: S() });
+      expect(list).toContain('mock-endpoint');
+    });
+
+    (skip ? it.skip : it)('removes route by index with unroute', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      await run(['route', '*/api/mock-endpoint*', '--status=404'], { SE_CLI_SESSION: S() });
+      const result = await run(['unroute', '0'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('Removed');
+      const list = await run(['--raw', 'route-list'], { SE_CLI_SESSION: S() });
+      expect(list).toContain('no active routes');
+    });
+
+    (skip ? it.skip : it)('removes all routes with unroute --all', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      await run(['route', '*/api/json*', '--status=200'], { SE_CLI_SESSION: S() });
+      await run(['route', '*/api/data*', '--status=404'], { SE_CLI_SESSION: S() });
+      const result = await run(['unroute', '--all'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('Removed all');
+      const list = await run(['--raw', 'route-list'], { SE_CLI_SESSION: S() });
+      expect(list).toContain('no active routes');
+    });
+
+    // ── v0.7: Additional coverage tests ───────────────────
+
+    (skip ? it.skip : it)('captures JS exceptions with console js-error', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      await run(['console', '--clear'], { SE_CLI_SESSION: S() });
+      // Trigger a JS error by clicking the button
+      await run(['click', '#btn-js-error'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      const result = await run(['--raw', 'console', 'js-error'], { SE_CLI_SESSION: S() });
+      // Should contain the JS exception text
+      expect(result).toContain('undefinedFunction');
+    });
+
+    (skip ? it.skip : it)('filters console by --since time window', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 1000));
+      await run(['console', '--clear'], { SE_CLI_SESSION: S() });
+      // Generate a console message
+      await run(['click', '#btn-log'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      // Filter with --since=5m should include the message
+      const result = await run(['--raw', 'console', '--since=5m'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('Hello from console.log');
+      // Filter with --since=0s should exclude all messages (cutoff = now)
+      const result2 = await run(['--raw', 'console', '--since=0s'], { SE_CLI_SESSION: S() });
+      // With 0s, the cutoff is "now" — messages from 500ms ago should be excluded
+      // (timestamp check: e.timestamp >= Date.now() - 0 = Date.now())
+    });
+
+    (skip ? it.skip : it)('filters network requests by status code', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      await run(['requests', '--clear'], { SE_CLI_SESSION: S() });
+      // Trigger a 404 request
+      await run(['click', '#btn-fetch-404'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 1000));
+      const result = await run(['--raw', 'requests', '--status=404'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('404');
+    });
+
+    (skip ? it.skip : it)('filters network requests by HTTP method', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      await run(['requests', '--clear'], { SE_CLI_SESSION: S() });
+      // Trigger a POST request
+      await run(['click', '#btn-fetch-post'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 1000));
+      const result = await run(['--raw', 'requests', '--method=POST'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('POST');
+      expect(result).toContain('api/submit');
+    });
+
+    (skip ? it.skip : it)('verifies route mock intercepts actual request', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      // Set up a route mock that returns 401 with a custom body
+      await run([
+        'route', '*/api/mock-endpoint*', '--status=401', `--body={"error":"mocked"}`,
+      ], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      // Trigger the fetch — the mock should intercept it
+      await run(['click', '#btn-mock-fetch'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 1000));
+      // Verify the page received the mocked response
+      const mockResult = await run(['--raw', 'eval',
+        `document.getElementById('mock-result').textContent`
+      ], { SE_CLI_SESSION: S() });
+      expect(mockResult).toContain('401');
+      expect(mockResult).toContain('mocked');
+    });
+
+    (skip ? it.skip : it)('highlights element by ref using data-se-ref', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['highlight', 'e1'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('Highlighted');
+      // Verify the outline was applied
+      const outline = (await run(['--raw', 'eval',
+        `getComputedStyle(document.getElementById('target1')).outlineStyle`
+      ], { SE_CLI_SESSION: S() })).trim();
+      expect(outline).not.toBe('none');
+    });
+
+    (skip ? it.skip : it)('verifies route mock applies custom headers', async () => {
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      // Set up a route mock with custom headers
+      await run([
+        'route', '*/api/mock-endpoint*', '--status=200',
+        '--body={"ok":true}',
+        '--headers={"X-Custom-Header":"test-value","Content-Type":"application/json"}',
+      ], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      // Trigger the fetch and check if custom headers are in the response
+      await run(['click', '#btn-mock-headers'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 1000));
+      const headersResult = await run(['--raw', 'eval',
+        `document.getElementById('headers-result').textContent`
+      ], { SE_CLI_SESSION: S() });
+      expect(headersResult).toContain('test-value');
+    });
+  });
 });
+

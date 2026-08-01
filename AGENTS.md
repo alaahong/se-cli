@@ -77,7 +77,8 @@ src/
 
 - CI config: `.github/workflows/ci.yml`
 - **Node.js version**: 22 (required)
-- **Test runner**: Vitest with path-based filtering (`npx vitest run tests/unit`), NOT Jest `--filter`
+- **Test runner**: Vitest with path-based filtering (`npm run test:coverage`), NOT Jest `--filter`
+- **Coverage**: Enforced at 95% statements/lines/functions and 90% branches via `vitest.config.ts` thresholds
 - **Test timeout**: 120000ms (integration tests start browser daemons)
 - **Integration tests**: Must use HTTP server (`tests/integration/test-server.ts`), not `file://` protocol
 - **Test pages**: Located in `tests/integration/fixtures/`, copied to `site/test-pages/` for GitHub Pages access
@@ -151,6 +152,29 @@ src/
 - **Test cleanup**: Integration tests must clean up daemon processes. Use 15s timeout with `kill-all` fallback.
 - **When adding a new feature**: Add unit tests, integration tests, test pages, and update documentation (`README.md`, `skill/SKILL.md`, `docs/spec.md`, `site/index.html`).
 
+### Test Coverage
+
+Code coverage is enforced via thresholds in `vitest.config.ts`. PRs will fail CI if thresholds are not met.
+
+- **Minimum thresholds**:
+
+  | Metric | Threshold |
+  |--------|-----------|
+  | Statements | 95% |
+  | Branches | 90% |
+  | Functions | 95% |
+  | Lines | 95% |
+
+- **Run coverage locally**: `npm run test:coverage` (alias: `npx vitest run tests/unit --coverage`)
+- **Coverage reports**: Generated in `coverage/` directory (text, html, lcov formats)
+- **Excluded from coverage** (not counted toward thresholds):
+  - `src/**/*.d.ts` — type declarations
+  - `src/snapshot/aria-snapshot.ts` — injected browser script
+  - `src/cli.ts` — CLI entry point, thin wrapper
+  - `src/protocol.ts` — type definitions only
+  - `src/daemon/server.ts` — socket server, covered by integration tests
+- **When adding new code**: Ensure new source files have corresponding unit tests. Run `npm run test:coverage` before submitting a PR to verify thresholds are met.
+
 ### npm Package
 
 - Published as `@browsers-cli/se-cli` with provenance enabled
@@ -195,7 +219,7 @@ Follow conventional commits:
 ### Before Submitting
 
 - Run `npx tsc --noEmit` (type check)
-- Run `npx vitest run tests/unit` (unit tests)
+- Run `npm run test:coverage` (unit tests + coverage — must meet 95% thresholds)
 - Ensure no personal fork URLs in any changed file
 - Ensure `package.json` version is not accidentally changed (unless intentional)
 

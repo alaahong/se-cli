@@ -59,6 +59,11 @@ import {
 } from './advanced-input';
 // v0.6: Web-First Assertions
 import { browser_expect } from './expect';
+// v0.7: Network & Debugging
+import { browser_highlight } from './highlight';
+import { browser_console } from './console';
+import { browser_requests, browser_request } from './requests';
+import { browser_route, browser_route_list, browser_unroute } from './route';
 
 export const tools: Record<string, (driver: any, params: any, response: any) => Promise<void>> = {
   browser_goto,
@@ -113,4 +118,12 @@ export const tools: Record<string, (driver: any, params: any, response: any) => 
   browser_actions_chain,
   // v0.6: Web-First Assertions
   browser_expect,
+  // v0.7: Network & Debugging
+  browser_highlight,
+  browser_console,
+  browser_requests,
+  browser_request,
+  browser_route,
+  browser_route_list,
+  browser_unroute,
 };

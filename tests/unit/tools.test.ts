@@ -17,6 +17,14 @@ import { browser_localstorage_get, browser_localstorage_set, browser_localstorag
 import { browser_sessionstorage_get, browser_sessionstorage_set, browser_sessionstorage_delete, browser_sessionstorage_list } from '../../src/daemon/tools/storage';
 import { browser_tab_list, browser_tab_new, browser_tab_close, browser_tab_select } from '../../src/daemon/tools/tab';
 import { browser_state_save, browser_state_load } from '../../src/daemon/tools/state';
+import { browser_find } from '../../src/daemon/tools/find';
+import { browser_check, browser_uncheck } from '../../src/daemon/tools/check';
+import { browser_type } from '../../src/daemon/tools/type';
+import { browser_press } from '../../src/daemon/tools/press';
+import { browser_go_back, browser_go_forward, browser_reload } from '../../src/daemon/tools/navigation';
+import { browser_url } from '../../src/daemon/tools/url';
+import { AssertionError } from '../../src/daemon/tools/expect';
+import { parseCommand } from '../../src/daemon/backend';
 
 function makeMockDriver(opts: any = {}): any {
   const calls: any[] = [];
@@ -178,6 +186,173 @@ describe('shared.ts', () => {
 
     it('rejects path with subdirectory', () => {
       expect(() => safeFilename('subdir/evil.png')).toThrow();
+    });
+  });
+
+  // ── Missing tool coverage tests ──────────────────────────
+
+  describe('browser_find', () => {
+    it('searches snapshot text and returns matches', async () => {
+      const driver = makeMockDriver({ scriptResult: '- textbox "Search" [ref=e1]\n- button "Submit" [ref=e2]' });
+      const response = new Response({ raw: false, json: false });
+      await browser_find(driver, { text: 'Submit' }, response);
+      const out = response.serialize();
+      expect(out).toContain('Submit');
+    });
+
+    it('returns no matches when text not found', async () => {
+      const driver = makeMockDriver({ scriptResult: '- textbox "Search" [ref=e1]' });
+      const response = new Response({ raw: false, json: false });
+      await browser_find(driver, { text: 'NonExistent' }, response);
+      const out = response.serialize();
+      expect(out).toContain('No matches');
+    });
+
+    it('supports regex search', async () => {
+      const driver = makeMockDriver({ scriptResult: '- link "Home" [ref=e1]\n- link "About" [ref=e2]' });
+      const response = new Response({ raw: false, json: false });
+      await browser_find(driver, { regex: 'link' }, response);
+      const out = response.serialize();
+      expect(out).toContain('link');
+    });
+  });
+
+  describe('browser_select', () => {
+    it('routes to browser_select in parseCommand', () => {
+      const r = parseCommand(['select', 'e1', 'option1']);
+      expect(r.toolName).toBe('browser_select');
+      expect(r.toolParams.target).toBe('e1');
+      expect(r.toolParams.value).toBe('option1');
+    });
+  });
+
+  describe('browser_check', () => {
+    it('calls findElement and click for unchecked checkbox', async () => {
+      const driver = makeMockDriver({});
+      const mockEl = {
+        click: vi.fn(async () => {}),
+        getAttribute: vi.fn(async () => 'false'),
+        isSelected: vi.fn(async () => false),
+      };
+      driver.findElement = vi.fn(async () => mockEl);
+      const response = new Response({ raw: false, json: false });
+      await browser_check(driver, { target: 'e1' }, response);
+      const out = response.serialize();
+      expect(out).toContain('checked');
+    });
+  });
+
+  describe('browser_uncheck', () => {
+    it('calls findElement and click for checked checkbox', async () => {
+      const driver = makeMockDriver({});
+      const mockEl = {
+        click: vi.fn(async () => {}),
+        getAttribute: vi.fn(async () => 'true'),
+        isSelected: vi.fn(async () => true),
+      };
+      driver.findElement = vi.fn(async () => mockEl);
+      const response = new Response({ raw: false, json: false });
+      await browser_uncheck(driver, { target: 'e1' }, response);
+      const out = response.serialize();
+      expect(out).toContain('unchecked');
+    });
+  });
+
+  describe('browser_type', () => {
+    it('sends keys to active element via switchTo activeElement', async () => {
+      const driver = makeMockDriver({});
+      const mockEl = { sendKeys: vi.fn(async () => {}) };
+      // activeElement() must return the element directly (WebElement is thenable
+      // in selenium-webdriver — methods are accessible without await)
+      driver.switchTo = vi.fn(() => ({ activeElement: vi.fn(() => mockEl) }));
+      const response = new Response({ raw: false, json: false });
+      await browser_type(driver, { value: 'hello' }, response);
+      const out = response.serialize();
+      expect(out).toContain('typed');
+      expect(mockEl.sendKeys).toHaveBeenCalledWith('hello');
+    });
+  });
+
+  describe('browser_press', () => {
+    it('sends key to active element', async () => {
+      const driver = makeMockDriver({});
+      const mockEl = { sendKeys: vi.fn(async () => {}) };
+      driver.switchTo = vi.fn(() => ({ activeElement: vi.fn(() => mockEl) }));
+      const response = new Response({ raw: false, json: false });
+      await browser_press(driver, { key: 'Enter' }, response);
+      const out = response.serialize();
+      expect(out).toContain('Enter');
+    });
+  });
+
+  describe('browser_go_back', () => {
+    it('calls driver.navigate().back()', async () => {
+      const driver = makeMockDriver({});
+      const response = new Response({ raw: false, json: false });
+      await browser_go_back(driver, {}, response);
+      const out = response.serialize();
+      expect(out).toContain('navigate');
+    });
+  });
+
+  describe('browser_go_forward', () => {
+    it('calls driver.navigate().forward()', async () => {
+      const driver = makeMockDriver({});
+      const response = new Response({ raw: false, json: false });
+      await browser_go_forward(driver, {}, response);
+      const out = response.serialize();
+      expect(out).toContain('navigate');
+    });
+  });
+
+  describe('browser_reload', () => {
+    it('calls driver.navigate().refresh()', async () => {
+      const driver = makeMockDriver({});
+      const response = new Response({ raw: false, json: false });
+      await browser_reload(driver, {}, response);
+      const out = response.serialize();
+      expect(out).toContain('reloaded');
+    });
+  });
+
+  describe('browser_url', () => {
+    it('returns current URL', async () => {
+      const driver = makeMockDriver({ url: 'https://test.example.com/page' });
+      const response = new Response({ raw: false, json: false });
+      await browser_url(driver, {}, response);
+      const out = response.serialize();
+      expect(out).toContain('https://test.example.com/page');
+    });
+  });
+
+  describe('AssertionError', () => {
+    it('carries structured metadata (matcher, expected, actual, not)', () => {
+      const err = new AssertionError('test message', 'visible', 'true', 'false', true);
+      expect(err.matcher).toBe('visible');
+      expect(err.expected).toBe('true');
+      expect(err.actual).toBe('false');
+      expect(err.not).toBe(true);
+      expect(err.message).toBe('test message');
+      expect(err.name).toBe('AssertionError');
+    });
+
+    it('toJSON returns structured object', () => {
+      const err = new AssertionError('msg', 'text', 'hello', 'world', false);
+      const json = err.toJSON();
+      expect(json.name).toBe('AssertionError');
+      expect(json.matcher).toBe('text');
+      expect(json.expected).toBe('hello');
+      expect(json.actual).toBe('world');
+      expect(json.not).toBe(false);
+    });
+
+    it('works with minimal args (message only)', () => {
+      const err = new AssertionError('simple error');
+      expect(err.message).toBe('simple error');
+      expect(err.matcher).toBeUndefined();
+      expect(err.expected).toBeUndefined();
+      expect(err.actual).toBeUndefined();
+      expect(err.not).toBeUndefined();
     });
   });
 });

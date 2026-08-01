@@ -181,12 +181,15 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
   // Parse flags from rest using minimist
   // Include wait/retry flags in the known options
   const parsed = parseArgs(rest, {
-    boolean: ['submit', 'no-wait', 'not', 'exact'],
+    boolean: ['submit', 'no-wait', 'not', 'exact', 'hide', 'all', 'clear'],
     string: [
       'filename', 'depth', 'regex',
       // v0.4 wait/retry flags
       'timeout', 'wait', 'retry', 'retry-interval',
       'implicit-wait', 'page-load-timeout', 'script-timeout',
+      // v0.7 network/debug flags
+      'status', 'body', 'headers', 'style', 'since',
+      'filter', 'method',
     ],
     alias: {},
   });
@@ -273,6 +276,59 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
         attributeValue: positional[3],
         not: parsed.not || false,
         exact: parsed.exact || false,
+      },
+    }),
+    // v0.7: Network & Debugging
+    'highlight': () => ({
+      toolName: 'browser_highlight',
+      toolParams: {
+        target: positional[0],
+        style: parsed.style,
+        hide: parsed.hide || false,
+        all: parsed.all || false,
+      },
+    }),
+    'console': () => ({
+      toolName: 'browser_console',
+      toolParams: {
+        level: positional[0],
+        since: parsed.since,
+        clear: parsed.clear || false,
+      },
+    }),
+    'requests': () => ({
+      toolName: 'browser_requests',
+      toolParams: {
+        filter: parsed.filter,
+        status: parsed.status,
+        method: parsed.method,
+        clear: parsed.clear || false,
+      },
+    }),
+    'request': () => ({
+      toolName: 'browser_request',
+      toolParams: {
+        index: positional[0] ? parseInt(positional[0]) : 0,
+      },
+    }),
+    'route': () => ({
+      toolName: 'browser_route',
+      toolParams: {
+        pattern: positional[0],
+        status: parsed.status,
+        body: parsed.body,
+        headers: parsed.headers,
+      },
+    }),
+    'route-list': () => ({
+      toolName: 'browser_route_list',
+      toolParams: {},
+    }),
+    'unroute': () => ({
+      toolName: 'browser_unroute',
+      toolParams: {
+        index: positional[0] ? parseInt(positional[0]) : undefined,
+        all: parsed.all || false,
       },
     }),
   };

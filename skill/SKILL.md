@@ -141,6 +141,41 @@ code 0.
 Assertions poll the condition until it passes or the timeout expires (default
 5s). Use `--timeout=0` or `--no-wait` for a single check without polling.
 
+### Network & Debugging (v0.7)
+
+Console capture, network monitoring, route mocking, and element highlighting
+via Selenium BiDi protocol.
+
+```bash
+# Element highlighting
+se-cli highlight e1              # Outline element (default: 3px solid red)
+se-cli highlight e1 --style="2px solid blue"  # Custom style
+se-cli highlight                 # List active highlights
+se-cli highlight e1 --hide       # Remove single highlight
+se-cli highlight --hide --all    # Remove all highlights
+
+# Console capture
+se-cli console                   # All buffered messages
+se-cli console error             # Error-level only
+se-cli console js-error          # JS exceptions only
+se-cli console --since=5m        # Messages from last 5 minutes
+se-cli console --clear           # Clear buffer after output
+
+# Network request monitoring
+se-cli requests                  # List all network requests
+se-cli requests --filter="api"   # Filter by URL substring
+se-cli requests --status=500     # Filter by status code
+se-cli requests --method=POST    # Filter by HTTP method
+se-cli requests --clear          # Clear request buffer
+se-cli request 0                 # Show details of request #0
+
+# Route mocking
+se-cli route "**/api/**" --status=401 --body='{"error":"invalid"}'
+se-cli route-list                # List active routes
+se-cli unroute 0                 # Remove route by index
+se-cli unroute --all             # Remove all routes
+```
+
 ### Storage
 ```bash
 se-cli cookie-list

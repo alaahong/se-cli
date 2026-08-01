@@ -1,6 +1,6 @@
 {
   "name": "@browsers-cli/se-cli",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Selenium CLI with token-efficient browser automation for AI agents",
   "license": "Apache-2.0",
   "homepage": "https://se-cli.github.io/se-cli/",
@@ -39,6 +39,7 @@
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
+    "test:coverage": "vitest run tests/unit --coverage",
     "test:integration": "cross-env SE_CLI_E2E=1 vitest run tests/integration/",
     "test:watch": "vitest",
     "lint": "tsc --noEmit"
@@ -52,6 +53,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@vitest/coverage-v8": "^2.1.9",
     "cross-env": "^7.0.0",
     "typescript": "^5.4.0",
     "vitest": "^2.0.0"

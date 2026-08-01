@@ -2,3 +2,6 @@ node_modules/
 dist/
 .se-cli/
 *.log
+coverage/
+.trae-html-share-packages/
+se-cli-audit-report/

@@ -10,7 +10,11 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/@browsers-cli/se-cli"><img src="https://img.shields.io/npm/v/@browsers-cli/se-cli?color=22C55E&label=npm" alt="npm version" /></a>
   <a href="https://github.com/se-cli/se-cli/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/se-cli/se-cli/ci.yml?branch=main&label=CI&color=22C55E" alt="CI" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/coverage-95%25%2B-22C55E" alt="Coverage" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/tests-768-22C55E" alt="Tests" /></a>
   <a href="https://www.npmjs.com/package/@browsers-cli/se-cli"><img src="https://img.shields.io/node/v/@browsers-cli/se-cli?color=22C55E" alt="Node.js" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/TypeScript-5.4%2B-3178C6" alt="TypeScript" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/tested%20with-Vitest-6ECC52" alt="Vitest" /></a>
   <a href="https://github.com/se-cli/se-cli/blob/main/LICENSE"><img src="https://img.shields.io/github/license/se-cli/se-cli?color=22C55E" alt="License" /></a>
   <a href="https://github.com/se-cli/se-cli"><img src="https://img.shields.io/github/stars/se-cli/se-cli?style=social" alt="Stars" /></a>
 </p>
@@ -176,6 +180,31 @@ Web-First assertions inspired by Playwright. Each `expect` command polls the pag
 | `--not` | Invert the assertion — pass when the condition is false (v0.6) |
 | `--exact` | Require strict/exact match instead of substring containment (v0.6) |
 | `--timeout=<ms>` | Polling timeout before the assertion fails (default uses `--timeout` config) (v0.6) |
+
+### Network & Debugging (v0.7)
+
+Network interception, console capture, and visual debugging tools powered by Selenium BiDi protocol.
+
+| Command | Description |
+|---------|-------------|
+| `highlight [ref]` | Outline element with CSS (default: 3px solid red) (v0.7) |
+| `highlight <ref> --style="..."` | Custom CSS outline style (v0.7) |
+| `highlight <ref> --hide` | Remove highlight from element (v0.7) |
+| `highlight --hide --all` | Remove all highlights (v0.7) |
+| `console` | All buffered console messages (v0.7) |
+| `console error` | Error-level messages only (v0.7) |
+| `console js-error` | JavaScript exceptions only (v0.7) |
+| `console --since=5m` | Messages from last 5 minutes (v0.7) |
+| `console --clear` | Clear console buffer (v0.7) |
+| `requests` | List all network requests (v0.7) |
+| `requests --filter="api"` | Filter by URL substring (v0.7) |
+| `requests --status=500` | Filter by status code (v0.7) |
+| `requests --method=POST` | Filter by HTTP method (v0.7) |
+| `request <index>` | Show request details (headers, body, response) (v0.7) |
+| `route <pattern> --status=401 --body="..."` | Mock API response (v0.7) |
+| `route-list` | List active route mocks (v0.7) |
+| `unroute <index>` | Remove specific route (v0.7) |
+| `unroute --all` | Remove all routes (v0.7) |
 
 ### Snapshot & Discovery
 
@@ -527,7 +556,7 @@ Features are classified as **Must-Have** (基础底座), **Core** (差异化), o
 - **v0.4** ✅: Wait & Retry configuration layer — `--timeout`/`--wait`/`--retry`/`--page-load-timeout`/`--script-timeout` flags, `SE_CLI_*` ENV vars, `.se-cli.json` config file, `config get/set/list/init` commands
 - **v0.5** ✅: Interaction completion — `hover`, `dblclick`, `drag`, `dialog-accept/dismiss`, `upload`, `resize`, `keydown/keyup`, `mousemove`, `mousedown/mouseup`, `mousewheel`, `actions-chain`
 - **v0.6** ✅: Web-First Assertions — `expect <ref> visible|hidden|enabled|disabled|checked|unchecked|text|value|count|attribute`, `expect title|url`, `--not` inversion, `--exact` strict match, `--timeout` polling, CI-friendly exit codes
-- **v0.7** (Core): Network & debugging — BiDi `route`/`unroute`, `console`, `requests`, `js-error`, `highlight`
+- **v0.7** ✅: Network & debugging — BiDi `route`/`unroute`/`route-list`, `console`, `requests`/`request`, `highlight` with `--style`/`--hide`/`--all`
 - **v0.8** (Core, Playwright port): Device & environment emulation — `device`, `device-list`, `emulate --throttle-network/--throttle-cpu/--offline`, geolocation/timezone/locale/viewport/UA override
 - **v0.9** (Must-Have): MCP Server & AI ecosystem — `se-cli mcp` via `@modelcontextprotocol/sdk`, `run-code`, `generate-locator`, SKILL.md frontmatter compliance, multi-target `install --skills`
 - **v0.10** (Core, Selenium moat): Remote, Grid & custom browsers — `--browser=safari`, `--endpoint`, `--browser-binary`, `--driver-binary`, `--capabilities`, cloud browser integration, `pdf`, `--browser=edge-ie` for legacy IE scenarios

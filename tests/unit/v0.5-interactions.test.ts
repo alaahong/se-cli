@@ -9,6 +9,8 @@ import {
   type ParsedFlags,
 } from '../../src/wait-config';
 import { parseCommand } from '../../src/daemon/backend';
+import { Response } from '../../src/response';
+import { browser_hover, browser_dblclick, browser_drag } from '../../src/daemon/tools/interactions';
 
 // Helper: create a temp directory with optional config file
 function makeTempDir(configContent?: object): string {
@@ -506,6 +508,60 @@ describe('v0.5 Interaction Completion', () => {
       expect(r.flags.timeout).toBe('10000');
       expect(r.flags.retry).toBe('2');
       expect(r.flags['retry-interval']).toBe('200');
+    });
+  });
+
+  // ── Code generation tests ────────────────────────────────────
+
+  describe('Code generation: interactions produce valid JS', () => {
+    function makeInteractionDriver(): any {
+      const mockEl = { click: vi.fn(async () => {}), sendKeys: vi.fn(async () => {}) };
+      const actions = {
+        move: vi.fn(() => actions),
+        doubleClick: vi.fn(() => actions),
+        dragAndDrop: vi.fn(() => actions),
+        perform: vi.fn(async () => {}),
+      };
+      return {
+        actions: vi.fn(() => actions),
+        findElement: vi.fn(async () => mockEl),
+        getTitle: vi.fn(async () => 'Test Page'),
+        getCurrentUrl: vi.fn(async () => 'https://test.example.com'),
+        executeScript: vi.fn(async () => {}),
+        switchTo: vi.fn(() => ({ defaultContent: vi.fn(async () => {}) })),
+        _actions: actions,
+      };
+    }
+
+    it('hover generates valid JS with element variable', async () => {
+      const driver = makeInteractionDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_hover(driver, { target: 'e1' }, response);
+      const out = response.serialize();
+      // Code should contain "const el = await driver.findElement(...)"
+      expect(out).toContain('const el = await driver.findElement');
+      expect(out).toContain('actions({ bridge: true }).move({ origin: el })');
+      // Should NOT contain the old broken format
+      expect(out).not.toMatch(/\[data-se-ref=e\d+\]/);
+    });
+
+    it('dblclick generates valid JS with element variable', async () => {
+      const driver = makeInteractionDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_dblclick(driver, { target: 'e1' }, response);
+      const out = response.serialize();
+      expect(out).toContain('const el = await driver.findElement');
+      expect(out).toContain('actions({ bridge: true }).doubleClick(el)');
+    });
+
+    it('drag generates valid JS with src and dst element variables', async () => {
+      const driver = makeInteractionDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_drag(driver, { start: 'e1', end: 'e2' }, response);
+      const out = response.serialize();
+      expect(out).toContain('const src = await driver.findElement');
+      expect(out).toContain('const dst = await driver.findElement');
+      expect(out).toContain('actions({ bridge: true }).dragAndDrop(src, dst)');
     });
   });
 });

@@ -61,7 +61,7 @@
       </nav>
 
       <h2 id="commands" data-i18n="bc.commands">Command Reference</h2>
-      <p data-i18n="cmd.intro">se-cli ships with commands grouped into eight categories. Session-level commands run in the CLI process; the rest are forwarded to the daemon. Pick a tab to browse each group.</p>
+      <p data-i18n="cmd.intro">se-cli ships with commands grouped into nine categories. Session-level commands run in the CLI process; the rest are forwarded to the daemon. Pick a tab to browse each group.</p>
 
       <div class="cmd-tabs" role="tablist">
         <button class="cmd-tab active" data-tab="session" role="tab" data-i18n="cmd.tab.session">Session</button>
@@ -73,6 +73,7 @@
         <button class="cmd-tab" data-tab="tabs" role="tab" data-i18n="cmd.tab.tabs">Tabs</button>
         <button class="cmd-tab" data-tab="config" role="tab" data-i18n="cmd.tab.config">Config</button>
         <button class="cmd-tab" data-tab="assert" role="tab">Assertions <span class="ver-badge">v0.6</span></button>
+        <button class="cmd-tab" data-tab="network" role="tab">Network &amp; Debug <span class="ver-badge">v0.7</span></button>
         <button class="cmd-tab" data-tab="flags" role="tab" data-i18n="cmd.tab.flags">Flags</button>
       </div>
 
@@ -225,6 +226,37 @@
         </table>
       </div>
 
+      <div class="cmd-panel" data-panel="network">
+        <table class="cmd-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>highlight &lt;ref&gt;</code></td><td>Outline element with persistent CSS overlay (default: 3px solid red) <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>highlight &lt;ref&gt; --style="2px solid blue"</code></td><td>Custom CSS outline style <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>highlight &lt;ref&gt; --hide</code></td><td>Remove highlight from a specific element <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>highlight --hide --all</code></td><td>Remove all highlights <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>highlight</code></td><td>List all active highlights (no args) <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>console</code></td><td>All buffered console messages since session start <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>console error</code></td><td>Filter by level: error, warning, info, verbose <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>console js-error</code></td><td>Show only JavaScript exceptions <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>console --since=5m</code></td><td>Messages from the last 5 minutes (30s, 1h, ...) <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>console --clear</code></td><td>Clear the console buffer after output <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>requests</code></td><td>List all buffered network requests <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>requests --filter="api"</code></td><td>Filter requests by URL substring <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>requests --status=500</code></td><td>Filter by HTTP status code <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>requests --method=POST</code></td><td>Filter by HTTP method <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>requests --clear</code></td><td>Clear the network request buffer <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>request &lt;index&gt;</code></td><td>Show full request details (headers, body, response) <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>route &lt;pattern&gt; --status=401</code></td><td>Register a mock response for matching URLs via BiDi <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>route &lt;pattern&gt; --body='{"error":"..."}'</code></td><td>Mock with custom response body <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>route &lt;pattern&gt; --headers='{"X-Custom":"val"}'</code></td><td>Mock with custom response headers <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>route-list</code></td><td>List all active route intercepts <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>unroute &lt;index&gt;</code></td><td>Remove a specific route intercept <span class="badge badge-version">v0.7</span></td></tr>
+            <tr><td><code>unroute --all</code></td><td>Remove all route intercepts <span class="badge badge-version">v0.7</span></td></tr>
+          </tbody>
+        </table>
+        <div class="alert alert-info"><span class="alert-icon">i</span><div><strong>v0.7 shipped.</strong> Network interception and console capture use the Selenium BiDi protocol (<code>log.entryAdded</code>, <code>Network.addIntercept</code>). The <code>highlight</code> command is pure JS injection and works on all browsers — no BiDi required. BiDi listeners initialize lazily on first use of any network/debug command.</div></div>
+      </div>
+
       <div class="cmd-panel" data-panel="flags">
         <table class="cmd-table">
           <thead><tr><th data-i18n="cmd.col.flag">Flag</th><th data-i18n="cmd.col.description">Description</th></tr></thead>
@@ -251,6 +283,16 @@
             <tr><td><code>--no-wait</code></td><td data-i18n="cmd.desc.noWait" data-i18n-html>Shorthand for <code>--wait=none --timeout=0</code> (v0.4)</td></tr>
             <tr><td><code>--not</code></td><td>Invert assertion (v0.6)</td></tr>
             <tr><td><code>--exact</code></td><td>Strict match for assertions (v0.6)</td></tr>
+            <tr><td><code>--style="..."</code></td><td>Custom CSS outline for <code>highlight</code> (v0.7)</td></tr>
+            <tr><td><code>--hide</code></td><td>Remove highlight from element(s) (v0.7)</td></tr>
+            <tr><td><code>--all</code></td><td>Apply to all highlights or routes (v0.7)</td></tr>
+            <tr><td><code>--since=&lt;duration&gt;</code></td><td>Time filter for <code>console</code> (e.g. <code>5m</code>, <code>30s</code>, <code>1h</code>) (v0.7)</td></tr>
+            <tr><td><code>--clear</code></td><td>Clear buffer after output (console/requests) (v0.7)</td></tr>
+            <tr><td><code>--filter="..."</code></td><td>Filter <code>requests</code> by URL substring (v0.7)</td></tr>
+            <tr><td><code>--status=&lt;code&gt;</code></td><td>Filter/mock HTTP status code (v0.7)</td></tr>
+            <tr><td><code>--method=&lt;VERB&gt;</code></td><td>Filter <code>requests</code> by HTTP method (v0.7)</td></tr>
+            <tr><td><code>--body='...'</code></td><td>Mock response body for <code>route</code> (v0.7)</td></tr>
+            <tr><td><code>--headers='{"k":"v"}'</code></td><td>Mock response headers for <code>route</code> (v0.7)</td></tr>
           </tbody>
         </table>
       </div>

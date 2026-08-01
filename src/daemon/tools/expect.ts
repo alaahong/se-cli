@@ -6,11 +6,32 @@ import type { WaitConfig } from '../../wait-config';
  * AssertionError — thrown when an expect assertion fails.
  * The server catches this and returns { ok: false, code: 'ASSERTION_FAILED' }
  * so the CLI exits with code 1 (CI-friendly).
+ *
+ * Carries structured metadata (matcher, expected, actual, not) per the v0.6
+ * spec, so error output can explain *why* the assertion failed.
  */
 export class AssertionError extends Error {
-  constructor(message: string) {
+  constructor(
+    message: string,
+    public readonly matcher?: string,
+    public readonly expected?: string,
+    public readonly actual?: string,
+    public readonly not?: boolean,
+  ) {
     super(message);
     this.name = 'AssertionError';
+  }
+
+  /** Return a structured JSON representation for --json output. */
+  toJSON(): Record<string, any> {
+    return {
+      name: this.name,
+      message: this.message,
+      matcher: this.matcher,
+      expected: this.expected,
+      actual: this.actual,
+      not: this.not,
+    };
   }
 }
 
@@ -113,7 +134,8 @@ export async function browser_expect(
     const passed = not ? !matched : matched;
     if (!passed) {
       throw new AssertionError(
-        `Expected title to ${not ? 'not ' : ''}${exact ? 'be' : 'contain'} "${expectedText}", but was "${actual}"`
+        `Expected title to ${not ? 'not ' : ''}${exact ? 'be' : 'contain'} "${expectedText}", but was "${actual}"`,
+        'title', expectedText, actual, not,
       );
     }
     response.addResult(`✓ title ${not ? 'not ' : ''}${exact ? '==' : '~'} "${expectedText}"`);
@@ -128,7 +150,8 @@ export async function browser_expect(
     const passed = not ? !matched : matched;
     if (!passed) {
       throw new AssertionError(
-        `Expected url to ${not ? 'not ' : ''}${exact ? 'be' : 'contain'} "${expectedUrl}", but was "${actual}"`
+        `Expected url to ${not ? 'not ' : ''}${exact ? 'be' : 'contain'} "${expectedUrl}", but was "${actual}"`,
+        'url', expectedUrl, actual, not,
       );
     }
     response.addResult(`✓ url ${not ? 'not ' : ''}${exact ? '==' : '~'} "${expectedUrl}"`);
@@ -153,7 +176,8 @@ export async function browser_expect(
         actualCount = els.length;
       } catch {}
       throw new AssertionError(
-        `Expected count to ${not ? 'not ' : ''}be ${expectedCount}, but was ${actualCount}`
+        `Expected count to ${not ? 'not ' : ''}be ${expectedCount}, but was ${actualCount}`,
+        'count', String(expectedCount), String(actualCount), not,
       );
     }
     response.addResult(`✓ count ${not ? '!= ' : '== '}${expectedCount}`);
@@ -169,7 +193,7 @@ export async function browser_expect(
     case 'visible': {
       const passed = await pollUntil(() => el.isDisplayed(), !not, timeout);
       if (!passed) {
-        throw new AssertionError(`Expected element to ${not ? 'not ' : ''}be visible`);
+        throw new AssertionError(`Expected element to ${not ? 'not ' : ''}be visible`, 'visible', undefined, undefined, not);
       }
       response.addResult(`✓ ${not ? 'not ' : ''}visible`);
       response.addCode(`await driver.wait(until.elementIs${not ? 'Not' : ''}Visible(${byStr}), ${timeout});`);
@@ -179,7 +203,7 @@ export async function browser_expect(
       // hidden is the inverse of visible
       const passed = await pollUntil(() => el.isDisplayed(), not, timeout);
       if (!passed) {
-        throw new AssertionError(`Expected element to ${not ? 'not ' : ''}be hidden`);
+        throw new AssertionError(`Expected element to ${not ? 'not ' : ''}be hidden`, 'hidden', undefined, undefined, not);
       }
       response.addResult(`✓ ${not ? 'not ' : ''}hidden`);
       response.addCode(`await driver.wait(until.elementIs${not ? '' : 'Not'}Visible(${byStr}), ${timeout});`);
@@ -188,7 +212,7 @@ export async function browser_expect(
     case 'enabled': {
       const passed = await pollUntil(() => el.isEnabled(), !not, timeout);
       if (!passed) {
-        throw new AssertionError(`Expected element to ${not ? 'not ' : ''}be enabled`);
+        throw new AssertionError(`Expected element to ${not ? 'not ' : ''}be enabled`, 'enabled', undefined, undefined, not);
       }
       response.addResult(`✓ ${not ? 'not ' : ''}enabled`);
       response.addCode(`await driver.wait(until.elementIs${not ? 'Not' : ''}Enabled(${byStr}), ${timeout});`);
@@ -197,7 +221,7 @@ export async function browser_expect(
     case 'disabled': {
       const passed = await pollUntil(() => el.isEnabled(), not, timeout);
       if (!passed) {
-        throw new AssertionError(`Expected element to ${not ? 'not ' : ''}be disabled`);
+        throw new AssertionError(`Expected element to ${not ? 'not ' : ''}be disabled`, 'disabled', undefined, undefined, not);
       }
       response.addResult(`✓ ${not ? 'not ' : ''}disabled`);
       response.addCode(`await driver.wait(until.elementIs${not ? '' : 'Not'}Enabled(${byStr}), ${timeout});`);
@@ -206,7 +230,7 @@ export async function browser_expect(
     case 'checked': {
       const passed = await pollUntil(() => el.isSelected(), !not, timeout);
       if (!passed) {
-        throw new AssertionError(`Expected element to ${not ? 'not ' : ''}be checked`);
+        throw new AssertionError(`Expected element to ${not ? 'not ' : ''}be checked`, 'checked', undefined, undefined, not);
       }
       response.addResult(`✓ ${not ? 'not ' : ''}checked`);
       response.addCode(`await driver.wait(until.elementIs${not ? 'Not' : ''}Selected(${byStr}), ${timeout});`);
@@ -215,7 +239,7 @@ export async function browser_expect(
     case 'unchecked': {
       const passed = await pollUntil(() => el.isSelected(), not, timeout);
       if (!passed) {
-        throw new AssertionError(`Expected element to ${not ? 'not ' : ''}be unchecked`);
+        throw new AssertionError(`Expected element to ${not ? 'not ' : ''}be unchecked`, 'unchecked', undefined, undefined, not);
       }
       response.addResult(`✓ ${not ? 'not ' : ''}unchecked`);
       response.addCode(`await driver.wait(until.elementIs${not ? '' : 'Not'}Selected(${byStr}), ${timeout});`);
@@ -228,7 +252,8 @@ export async function browser_expect(
       const passed = not ? !matched : matched;
       if (!passed) {
         throw new AssertionError(
-          `Expected text to ${not ? 'not ' : ''}${exact ? 'be' : 'contain'} "${expected}", but was "${actual}"`
+          `Expected text to ${not ? 'not ' : ''}${exact ? 'be' : 'contain'} "${expected}", but was "${actual}"`,
+          'text', expected, actual, not,
         );
       }
       response.addResult(`✓ text ${not ? '!' : ''}${exact ? '==' : '~'} "${expected}"`);
@@ -242,7 +267,8 @@ export async function browser_expect(
       const passed = not ? !matched : matched;
       if (!passed) {
         throw new AssertionError(
-          `Expected value to ${not ? 'not ' : ''}${exact ? 'be' : 'contain'} "${expected}", but was "${actual}"`
+          `Expected value to ${not ? 'not ' : ''}${exact ? 'be' : 'contain'} "${expected}", but was "${actual}"`,
+          'value', expected, actual, not,
         );
       }
       response.addResult(`✓ value ${not ? '!' : ''}${exact ? '==' : '~'} "${expected}"`);
@@ -257,7 +283,8 @@ export async function browser_expect(
       const passed = not ? !matched : matched;
       if (!passed) {
         throw new AssertionError(
-          `Expected attribute "${name}" to ${not ? 'not ' : ''}${exact ? 'be' : 'contain'} "${expectedVal}", but was "${actual}"`
+          `Expected attribute "${name}" to ${not ? 'not ' : ''}${exact ? 'be' : 'contain'} "${expectedVal}", but was "${actual}"`,
+          'attribute', expectedVal, actual, not,
         );
       }
       response.addResult(`✓ attribute ${name} ${not ? '!' : ''}${exact ? '==' : '~'} "${expectedVal}"`);
