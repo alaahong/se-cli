@@ -5,6 +5,12 @@ import { Registry, SessionConfig } from '../registry';
 import { baseDaemonDir } from '../config';
 import type { ClientMessage, ServerMessage } from '../protocol';
 import { resetAll as resetNetworkDebugState } from './tools/network-state';
+import { hideChildProcessWindows } from './hide-windows';
+
+// Must run before any selenium-webdriver call: selenium-webdriver spawns
+// selenium-manager.exe and the browser driver without windowsHide, which
+// would pop up console windows on Windows (see hide-windows.ts).
+hideChildProcessWindows();
 
 const args = process.argv.slice(2);
 const sessionName = args[0];
