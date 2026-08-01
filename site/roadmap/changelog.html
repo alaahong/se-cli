@@ -188,7 +188,7 @@
           <div class="roadmap-body">
             <h3 data-i18n="cl.v09Title" data-i18n-html>MCP Server &amp; AI Ecosystem <span class="badge badge-must">Must-Have</span> <span class="matrix-status-planned">planned</span></h3>
             <span class="roadmap-meta" data-i18n="cl.v09Meta">planned · dual-track AI strategy</span>
-            <p data-i18n="cl.v09Lead">Exposes se-cli as an MCP Server. Dual-track: CLI+SKILLS (token-efficient for coding agents) and MCP Server (persistent state for autonomous workflows) — both share the same underlying tool implementation.</p>
+            <p data-i18n="cl.v09Lead">Exposes se-cli as an MCP Server. Dual-track: CLI+SKILLS (token-efficient for coding agents) and MCP Server (persistent state for autonomous workflows) — both share the same underlying tool implementation. MCP server wrapper published as <a href="https://github.com/se-cli/se-mcp"><code>se-mcp</code></a>.</p>
             <ul>
               <li data-i18n="cl.v09L1" data-i18n-html><code>se-cli mcp</code>: start MCP Server using <code>@modelcontextprotocol/sdk</code>; stdio (default) and Streamable HTTP transports.</li>
               <li data-i18n="cl.v09L2" data-i18n-html><code>run-code "async driver =&gt; ..."</code>: execute arbitrary Selenium snippets.</li>
@@ -234,8 +234,8 @@
           <div class="roadmap-version roadmap-version-long">v0.12</div>
           <div class="roadmap-body">
             <h3 data-i18n="cl.v012Title" data-i18n-html>VSCode Extension <span class="badge badge-marginal">Marginal</span> <span class="matrix-status-planned">planned</span></h3>
-            <span class="roadmap-meta" data-i18n="cl.v012Meta">planned · separate npm package</span>
-            <p data-i18n="cl.v012Lead" data-i18n-html>A separate package (<code>@browsers-cli/se-cli-vscode</code>) that depends on se-cli CLI being globally installed.</p>
+            <span class="roadmap-meta" data-i18n="cl.v012Meta">planned · separate GitHub repo</span>
+            <p data-i18n="cl.v012Lead" data-i18n-html>A separate repo (<a href="https://github.com/se-cli/se-extension-vscode"><code>se-extension-vscode</code></a>) that depends on se-cli CLI being globally installed. Initial implementation includes MCP registration, commands, webview, and status bar.</p>
             <ul>
               <li data-i18n="cl.v012L1" data-i18n-html><strong>Task Provider</strong>: register se-cli commands as VSCode custom tasks.</li>
               <li data-i18n="cl.v012L2" data-i18n-html><strong>Webview</strong>: browser screenshot and aria snapshot preview via <code>postMessage</code>.</li>

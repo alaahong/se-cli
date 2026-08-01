@@ -18,7 +18,11 @@
     "browser-automation",
     "ai-agent",
     "accessibility",
-    "aria"
+    "aria",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "vscode"
   ],
   "engines": {
     "node": ">=18"

@@ -115,6 +115,7 @@ se-cli close
 | `list` | List all sessions |
 | `close-all` | Close all sessions gracefully |
 | `kill-all` | Force-kill all sessions |
+| `mcp-server` | Start MCP server in stdio mode (for VS Code / AI agents) |
 
 ### Navigation
 
@@ -429,7 +430,62 @@ Agent: I'll navigate to the login page and test it.
   The login succeeded — I can see the dashboard.
 ```
 
+### With VS Code MCP Server
+
+se-cli can be used as an MCP (Model Context Protocol) server, allowing VS Code Copilot and other MCP-aware AI tools to use browser automation directly — no shell commands needed.
+
+**Option 1: Workspace `.vscode/mcp.json` (recommended for projects)**
+
+```json
+{
+  "servers": {
+    "se-cli": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@browsers-cli/se-mcp"]
+    }
+  }
+}
+```
+
+> **Tip**: `@browsers-cli/se-mcp` is a thin wrapper that delegates to `@browsers-cli/se-cli mcp-server`.
+> You can also use `"args": ["-y", "@browsers-cli/se-cli", "mcp-server"]` directly.
+
+**Option 2: User settings (`settings.json`)**
+
+```json
+{
+  "mcp.servers": {
+    "se-cli": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@browsers-cli/se-mcp"]
+    }
+  }
+}
+```
+
+**Option 3: VS Code Extension (marketplace discovery)**
+
+Install the [se-cli VS Code extension](https://github.com/se-cli/se-extension-vscode) — search `@mcp se-cli`
+in VS Code Extensions view (`Ctrl+Shift+X`). The extension auto-registers the MCP server, provides
+commands, a webview panel for snapshot/screenshot preview, and a status bar indicator.
+
+Once enabled, all 40+ browser automation commands are available as MCP tools:
+- `browser_open`, `browser_close`, `browser_navigate`
+- `browser_click`, `browser_fill`, `browser_type`, `browser_press`
+- `browser_snapshot`, `browser_find`, `browser_screenshot`, `browser_eval`
+- `browser_expect` (assertions), `browser_console`, `browser_requests`, `browser_route`
+- And more — see `se-cli mcp-server` for the full tool list
+
+```bash
+# Start MCP server manually (for debugging)
+se-cli mcp-server
+```
+
 ### Why CLI over MCP for agents?
+
+se-cli supports both modes — CLI for token-critical workflows, MCP for IDE-integrated workflows:
 
 | Aspect | MCP | CLI |
 |--------|-----|-----|
@@ -437,6 +493,7 @@ Agent: I'll navigate to the login page and test it.
 | Context pollution | Tool schemas fill context | No schemas in context |
 | State persistence | Per-session overhead | Daemon holds state |
 | Agent compatibility | MCP-compatible only | Any agent that runs shell |
+| IDE integration | Native VS Code / Copilot | Requires terminal access |
 
 ## Architecture
 
@@ -444,15 +501,18 @@ Agent: I'll navigate to the login page and test it.
 ┌─────────────────┐  Unix socket / Win pipe  ┌──────────────────────┐
 │  se-cli         │ ─── line-delimited JSON ─▶ │  se-cli daemon       │
 │  (short-lived)  │ ◀── single response ───── │  (holds WebDriver)   │
-└─────────────────┘                            └──────────────────────┘
-                                                          │
+│  CLI process    │                            └──────────────────────┘
+└─────────────────┘                                      │
                                                           │ W3C WebDriver HTTP
                                                           ▼
-                                                    ┌──────────┐
-                                                    │ Browser  │
-                                                    │(Chrome/  │
-                                                    │ Edge/FF) │
-                                                    └──────────┘
+┌─────────────────┐                               ┌──────────┐
+│  MCP Server     │  (same daemon,                │ Browser  │
+│  (stdio JSON-   │   long-lived)                 │(Chrome/  │
+│   RPC process)  │                               │ Edge/FF) │
+└─────────────────┘                               └──────────┘
+
+CLI mode:     se-cli <cmd> → daemon → browser
+MCP mode:     AI agent → MCP server (stdio) → daemon → browser
 ```
 
 - **CLI process**: spawned per command, sends one JSON line, receives one response, exits
@@ -555,10 +615,10 @@ Features are classified as **Must-Have** (基础底座), **Core** (差异化), o
 - **v0.6** ✅: Web-First Assertions — `expect <ref> visible|hidden|enabled|disabled|checked|unchecked|text|value|count|attribute`, `expect title|url`, `--not` inversion, `--exact` strict match, `--timeout` polling, CI-friendly exit codes
 - **v0.7** ✅: Network & debugging — BiDi `route`/`unroute`/`route-list`, `console`, `requests`/`request`, `highlight` with `--style`/`--hide`/`--all`
 - **v0.8** (Core, Playwright port): Device & environment emulation — `device`, `device-list`, `emulate --throttle-network/--throttle-cpu/--offline`, geolocation/timezone/locale/viewport/UA override
-- **v0.9** (Must-Have): MCP Server & AI ecosystem — `se-cli mcp` via `@modelcontextprotocol/sdk`, `run-code`, `generate-locator`, SKILL.md frontmatter compliance, multi-target `install --skills`
+- **v0.9** (Must-Have, partially implemented ✅): MCP Server & AI ecosystem — `se-cli mcp-server` with 40+ tools, VS Code `.vscode/mcp.json` config, separate [`se-mcp`](https://github.com/se-cli/se-mcp) wrapper package. Remaining: `run-code`, `generate-locator`, Streamable HTTP transport
 - **v0.10** (Core, Selenium moat): Remote, Grid & custom browsers — `--browser=safari`, `--endpoint`, `--browser-binary`, `--driver-binary`, `--capabilities`, cloud browser integration, `pdf`, `--browser=edge-ie` for legacy IE scenarios
 - **v0.11** (Marginal): Recording & visualization — `record`, `tracing-start/stop`, `video-start/stop`, `show` dashboard, `--annotate`
-- **v0.12** (Marginal): VSCode extension — Task Provider, Webview, MCP auto-registration
+- **v0.12** (Marginal, initial impl ✅): VSCode extension — [`se-extension-vscode`](https://github.com/se-cli/se-extension-vscode) with MCP registration, commands, webview, status bar. Remaining: Task Provider, `attach --extension`
 
 **Will never implement**: native aria ref engine (staying on `data-se-ref`), Playwright-level full tracing parity, real IE 11 (replaced by Edge IE mode in v0.10).
 

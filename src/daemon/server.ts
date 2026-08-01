@@ -91,23 +91,37 @@ async function buildDriver(): Promise<void> {
   builder.getCapabilities().set('webSocketUrl', true);
 
   if (browserName === 'chrome') {
-    const chromeArgs: string[] = [];
+    const chromeArgs: string[] = [
+      // Suppress Chrome's own stderr logging noise (GPU warnings, importer
+      // scans, task-provider bugs, etc.) that floods the daemon's stderr on
+      // Windows.  These flags are safe in both headed and headless modes.
+      '--disable-logging', '--log-level=3', '--disable-breakpad',
+    ];
     if (!headed && !cdpEndpoint) {
       chromeArgs.push('--headless=new', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu');
     }
     if (profilePath) chromeArgs.push(`--user-data-dir=${profilePath}`);
-    const chromeOpts: any = { args: chromeArgs };
+    const chromeOpts: any = {
+      args: chromeArgs,
+      // excludeSwitches removes Chrome defaults that produce stderr noise.
+      excludeSwitches: ['enable-logging', 'disable-extensions'],
+    };
     if (cdpEndpoint) chromeOpts.debuggerAddress = cdpEndpoint;
     // Allow overriding the Chrome binary path via env var (useful in CI).
     if (process.env.SE_CHROME_BINARY) chromeOpts.binary = process.env.SE_CHROME_BINARY;
     builder.getCapabilities().set('goog:chromeOptions', chromeOpts);
   } else if (browserName === 'edge') {
-    const edgeArgs: string[] = [];
+    const edgeArgs: string[] = [
+      '--disable-logging', '--log-level=3', '--disable-breakpad',
+    ];
     if (!headed) {
       edgeArgs.push('--headless=new', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu');
     }
     if (profilePath) edgeArgs.push(`--user-data-dir=${profilePath}`);
-    const edgeOpts: any = { args: edgeArgs };
+    const edgeOpts: any = {
+      args: edgeArgs,
+      excludeSwitches: ['enable-logging', 'disable-extensions'],
+    };
     if (cdpEndpoint) edgeOpts.debuggerAddress = cdpEndpoint;
     if (process.env.SE_EDGE_BINARY) edgeOpts.binary = process.env.SE_EDGE_BINARY;
     builder.getCapabilities().set('ms:edgeOptions', edgeOpts);

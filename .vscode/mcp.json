@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "se-cli": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@browsers-cli/se-mcp"]
+    }
+  }
+}

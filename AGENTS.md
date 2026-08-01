@@ -11,6 +11,16 @@ Guidelines for AI agents and human contributors working on the se-cli codebase.
 - **npm package**: `@browsers-cli/se-cli`
 - **npm URL**: `https://www.npmjs.com/package/@browsers-cli/se-cli`
 
+### Ecosystem Repositories
+
+The se-cli ecosystem consists of three independent repositories (following the Playwright pattern):
+
+| Repo | npm Package | Purpose |
+|------|------------|---------|
+| [`se-cli/se-cli`](https://github.com/se-cli/se-cli) | `@browsers-cli/se-cli` | Core CLI + daemon + MCP server implementation |
+| [`se-cli/se-mcp`](https://github.com/se-cli/se-mcp) | `@browsers-cli/se-mcp` | Thin MCP server wrapper package for MCP clients |
+| [`se-cli/se-extension-vscode`](https://github.com/se-cli/se-extension-vscode) | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=se-cli.se-extension-vscode) | VS Code extension — MCP registration, commands, webview |
+
 ### URL Reference Rules (CRITICAL)
 
 All GitHub URLs in documentation, source code, configuration, and website content **MUST** point to the organization repository `se-cli/se-cli`. Never use personal or fork usernames (e.g., `alaahong`) in any committed file.
