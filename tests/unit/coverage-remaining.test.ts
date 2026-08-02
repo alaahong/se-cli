@@ -69,6 +69,7 @@ import { addHighlight, clearAllHighlights, addRoute, removeAllRoutes, getRoutes 
 import { callTool, parseCommand } from '../../src/daemon/backend';
 import { browser_expect } from '../../src/daemon/tools/expect';
 import { Session } from '../../src/session';
+import { filterCliFlags } from '../../src/program';
 import { browser_route_list, browser_unroute } from '../../src/daemon/tools/route';
 
 // Mock network-state to make ensureBidiInitialized a no-op and getNetwork
@@ -407,7 +408,12 @@ describe('shared.ts findElementWithWait', () => {
     };
     await expect(
       findElementWithWait(driver, 'e1', { state: 'visible', timeout: 100, retry: 0, retryInterval: 100 }),
-    ).rejects.toThrow('Element not found after 100ms: e1');
+    ).rejects.toMatchObject({
+      // Must be a selenium TimeoutError, NOT a generic Error: the server
+      // classifies generic Errors as DRIVER_ERROR and destroys the session.
+      name: 'TimeoutError',
+      message: 'Element not found after 100ms: e1',
+    });
   });
 });
 
@@ -536,6 +542,26 @@ describe('state.ts', () => {
       );
     });
   });
+
+  describe('browser_state_load missing fields', () => {
+    it('tolerates state files with missing cookies/storage/url fields', async () => {
+      fs.mkdirSync(path.join(tmpDir, '.se-cli'), { recursive: true });
+      fs.writeFileSync(path.join(tmpDir, '.se-cli', 'minimal.json'), JSON.stringify({}));
+      const driver = {
+        get: vi.fn(async () => {}),
+        manage: vi.fn(() => ({
+          deleteAllCookies: vi.fn(async () => {}),
+          addCookie: vi.fn(async () => {}),
+        })),
+        executeScript: vi.fn(async () => {}),
+      };
+      const resp = new Response({ raw: false, json: true });
+      await browser_state_load(driver, { filename: 'minimal.json' }, resp);
+      const out = JSON.parse(resp.serialize());
+      expect(out.result).toContain('loaded state from minimal.json');
+      expect(driver.get).not.toHaveBeenCalled();
+    });
+  });
 });
 
 // ===========================================================================
@@ -611,6 +637,17 @@ describe('find.ts search paths', () => {
     await browser_find(driver, { text: 'anything' }, resp);
 
     expect(resp.serialize()).toContain('Failed to generate snapshot for find');
+  });
+
+  it('matches every line with a /g-flag regex (no lastIndex skipping)', async () => {
+    const driver = makeFindDriver([true, '- item A\n- item B\n- item C']);
+    const resp = new Response({ raw: false, json: true });
+    await browser_find(driver, { regex: '/item/g' }, resp);
+    const out = JSON.parse(resp.serialize());
+
+    expect(out.result).toContain('item A');
+    expect(out.result).toContain('item B');
+    expect(out.result).toContain('item C');
   });
 });
 
@@ -764,6 +801,15 @@ describe('tab.ts edge cases', () => {
     await browser_tab_select(driver, { index: 5 }, resp);
 
     expect(resp.serialize()).toContain('out of range');
+  });
+
+  it('tab_select with NaN index adds error instead of switching', async () => {
+    const driver = makeMockDriver({ handles: ['w1', 'w2'] });
+    const resp = new Response({ raw: false, json: true });
+    await browser_tab_select(driver, { index: NaN }, resp);
+
+    expect(resp.serialize()).toContain('out of range');
+    expect(driver.switchTo().window).not.toHaveBeenCalled();
   });
 });
 
@@ -1062,6 +1108,34 @@ describe('registry.ts error paths', () => {
   it('listSessions returns empty array when directory does not exist', () => {
     expect(registry.listSessions('nonexistent')).toEqual([]);
   });
+
+  it('listAllSessions aggregates sessions across all workspace hashes', () => {
+    const makeConfig = (name: string, wsDir: string): SessionConfig => ({
+      name, version: '1.0', timestamp: Date.now(),
+      socketPath: '/tmp/test.sock', workspaceDir: wsDir, persistent: false, browserName: 'chrome',
+    });
+    fs.mkdirSync(path.join(tmpDir, 'ws1'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, 'ws2'), { recursive: true });
+    fs.writeFileSync(path.join(tmpDir, 'ws1', 'default.session'), JSON.stringify(makeConfig('default', '/proj/a')));
+    fs.writeFileSync(path.join(tmpDir, 'ws1', 'scrape.session'), JSON.stringify(makeConfig('scrape', '/proj/a')));
+    fs.writeFileSync(path.join(tmpDir, 'ws2', 'default.session'), JSON.stringify(makeConfig('default', '/proj/b')));
+    // A stray file that is not a *.session and a non-directory entry are ignored
+    fs.writeFileSync(path.join(tmpDir, 'notes.txt'), 'not a session');
+    fs.writeFileSync(path.join(tmpDir, 'ws1', 'junk.json'), '{}');
+
+    const entries = registry.listAllSessions();
+    expect(entries).toHaveLength(3);
+    expect(entries.map(e => `${e.wsHash}:${e.config.workspaceDir}`).sort()).toEqual([
+      'ws1:/proj/a',
+      'ws1:/proj/a',
+      'ws2:/proj/b',
+    ]);
+  });
+
+  it('listAllSessions returns empty array when base dir does not exist', () => {
+    const empty = new Registry(path.join(tmpDir, 'missing'));
+    expect(empty.listAllSessions()).toEqual([]);
+  });
 });
 
 // ===========================================================================
@@ -1152,7 +1226,7 @@ describe('press.ts key mapping', () => {
     expect(out.result).toBe('pressed Enter');
   });
 
-  it('uses raw key for unknown keys', async () => {
+  it('rejects unknown keys instead of typing them as literal text', async () => {
     const sendKeys = vi.fn(async () => {});
     const driver = {
       switchTo: vi.fn(() => ({
@@ -1160,12 +1234,11 @@ describe('press.ts key mapping', () => {
       })),
     };
     const resp = new Response({ raw: false, json: true });
-    await browser_press(driver, { key: 'a' }, resp);
+    await browser_press(driver, { key: 'Delete' }, resp);
     const out = JSON.parse(resp.serialize());
 
-    expect(sendKeys).toHaveBeenCalledWith('a');
-    expect(out.code.join('\n')).toContain("'a'");
-    expect(out.result).toBe('pressed a');
+    expect(sendKeys).not.toHaveBeenCalled();
+    expect(out.error).toContain('Unsupported key: Delete');
   });
 });
 
@@ -1436,7 +1509,21 @@ describe('minimist.ts alias resolution', () => {
       string: [],
       alias: { v: 'verbose' },
     });
-    expect(result.verbose).toBe('true');
+    expect(result.verbose).toBe(true);
+  });
+
+  it('treats --flag=false / --flag=0 as false for boolean options', () => {
+    const opts = { boolean: ['headed'], string: [], alias: {} };
+    expect(parseArgs(['--headed=false'], opts).headed).toBe(false);
+    expect(parseArgs(['--headed=0'], opts).headed).toBe(false);
+    expect(parseArgs(['--headed=true'], opts).headed).toBe(true);
+  });
+
+  it('keeps negative numbers as positional args (not flags)', () => {
+    const opts = { boolean: [], string: [], alias: {} };
+    const result = parseArgs(['mousewheel', '-100', '-50'], opts);
+    expect(result._).toEqual(['mousewheel', '-100', '-50']);
+    expect(result['100']).toBeUndefined();
   });
 });
 
@@ -1482,6 +1569,19 @@ describe('wait-config.ts file config', () => {
 
     const result = resolveConfig({}, tmpDir, process.env as any, 'click');
     expect(result.timeouts.script).toBe(25000);
+  });
+
+  it('ignores invalid numeric flag values (NaN) instead of poisoning config', () => {
+    const result = resolveConfig(
+      { timeout: 'abc', retry: 'xyz', 'retry-interval': 'q', 'implicit-wait': 'nope' },
+      tmpDir,
+      {},
+      'click',
+    );
+    expect(result.wait.timeout).toBe(5000);
+    expect(result.wait.retry).toBe(0);
+    expect(result.wait.retryInterval).toBe(100);
+    expect(result.timeouts.implicit).toBe(0);
   });
 });
 
@@ -1996,5 +2096,38 @@ describe('backend.ts catch blocks', () => {
     );
     // Should succeed on retry despite switchTo throwing on both attempts
     expect(resp.serialize()).toContain('Test');
+  });
+});
+
+// ===========================================================================
+// 21. program.ts filterCliFlags
+// ===========================================================================
+
+describe('program.ts filterCliFlags', () => {
+  it('keeps tool command and positional args', () => {
+    expect(filterCliFlags(['click', 'e1'])).toEqual(['click', 'e1']);
+  });
+
+  it('strips =value CLI flags', () => {
+    expect(filterCliFlags(['click', 'e1', '--raw', '--session=dev'])).toEqual(['click', 'e1']);
+    expect(filterCliFlags(['click', '--browser=chrome', 'e1'])).toEqual(['click', 'e1']);
+  });
+
+  it('consumes space-separated values of CLI flags (no leak)', () => {
+    expect(filterCliFlags(['click', 'e1', '-s', 'dev'])).toEqual(['click', 'e1']);
+    expect(filterCliFlags(['-s', 'dev', 'click', 'e1'])).toEqual(['click', 'e1']);
+    expect(filterCliFlags(['click', '--browser', 'chrome', 'e1'])).toEqual(['click', 'e1']);
+  });
+
+  it('does not consume the next arg when it is another flag', () => {
+    expect(filterCliFlags(['click', '-s', '--raw', 'e1'])).toEqual(['click', 'e1']);
+  });
+
+  it('keeps tool-specific flags', () => {
+    expect(filterCliFlags(['fill', 'e1', 'hello', '--submit'])).toEqual(['fill', 'e1', 'hello', '--submit']);
+  });
+
+  it('keeps negative-number positionals after a stripped flag', () => {
+    expect(filterCliFlags(['mousewheel', '-100', '-50', '-s', 'dev'])).toEqual(['mousewheel', '-100', '-50']);
   });
 });

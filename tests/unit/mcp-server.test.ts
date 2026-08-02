@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mapToolToCliArgs, toolDefinitions, buildOpenOptions, type ToolDef } from '../../src/mcp-server';
 
 vi.mock('../../src/detect-browser', () => ({
@@ -639,5 +639,112 @@ describe('MCP Server — buildOpenOptions', () => {
     expect(persistent.opts.persistent).toBe(true);
     expect(persistent.opts.profilePath).toContain('profiles');
     expect(persistent.opts.profilePath).toContain('mySession');
+  });
+});
+
+// ===========================================================================
+// MCP Server — request handling (browser_open / browser_close semantics)
+// ===========================================================================
+
+const { mockRl } = vi.hoisted(() => ({
+  mockRl: { on: vi.fn(), close: vi.fn() },
+}));
+
+vi.mock('readline', () => ({
+  createInterface: vi.fn(() => mockRl),
+}));
+
+vi.mock('../../src/session', () => {
+  return {
+    Session: class MockSession {
+      stop = vi.fn(async () => {});
+      run = vi.fn(async () => ({ ok: true, text: 'ok' }));
+      startDaemon = vi.fn(async () => {});
+      canConnect = vi.fn(async () => true);
+    },
+  };
+});
+
+import { McpServer } from '../../src/mcp-server';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+
+describe('MCP Server — request handling', () => {
+  let tmpDir: string;
+  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'se-cli-mcp-'));
+    vi.mocked(detectBrowser).mockReset();
+    stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    stdoutSpy.mockRestore();
+    try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch {}
+  });
+
+  function lastResponse(): any {
+    const written = stdoutSpy.mock.calls.map(c => String(c[0])).join('');
+    return JSON.parse(written.trim().split('\n').pop()!);
+  }
+
+  it('browser_open reports failure as isError:true when no browser is detected', async () => {
+    vi.mocked(detectBrowser).mockReturnValue(null);
+    const server = new McpServer(tmpDir);
+    await (server as any).handleRequest({
+      id: 1,
+      method: 'tools/call',
+      params: { name: 'browser_open', arguments: {} },
+    });
+    const resp = lastResponse();
+    expect(resp.id).toBe(1);
+    expect(resp.result.isError).toBe(true);
+    expect(resp.result.content[0].text).toContain('No browser detected');
+  });
+
+  it('browser_open succeeds when a browser is detected (isError:false)', async () => {
+    vi.mocked(detectBrowser).mockReturnValue('edge');
+    const server = new McpServer(tmpDir);
+    await (server as any).handleRequest({
+      id: 1,
+      method: 'tools/call',
+      params: { name: 'browser_open', arguments: {} },
+    });
+    const resp = lastResponse();
+    expect(resp.result.isError).toBe(false);
+    expect(resp.result.content[0].text).toContain('started');
+  });
+
+  it('browser_close for a session not opened here reports isError:true (no false success)', async () => {
+    const server = new McpServer(tmpDir);
+    await (server as any).handleRequest({
+      id: 1,
+      method: 'tools/call',
+      params: { name: 'browser_close', arguments: { session: 'external' } },
+    });
+    const resp = lastResponse();
+    expect(resp.result.isError).toBe(true);
+    expect(resp.result.content[0].text).toContain('No browser session managed');
+  });
+
+  it('browser_close succeeds for a session opened via browser_open', async () => {
+    vi.mocked(detectBrowser).mockReturnValue('edge');
+    const server = new McpServer(tmpDir);
+    await (server as any).handleRequest({
+      id: 1,
+      method: 'tools/call',
+      params: { name: 'browser_open', arguments: {} },
+    });
+    await (server as any).handleRequest({
+      id: 2,
+      method: 'tools/call',
+      params: { name: 'browser_close', arguments: {} },
+    });
+    const resp = lastResponse();
+    expect(resp.id).toBe(2);
+    expect(resp.result.isError).toBe(false);
+    expect(resp.result.content[0].text).toContain('closed');
   });
 });

@@ -25,6 +25,9 @@ export function browserCandidates(browser: BrowserName, platform: NodeJS.Platfor
     switch (browser) {
       case 'edge':
         return [
+          // Per-user installs live under %LocalAppData% (e.g. Edge auto-update
+          // on Windows without admin rights) — Chrome already covers this.
+          path.join(process.env.LOCALAPPDATA || path.join(home, 'AppData', 'Local'), 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
           path.join(programFiles(true), 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
           path.join(programFiles(false), 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
         ];

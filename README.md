@@ -112,9 +112,12 @@ se-cli close
 |---------|-------------|
 | `open [url]` | Start daemon + browser, optionally navigate to URL |
 | `close` | Close browser and daemon |
+| `close --all` | Close every session across all projects (multiple workspaces) |
+| `sessions` | List all sessions across all projects with live/dead status |
 | `list` | List all sessions |
 | `close-all` | Close all sessions gracefully |
 | `kill-all` | Force-kill all sessions |
+| `logs [--tail=N]` | Show recent daemon + CLI log lines for this session (default tail 50) |
 | `mcp-server` | Start MCP server in stdio mode (for VS Code / AI agents) |
 
 ### Navigation
@@ -279,6 +282,7 @@ Network interception, console capture, and visual debugging tools powered by Sel
 | `--cdp=<url>` | Attach to running Chrome via CDP |
 | `--profile=<path>` | Use a persistent browser profile directory |
 | `--persistent` | Keep browser profile across sessions (auto-assigns path) |
+| `--idle-timeout=<min>` | Auto-close idle daemon after N minutes (default 30; 0 = never) |
 | `--timeout=<ms>` | Per-command explicit-wait timeout (v0.4) |
 | `--wait=<state>` | Wait condition: visible\|hidden\|enabled\|disabled\|stable\|attached\|none\|auto (v0.4) |
 | `--retry=<n>` | Failure retry count, -1 = until timeout (v0.4) |
@@ -287,6 +291,20 @@ Network interception, console capture, and visual debugging tools powered by Sel
 | `--page-load-timeout=<ms>` | Page load timeout (v0.4) |
 | `--script-timeout=<ms>` | Script timeout for async eval (v0.4) |
 | `--no-wait` | Shorthand for --wait=none --timeout=0 (v0.4) |
+
+### Logging
+
+The daemon runs detached (its stdio is unreachable from the CLI), so se-cli writes everything to file logs under `baseDaemonDir()/logs` — `%LOCALAPPDATA%\ms-se-cli\daemon\logs\` on Windows, `~/.cache/ms-se-cli/daemon/logs/` elsewhere:
+
+| File | Content |
+|------|---------|
+| `<wsHash>-<session>.daemon.log` | Daemon lifecycle, driver builds/resets, per-command duration + result code |
+| `<wsHash>-<session>.cli.log` | CLI-side events (session started/reused/stopped, connection retries) |
+| `mcp.log` | MCP server console/stderr output (stdout stays reserved for JSON-RPC) |
+
+- Files rotate at 2 MB keeping 2 backups. Command summaries never include argument values (e.g. `fill` passwords).
+- `SE_CLI_LOG_LEVEL=debug\|info\|warn\|error` controls verbosity (default `info`).
+- `se-cli logs [--tail=N]` prints the tail of the current session's logs.
 
 ## Usage Examples
 

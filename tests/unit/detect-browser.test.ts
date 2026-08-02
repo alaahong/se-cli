@@ -15,6 +15,30 @@ describe('browserCandidates', () => {
     expect(browserCandidates('edge', 'linux')).toContain('/usr/bin/microsoft-edge');
   });
 
+  it('includes per-user Edge install under %LocalAppData% on win32', () => {
+    const original = process.env.LOCALAPPDATA;
+    process.env.LOCALAPPDATA = 'C:\\Users\\test\\AppData\\Local';
+    try {
+      const candidates = browserCandidates('edge', 'win32');
+      expect(candidates[0]).toBe('C:\\Users\\test\\AppData\\Local\\Microsoft\\Edge\\Application\\msedge.exe');
+      expect(detectBrowser(makeCheck([candidates[0]]), 'win32')).toBe('edge');
+    } finally {
+      if (original === undefined) delete process.env.LOCALAPPDATA;
+      else process.env.LOCALAPPDATA = original;
+    }
+  });
+
+  it('falls back to ProgramFiles when LOCALAPPDATA is unset on win32', () => {
+    const original = process.env.LOCALAPPDATA;
+    delete process.env.LOCALAPPDATA;
+    try {
+      const candidates = browserCandidates('edge', 'win32');
+      expect(candidates[0]).toContain('AppData\\Local\\Microsoft\\Edge\\Application\\msedge.exe');
+    } finally {
+      if (original !== undefined) process.env.LOCALAPPDATA = original;
+    }
+  });
+
   it('returns Chrome candidates for win32/darwin/linux', () => {
     expect(browserCandidates('chrome', 'win32').length).toBeGreaterThan(0);
     expect(browserCandidates('chrome', 'win32')[0]).toContain('chrome.exe');

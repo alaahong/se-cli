@@ -16,6 +16,7 @@ import { describe, it, expect, beforeEach, afterEach, afterAll, vi } from 'vites
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { spawn } from 'child_process';
 
 // ── Hoisted state shared with mock factories ──────────────────────────
 // vi.hoisted runs before any import, so these values are available inside
@@ -457,6 +458,247 @@ describe('Session', () => {
     });
   });
 
+  // ── startDaemon() ──────────────────────────────────────────────────
+
+  describe('startDaemon()', () => {
+    it('returns "reused" when an alive daemon already owns the socket', async () => {
+      const session = new Session('/workspace', 'default');
+      const promise = session.startDaemon({ browserName: 'chrome' });
+
+      // canConnect() → socket[0]
+      const sock0 = mockState.sockets[0];
+      sock0.emit('connect');
+
+      // startDaemon ping → socket[1]
+      const sock1 = await waitForSocket(1);
+      sock1.emit('connect');
+      sock1.emit('data', Buffer.from(JSON.stringify({ ok: true, text: 'pong' }) + '\n'));
+
+      await expect(promise).resolves.toBe('reused');
+      expect(spawn).not.toHaveBeenCalled();
+    });
+
+    it('returns "reused" even when ping responds with driver error', async () => {
+      // A live daemon with a crashed driver is still "reused" — the daemon
+      // resets its driver on the next command rather than spawning a window.
+      const session = new Session('/workspace', 'default');
+      const promise = session.startDaemon({ browserName: 'chrome' });
+
+      const sock0 = mockState.sockets[0];
+      sock0.emit('connect');
+
+      const sock1 = await waitForSocket(1);
+      sock1.emit('connect');
+      sock1.emit(
+        'data',
+        Buffer.from(
+          JSON.stringify({ ok: false, code: 'DRIVER_ERROR', error: 'crash' }) + '\n',
+        ),
+      );
+
+      await expect(promise).resolves.toBe('reused');
+      expect(spawn).not.toHaveBeenCalled();
+    });
+
+    it('returns "started" and forwards --idle-timeout to the daemon', async () => {
+      mockState.registry.loadSession.mockReturnValue(null);
+
+      let stdoutData: ((d: Buffer) => void) | null = null;
+      const spawnMock = vi.mocked(spawn);
+      spawnMock.mockImplementationOnce(() => {
+        const child: any = {
+          pid: 4242,
+          stdout: {
+            on: (ev: string, cb: (d: Buffer) => void) => { if (ev === 'data') stdoutData = cb; },
+            removeListener: vi.fn(),
+            unref: vi.fn(),
+          },
+          stderr: { on: vi.fn(), removeListener: vi.fn(), unref: vi.fn() },
+          on: vi.fn(),
+          removeListener: vi.fn(),
+          kill: vi.fn(),
+          unref: vi.fn(),
+        };
+        return child;
+      });
+
+      const session = new Session('/workspace', 'default');
+      const promise = session.startDaemon({ browserName: 'chrome', idleTimeout: 120 });
+
+      // canConnect() → socket[0] fails → spawn daemon
+      const sock0 = mockState.sockets[0];
+      sock0.emit('error', new Error('connect ECONNREFUSED'));
+
+      // Announce listening so startDaemon resolves
+      const start = Date.now();
+      while (stdoutData === null && Date.now() - start < 5000) {
+        await new Promise((r) => setTimeout(r, 10));
+      }
+      expect(stdoutData).not.toBeNull();
+      stdoutData!(Buffer.from('Daemon listening on /tmp/mock-socket\n'));
+
+      // Health-check ping → socket[1]
+      const sock1 = await waitForSocket(1);
+      sock1.emit('connect');
+      sock1.emit('data', Buffer.from(JSON.stringify({ ok: true, text: 'pong' }) + '\n'));
+
+      await expect(promise).resolves.toBe('started');
+      expect(spawnMock).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.arrayContaining(['--idle-timeout=120']),
+        expect.anything(),
+      );
+    });
+
+    it('restarts daemon after killing an unresponsive one', async () => {
+      const killSpy = vi.spyOn(process, 'kill').mockImplementation(() => true);
+      mockState.registry.loadSession.mockReturnValue({
+        name: 'default',
+        version: '1.0.0',
+        timestamp: Date.now(),
+        socketPath: '/tmp/mock-socket',
+        workspaceDir: '/workspace',
+        persistent: false,
+        browserName: 'chrome',
+        pid: 777,
+      });
+
+      let stdoutData: ((d: Buffer) => void) | null = null;
+      const spawnMock = vi.mocked(spawn);
+      spawnMock.mockImplementationOnce(() => {
+        const child: any = {
+          pid: 4242,
+          stdout: {
+            on: (ev: string, cb: (d: Buffer) => void) => { if (ev === 'data') stdoutData = cb; },
+            removeListener: vi.fn(),
+            unref: vi.fn(),
+          },
+          stderr: { on: vi.fn(), removeListener: vi.fn(), unref: vi.fn() },
+          on: vi.fn(),
+          removeListener: vi.fn(),
+          kill: vi.fn(),
+          unref: vi.fn(),
+        };
+        return child;
+      });
+
+      const session = new Session('/workspace', 'default');
+      const promise = session.startDaemon();
+
+      // canConnect() → socket[0] succeeds, but ping hangs → sendAndClose
+      // times out only after 60s. Simulate the unresponsive daemon instead
+      // by emitting 'close' without data (fast path used by the catch).
+      const sock0 = mockState.sockets[0];
+      sock0.emit('connect');
+
+      // Ping socket[1] closes without a response → catch → force-kill + respawn
+      const sock1 = await waitForSocket(1);
+      sock1.emit('close');
+
+      // spawn the replacement daemon
+      const start = Date.now();
+      while (stdoutData === null && Date.now() - start < 5000) {
+        await new Promise((r) => setTimeout(r, 10));
+      }
+      expect(stdoutData).not.toBeNull();
+      stdoutData!(Buffer.from('Daemon listening on /tmp/mock-socket\n'));
+
+      // Health-check ping → socket[2]
+      const sock2 = await waitForSocket(2);
+      sock2.emit('connect');
+      sock2.emit('data', Buffer.from(JSON.stringify({ ok: true, text: 'pong' }) + '\n'));
+
+      await expect(promise).resolves.toBe('started');
+      expect(killSpy).toHaveBeenCalledWith(777, 'SIGKILL');
+      expect(mockState.registry.deleteSession).toHaveBeenCalledWith(
+        'mockhash123',
+        'default',
+      );
+      killSpy.mockRestore();
+    });
+
+    it('retries the health-check ping when the first one fails', async () => {
+      let stdoutData: ((d: Buffer) => void) | null = null;
+      const spawnMock = vi.mocked(spawn);
+      spawnMock.mockImplementationOnce(() => {
+        const child: any = {
+          pid: 4242,
+          stdout: {
+            on: (ev: string, cb: (d: Buffer) => void) => { if (ev === 'data') stdoutData = cb; },
+            removeListener: vi.fn(),
+            unref: vi.fn(),
+          },
+          stderr: { on: vi.fn(), removeListener: vi.fn(), unref: vi.fn() },
+          on: vi.fn(),
+          removeListener: vi.fn(),
+          kill: vi.fn(),
+          unref: vi.fn(),
+        };
+        return child;
+      });
+
+      const session = new Session('/workspace', 'default');
+      const promise = session.startDaemon({ browserName: 'edge' });
+
+      // canConnect() fails → spawn daemon
+      const sock0 = mockState.sockets[0];
+      sock0.emit('error', new Error('connect ECONNREFUSED'));
+
+      // Announce listening
+      const start = Date.now();
+      while (stdoutData === null && Date.now() - start < 5000) {
+        await new Promise((r) => setTimeout(r, 10));
+      }
+      stdoutData!(Buffer.from('Daemon listening on /tmp/mock-socket\n'));
+
+      // First health-check ping fails (daemon crashed) → 500ms delay → retry
+      const sock1 = await waitForSocket(1);
+      sock1.emit('close');
+
+      // Retry ping after the 500ms delay → socket[2]
+      const sock2 = await waitForSocket(2, 10000);
+      sock2.emit('connect');
+      sock2.emit('data', Buffer.from(JSON.stringify({ ok: true, text: 'pong' }) + '\n'));
+
+      await expect(promise).resolves.toBe('started');
+    });
+
+    it('rejects with "daemon exited early" when the child exits during startup', async () => {
+      let exitHandler: ((code: number | null, signal: any) => void) | null = null;
+      const spawnMock = vi.mocked(spawn);
+      spawnMock.mockImplementationOnce(() => {
+        const child: any = {
+          pid: 4242,
+          stdout: { on: vi.fn(), removeListener: vi.fn(), unref: vi.fn() },
+          stderr: { on: vi.fn(), removeListener: vi.fn(), unref: vi.fn() },
+          on: (ev: string, cb: (...a: any[]) => void) => { if (ev === 'exit') exitHandler = cb; },
+          removeListener: vi.fn(),
+          kill: vi.fn(),
+          unref: vi.fn(),
+        };
+        return child;
+      });
+
+      const session = new Session('/workspace', 'default');
+      const promise = session.startDaemon({ browserName: 'chrome' });
+
+      // canConnect() fails → spawn daemon → child exits before listening.
+      // No socket is created after spawn (listening never announced), so
+      // wait until the spawn mock registered its 'exit' handler instead.
+      const sock0 = mockState.sockets[0];
+      sock0.emit('error', new Error('connect ECONNREFUSED'));
+
+      const start = Date.now();
+      while (exitHandler === null && Date.now() - start < 5000) {
+        await new Promise((r) => setTimeout(r, 10));
+      }
+      expect(exitHandler).not.toBeNull();
+      exitHandler!(1, null);
+
+      await expect(promise).rejects.toThrow('daemon exited early');
+    });
+  });
+
   // ── run() retry logic ────────────────────────────────────────────
 
   describe('run() retry logic', () => {
@@ -551,6 +793,43 @@ describe('Session', () => {
       expect(result.text).toBe('success');
     });
 
+    it('swallows startDaemon failure during restart and retries the connection', async () => {
+      mockState.registry.loadSession.mockReturnValue({
+        name: 'default',
+        version: '1.0.0',
+        timestamp: Date.now(),
+        socketPath: '/tmp/mock-socket',
+        workspaceDir: '/workspace',
+        persistent: false,
+        browserName: 'chrome',
+      });
+      const spawnMock = vi.mocked(spawn);
+      spawnMock.mockImplementationOnce(() => {
+        throw new Error('spawn failed');
+      });
+
+      const session = new Session('/workspace', 'default');
+      const promise = session.run(['title'], '/cwd');
+
+      // Attempt 0: ECONNREFUSED → loadSession returns config → startDaemon:
+      // its canConnect() creates socket[1] → fails → spawn throws →
+      // the restart error is swallowed and run() retries.
+      const sock0 = mockState.sockets[0];
+      sock0.emit('error', new Error('connect ECONNREFUSED'));
+
+      const sock1 = await waitForSocket(1);
+      sock1.emit('error', new Error('connect ECONNREFUSED'));
+
+      // Attempt 1: connection succeeds
+      const sock2 = await waitForSocket(2);
+      sock2.emit('connect');
+      sock2.emit('data', Buffer.from(JSON.stringify({ ok: true, text: 'ok' }) + '\n'));
+
+      const result = await promise;
+      expect(result.ok).toBe(true);
+      mockState.registry.loadSession.mockReset();
+    });
+
     it('throws after all retries fail on ECONNREFUSED', async () => {
       const session = new Session('/workspace', 'default');
       const promise = session.run(['title'], '/cwd');
@@ -571,6 +850,99 @@ describe('Session', () => {
 
       // After 3s delay on attempt 2, loop exits and throws lastErr
       await expect(promise).rejects.toThrow('ECONNREFUSED');
+    });
+
+    it('restarts daemon with the FULL saved config on connection failure', async () => {
+      mockState.registry.loadSession.mockReturnValue({
+        name: 'default',
+        version: '1.0.0',
+        timestamp: Date.now(),
+        socketPath: '/tmp/mock-socket',
+        workspaceDir: '/workspace',
+        persistent: true,
+        browserName: 'chrome',
+        headed: true,
+        cdpEndpoint: 'http://localhost:9222',
+        profilePath: '/profiles/p1',
+        idleTimeout: 120,
+      });
+
+      const session = new Session('/workspace', 'default');
+      const promise = session.run(['title'], '/cwd');
+
+      // Attempt 0: ECONNREFUSED → run() loads the saved config and restarts
+      mockState.sockets[0].emit(
+        'error',
+        new Error('connect ECONNREFUSED 127.0.0.1:1234'),
+      );
+
+      // startDaemon spawns the daemon child — capture its stdout 'data' cb
+      // so the test can announce "listening" and let startDaemon resolve.
+      let stdoutData: ((d: Buffer) => void) | null = null;
+      const spawnMock = vi.mocked(spawn);
+      spawnMock.mockImplementationOnce(() => {
+        const child: any = {
+          pid: 4242,
+          stdout: {
+            on: (ev: string, cb: (d: Buffer) => void) => { if (ev === 'data') stdoutData = cb; },
+            removeListener: vi.fn(),
+            unref: vi.fn(),
+          },
+          stderr: { on: vi.fn(), removeListener: vi.fn(), unref: vi.fn() },
+          on: vi.fn(),
+          removeListener: vi.fn(),
+          kill: vi.fn(),
+          unref: vi.fn(),
+        };
+        return child;
+      });
+
+      // canConnect() inside startDaemon creates socket[1]
+      const sock1 = await waitForSocket(1, 10000);
+      sock1.emit('error', new Error('connect ECONNREFUSED'));
+
+      // Announce the daemon is listening
+      const start = Date.now();
+      while (stdoutData === null && Date.now() - start < 5000) {
+        await new Promise((r) => setTimeout(r, 10));
+      }
+      expect(stdoutData).not.toBeNull();
+      stdoutData!(Buffer.from('Daemon listening on /tmp/mock-socket\n'));
+
+      // startDaemon health-check ping → socket[2]
+      const sock2 = await waitForSocket(2, 10000);
+      sock2.emit('connect');
+      sock2.emit(
+        'data',
+        Buffer.from(JSON.stringify({ ok: true, text: 'pong' }) + '\n'),
+      );
+
+      // run() retry attempt 1 → socket[3]
+      const sock3 = await waitForSocket(3, 10000);
+      sock3.emit('connect');
+      sock3.emit(
+        'data',
+        Buffer.from(JSON.stringify({ ok: true, text: 'recovered' }) + '\n'),
+      );
+
+      const result = await promise;
+      expect(result.ok).toBe(true);
+      expect(result.text).toBe('recovered');
+
+      // The restarted daemon must receive ALL launch params, not just the browser
+      expect(spawnMock).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.arrayContaining([
+          'chrome',
+          '--headed',
+          '--cdp=http://localhost:9222',
+          '--profile=/profiles/p1',
+          '--persistent',
+          '--idle-timeout=120',
+        ]),
+        expect.anything(),
+      );
+      mockState.registry.loadSession.mockReset();
     });
   });
 });

@@ -1,6 +1,11 @@
 import { By } from 'selenium-webdriver';
 import type { WaitConfig } from '../../wait-config';
 
+// Selenium error classes so failures are classified correctly by the server
+// (NoSuchElementError → ELEMENT_NOT_FOUND, TimeoutError → TIMEOUT) instead of
+// the generic DRIVER_ERROR bucket, which destroys the whole browser session.
+const { NoSuchElementError, TimeoutError } = require('selenium-webdriver').error;
+
 export function safeFilename(filename: string): string {
   // Reject any path separator (both POSIX and Windows) so behavior is
   // platform-independent. `path.basename` alone treats `\` as a regular
@@ -104,7 +109,7 @@ export async function findElement(driver: any, target: string) {
          return findInShadowRoots(document, arguments[0]);`,
         target,
       );
-      if (!el) throw new Error(`Element not found: ${target}`);
+      if (!el) throw new NoSuchElementError(`Element not found: ${target}`);
       return el;
     }
   }
@@ -180,5 +185,5 @@ export async function findElementWithWait(
       await new Promise(resolve => setTimeout(resolve, interval));
     }
   }
-  throw new Error(`Element not found after ${wait.timeout}ms: ${target}`);
+  throw new TimeoutError(`Element not found after ${wait.timeout}ms: ${target}`);
 }

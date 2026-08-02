@@ -5,11 +5,13 @@ import { StringDecoder } from 'string_decoder';
 import { Registry, SessionConfig } from './registry';
 import { makeSocketPath, workspaceHash, baseDaemonDir } from './config';
 import type { ClientMessage, ServerMessage } from './protocol';
+import { FileLogger } from './logger';
 
 export class Session {
   private socketPath: string;
   private wsHash: string;
   private registry: Registry;
+  private logger: FileLogger;
 
   constructor(
     private workspaceDir: string,
@@ -18,6 +20,12 @@ export class Session {
     this.wsHash = workspaceHash(workspaceDir);
     this.socketPath = makeSocketPath(this.wsHash, sessionName);
     this.registry = new Registry(baseDaemonDir());
+    // CLI-side log: records start/reuse/stop/connection events that happen
+    // inside this (short-lived) process, complementing the daemon log.
+    this.logger = new FileLogger(
+      path.join(baseDaemonDir(), 'logs'),
+      `${this.wsHash}-${sessionName}.cli.log`,
+    );
   }
 
   async canConnect(): Promise<boolean> {
@@ -33,16 +41,25 @@ export class Session {
     });
   }
 
-  async startDaemon(opts: { browserName?: string; headed?: boolean; cdpEndpoint?: string; profilePath?: string; persistent?: boolean } = {}): Promise<void> {
+  /**
+   * Start (or reuse) the daemon for this session.
+   *
+   * @returns 'reused' if an alive daemon already owns the socket (no new
+   *          browser window was spawned), 'started' if a new daemon was
+   *          launched (a fresh browser window appears when headed).
+   */
+  async startDaemon(opts: { browserName?: string; headed?: boolean; cdpEndpoint?: string; profilePath?: string; persistent?: boolean; idleTimeout?: number } = {}): Promise<'started' | 'reused'> {
     // If a daemon is already running on this socket, verify it's responsive.
     if (await this.canConnect()) {
       try {
         await this.sendAndClose({ method: 'ping', params: { args: [], cwd: '' } });
-        return; // Daemon is alive and responsive
+        this.logger.info('session', `reused existing daemon ${this.sessionName}@${this.wsHash}`);
+        return 'reused'; // Daemon is alive and responsive
       } catch {
         // Daemon is listening but not responsive — force kill it.
         const config = this.registry.loadSession(this.wsHash, this.sessionName);
         if (config && config.pid) {
+          this.logger.warn('session', `daemon unresponsive — killing pid=${config.pid}`);
           try { process.kill(config.pid, 'SIGKILL'); } catch {}
         }
         this.registry.deleteSession(this.wsHash, this.sessionName);
@@ -57,6 +74,7 @@ export class Session {
     if (opts.cdpEndpoint) args.push(`--cdp=${opts.cdpEndpoint}`);
     if (opts.profilePath) args.push(`--profile=${opts.profilePath}`);
     if (opts.persistent) args.push('--persistent');
+    if (opts.idleTimeout !== undefined) args.push(`--idle-timeout=${opts.idleTimeout}`);
 
     const child: ChildProcess = spawn(process.execPath, args, {
       detached: true,
@@ -64,6 +82,7 @@ export class Session {
       windowsHide: true,
     });
 
+    let daemonStderr = '';
     await new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
         child.kill();
@@ -73,6 +92,7 @@ export class Session {
         const line = data.toString().trim();
         if (line.startsWith('Daemon listening on')) {
           clearTimeout(timeout);
+          this.logger.info('session', `started daemon pid=${child.pid}`);
           // Detach from the child so it survives the parent's exit.
           child.unref();
           // Remove listeners so we don't interfere with the child's lifecycle.
@@ -93,7 +113,9 @@ export class Session {
         }
       };
       const onStderr = (data: Buffer) => {
-        process.stderr.write(`daemon stderr: ${data}`);
+        const text = data.toString();
+        daemonStderr += text;
+        this.logger.warn('daemon-stderr', text.trimEnd());
       };
       const onError = (err: Error) => {
         clearTimeout(timeout);
@@ -101,7 +123,8 @@ export class Session {
       };
       const onExit = (code: number | null, signal: NodeJS.Signals | null) => {
         clearTimeout(timeout);
-        reject(new Error(`daemon exited early code=${code} signal=${signal}`));
+        reject(new Error(`daemon exited early code=${code} signal=${signal}` +
+          (daemonStderr ? `\n${daemonStderr}` : '')));
       };
       child.stdout?.on('data', onStdout);
       child.stderr?.on('data', onStderr);
@@ -120,6 +143,7 @@ export class Session {
       await new Promise(r => setTimeout(r, 500));
       await this.sendAndClose({ method: 'ping', params: { args: [], cwd: '' } });
     }
+    return 'started';
   }
 
   async run(args: string[], cwd: string, opts: { raw?: boolean; json?: boolean } = {}): Promise<ServerMessage> {
@@ -139,6 +163,7 @@ export class Session {
         // Windows chromedriver 0xC0000142) without retrying application-
         // level errors like "element not found".
         if (!resp.ok && resp.code === 'DRIVER_ERROR' && attempt < 2) {
+          this.logger.warn('session', `DRIVER_ERROR on "${args[0] || '?'}" — retry ${attempt + 1}`);
           await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
           continue;
         }
@@ -149,10 +174,22 @@ export class Session {
         if (errMsg.includes('daemon closed connection') || errMsg.includes('ECONNREFUSED') || errMsg.includes('connect ENOENT') || errMsg.includes('ECONNRESET') || errMsg.includes('EPIPE')) {
           // Try to restart the daemon on the first connection failure.
           if (attempt === 0) {
+            this.logger.warn('session', `daemon connection lost — restarting (${errMsg})`);
             try {
               const config = this.registry.loadSession(this.wsHash, this.sessionName);
               if (config && config.browserName) {
-                await this.startDaemon({ browserName: config.browserName });
+                // Restore the FULL launch configuration, not just the browser:
+                // losing --headed/--cdp/--profile/--persistent/--idle-timeout
+                // on restart would silently degrade the session (e.g.
+                // attach→new browser, window reappearing on idle).
+                await this.startDaemon({
+                  browserName: config.browserName,
+                  headed: config.headed,
+                  cdpEndpoint: config.cdpEndpoint,
+                  profilePath: config.profilePath,
+                  persistent: config.persistent,
+                  idleTimeout: config.idleTimeout,
+                });
               }
             } catch {
               // startDaemon may fail — that's OK, we'll retry the connection
@@ -168,6 +205,7 @@ export class Session {
   }
 
   async stop(): Promise<void> {
+    this.logger.info('session', 'stopping daemon');
     try {
       await this.sendAndClose({ method: 'stop', params: { args: [], cwd: process.cwd() } });
     } catch {

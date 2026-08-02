@@ -96,8 +96,15 @@ export async function browser_state_load(
   }
 
   // 3. Navigate to the saved URL first — cookies can only be set when the
-  //    driver is on a matching domain.
-  await driver.get(state.url);
+  //    driver is on a matching domain. Guard against missing fields in
+  //    hand-edited or older state files.
+  const cookies = Array.isArray(state.cookies) ? state.cookies : [];
+  const localStorageData = state.localStorage && typeof state.localStorage === 'object' ? state.localStorage : {};
+  const sessionStorageData = state.sessionStorage && typeof state.sessionStorage === 'object' ? state.sessionStorage : {};
+
+  if (state.url) {
+    await driver.get(state.url);
+  }
 
   // 4. Clear existing cookies before restoring.
   await driver.manage().deleteAllCookies();
@@ -105,7 +112,7 @@ export async function browser_state_load(
   // 5. Restore cookies.
   //    Firefox enforces that SameSite=None cookies must also be Secure.
   //    Sanitize cookies before passing to addCookie to avoid driver errors.
-  for (const cookie of state.cookies) {
+  for (const cookie of cookies) {
     const sanitized = { ...cookie };
     if (sanitized.sameSite === 'None' && !sanitized.secure) {
       sanitized.secure = true;
@@ -114,17 +121,17 @@ export async function browser_state_load(
   }
 
   // 6. Restore localStorage.
-  const lsKeys = Object.keys(state.localStorage);
+  const lsKeys = Object.keys(localStorageData);
   for (const k of lsKeys) {
-    await driver.executeScript('localStorage.setItem(arguments[0], arguments[1]);', k, state.localStorage[k]);
+    await driver.executeScript('localStorage.setItem(arguments[0], arguments[1]);', k, localStorageData[k]);
   }
 
   // 7. Restore sessionStorage.
-  const ssKeys = Object.keys(state.sessionStorage);
+  const ssKeys = Object.keys(sessionStorageData);
   for (const k of ssKeys) {
-    await driver.executeScript('sessionStorage.setItem(arguments[0], arguments[1]);', k, state.sessionStorage[k]);
+    await driver.executeScript('sessionStorage.setItem(arguments[0], arguments[1]);', k, sessionStorageData[k]);
   }
 
   response.addCode(`const state = JSON.parse(fs.readFileSync('${filename}', 'utf8'));\nawait driver.get(state.url);\nawait driver.manage().deleteAllCookies();\nfor (const cookie of state.cookies) { await driver.manage().addCookie(cookie); }\nfor (const k of Object.keys(state.localStorage)) { await driver.executeScript('localStorage.setItem(arguments[0], arguments[1]);', k, state.localStorage[k]); }\nfor (const k of Object.keys(state.sessionStorage)) { await driver.executeScript('sessionStorage.setItem(arguments[0], arguments[1]);', k, state.sessionStorage[k]); }`);
-  response.addResult(`loaded state from ${filename} (${state.cookies.length} cookies, ${lsKeys.length} localStorage items, ${ssKeys.length} sessionStorage items)`);
+  response.addResult(`loaded state from ${filename} (${cookies.length} cookies, ${lsKeys.length} localStorage items, ${ssKeys.length} sessionStorage items)`);
 }

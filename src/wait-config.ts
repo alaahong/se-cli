@@ -309,33 +309,45 @@ export function resolveConfig(
     }
   }
 
-  // Apply flag layer (highest priority)
-  if (flags.timeout !== undefined) {
-    result.wait.timeout = parseInt(flags.timeout);
+  // Apply flag layer (highest priority).
+  // Invalid numeric values (e.g. --timeout=abc → NaN) are ignored so they
+  // don't poison the effective config with NaN comparisons.
+  const toInt = (v: string): number | undefined => {
+    const n = parseInt(v, 10);
+    return Number.isFinite(n) ? n : undefined;
+  };
+  const flagTimeout = flags.timeout !== undefined ? toInt(flags.timeout) : undefined;
+  if (flagTimeout !== undefined) {
+    result.wait.timeout = flagTimeout;
     sources.timeout = 'flag';
   }
   if (flags.wait !== undefined) {
     result.wait.state = flags.wait as WaitState;
     sources.state = 'flag';
   }
-  if (flags.retry !== undefined) {
-    result.wait.retry = parseInt(flags.retry);
+  const flagRetry = flags.retry !== undefined ? toInt(flags.retry) : undefined;
+  if (flagRetry !== undefined) {
+    result.wait.retry = flagRetry;
     sources.retry = 'flag';
   }
-  if (flags['retry-interval'] !== undefined) {
-    result.wait.retryInterval = parseInt(flags['retry-interval']);
+  const flagRetryInterval = flags['retry-interval'] !== undefined ? toInt(flags['retry-interval']) : undefined;
+  if (flagRetryInterval !== undefined) {
+    result.wait.retryInterval = flagRetryInterval;
     sources.retryInterval = 'flag';
   }
-  if (flags['implicit-wait'] !== undefined) {
-    result.timeouts.implicit = parseInt(flags['implicit-wait']);
+  const flagImplicit = flags['implicit-wait'] !== undefined ? toInt(flags['implicit-wait']) : undefined;
+  if (flagImplicit !== undefined) {
+    result.timeouts.implicit = flagImplicit;
     sources.implicit = 'flag';
   }
-  if (flags['page-load-timeout'] !== undefined) {
-    result.timeouts.pageLoad = parseInt(flags['page-load-timeout']);
+  const flagPageLoad = flags['page-load-timeout'] !== undefined ? toInt(flags['page-load-timeout']) : undefined;
+  if (flagPageLoad !== undefined) {
+    result.timeouts.pageLoad = flagPageLoad;
     sources.pageLoad = 'flag';
   }
-  if (flags['script-timeout'] !== undefined) {
-    result.timeouts.script = parseInt(flags['script-timeout']);
+  const flagScript = flags['script-timeout'] !== undefined ? toInt(flags['script-timeout']) : undefined;
+  if (flagScript !== undefined) {
+    result.timeouts.script = flagScript;
     sources.script = 'flag';
   }
 

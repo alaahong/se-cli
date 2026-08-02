@@ -59,7 +59,7 @@ export async function browser_tab_select(
   const handles = await driver.getAllWindowHandles();
   const index = params.index;
 
-  if (index < 0 || index >= handles.length) {
+  if (!Number.isInteger(index) || index < 0 || index >= handles.length) {
     response.addError(`tab index ${index} out of range (0..${handles.length - 1})`);
     return;
   }

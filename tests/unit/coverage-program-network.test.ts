@@ -48,6 +48,7 @@ vi.mock('../../src/registry', () => {
     writeSession: vi.fn(),
     deleteSession: vi.fn(),
     listSessions: vi.fn(() => []),
+    listAllSessions: vi.fn(() => []),
   };
   return { Registry: vi.fn(() => instance), _mockInstance: instance };
 });
@@ -485,6 +486,7 @@ describe('main()', () => {
     mockSession.stop.mockResolvedValue(undefined);
     mockRegistry.loadSession.mockReturnValue(null);
     mockRegistry.listSessions.mockReturnValue([]);
+    mockRegistry.listAllSessions.mockReturnValue([]);
     mockWaitConfig.loadConfigFile.mockReturnValue(null);
     mockWaitConfig.getConfigValue.mockReturnValue(null);
     mockWaitConfig.listConfig.mockReturnValue([]);
@@ -642,6 +644,102 @@ describe('main()', () => {
     ]);
 
     await main(['close-all']);
+  });
+
+  // ── close --all (global) ─────────────────────────────────
+
+  it('close --all: stops sessions across ALL workspaces', async () => {
+    mockRegistry.listAllSessions.mockReturnValue([
+      { wsHash: 'ws1', config: { name: 'default', workspaceDir: '/proj/a', browserName: 'chrome', persistent: false, timestamp: Date.now(), socketPath: '' } },
+      { wsHash: 'ws2', config: { name: 'default', workspaceDir: '/proj/b', browserName: 'firefox', persistent: false, timestamp: Date.now(), socketPath: '' } },
+      { wsHash: 'ws2', config: { name: 'scrape', workspaceDir: '/proj/b', browserName: 'edge', persistent: false, timestamp: Date.now(), socketPath: '' } },
+    ]);
+
+    await main(['close', '--all']);
+
+    expect(mockSession.stop).toHaveBeenCalledTimes(3);
+  });
+
+  it('close --all with no sessions: does not call stop', async () => {
+    await main(['close', '--all']);
+
+    expect(mockSession.stop).not.toHaveBeenCalled();
+  });
+
+  it('close --all swallows errors from stop', async () => {
+    mockSession.stop.mockRejectedValue(new Error('stop failed'));
+    mockRegistry.listAllSessions.mockReturnValue([
+      { wsHash: 'ws1', config: { name: 'default', workspaceDir: '/proj/a', browserName: 'chrome', persistent: false, timestamp: Date.now(), socketPath: '' } },
+    ]);
+
+    await main(['close', '--all']);
+  });
+
+  // ── sessions (global) ────────────────────────────────────
+
+  it('sessions command: prints every session across workspaces with status', async () => {
+    mockRegistry.listAllSessions.mockReturnValue([
+      { wsHash: 'ws1', config: { name: 'default', workspaceDir: '/proj/a', browserName: 'chrome', headed: true, persistent: false, timestamp: 1000, socketPath: '' } },
+      { wsHash: 'ws2', config: { name: 'scrape', workspaceDir: '/proj/b', browserName: 'firefox', persistent: false, timestamp: 2000, socketPath: '' } },
+    ]);
+
+    await main(['sessions']);
+
+    expect(mockRegistry.listAllSessions).toHaveBeenCalledTimes(1);
+    expect(logSpy).toHaveBeenCalledTimes(2);
+    expect(logSpy.mock.calls[0][0]).toContain('/proj/a');
+    expect(logSpy.mock.calls[0][0]).toContain('default');
+    expect(logSpy.mock.calls[0][0]).toContain('live');
+    expect(logSpy.mock.calls[0][0]).toContain('headed');
+    expect(logSpy.mock.calls[1][0]).toContain('/proj/b');
+    expect(logSpy.mock.calls[1][0]).toContain('scrape');
+    expect(logSpy.mock.calls[1][0]).toContain('headless');
+  });
+
+  it('sessions command: marks sessions dead when canConnect returns false', async () => {
+    mockSession.canConnect.mockResolvedValue(false);
+    mockRegistry.listAllSessions.mockReturnValue([
+      { wsHash: 'ws1', config: { name: 'default', workspaceDir: '/proj/a', browserName: 'chrome', persistent: false, timestamp: 1000, socketPath: '' } },
+    ]);
+
+    await main(['sessions']);
+
+    expect(logSpy.mock.calls[0][0]).toContain('dead');
+  });
+
+  it('sessions command with no sessions: does not log', async () => {
+    await main(['sessions']);
+
+    expect(logSpy).not.toHaveBeenCalled();
+  });
+
+  // ── open reuse hint ──────────────────────────────────────
+
+  it('open when daemon already alive: prints reuse hint, no goto', async () => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+    mockSession.startDaemon.mockResolvedValue('reused' as any);
+    await main(['open']);
+
+    expect(logSpy.mock.calls[0][0]).toContain('reusing existing browser session');
+    expect(mockSession.run).not.toHaveBeenCalled();
+  });
+
+  it('open when daemon started fresh: no reuse hint', async () => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+    mockSession.startDaemon.mockResolvedValue('started' as any);
+    await main(['open']);
+
+    expect(logSpy).not.toHaveBeenCalled();
+  });
+
+  it('open --idle-timeout=120: passes idleTimeout to startDaemon', async () => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+    await main(['open', '--idle-timeout=120']);
+
+    expect(mockSession.startDaemon).toHaveBeenCalledWith({
+      browserName: 'edge',
+      idleTimeout: 120,
+    });
   });
 
   // ── kill-all ─────────────────────────────────────────────

@@ -20,10 +20,11 @@ export async function main(argv: string[]): Promise<void> {
   const opts = {
     boolean: ['headed', 'raw', 'json', 'persistent', 'help', 'no-wait'],
     string: [
-      'browser', 'filename', 'depth', 's', 'session', 'cdp', 'profile',
+      'browser', 'filename', 'depth', 's', 'session', 'cdp', 'profile', 'tail',
       // v0.4 wait/retry flags
       'timeout', 'wait', 'retry', 'retry-interval',
       'implicit-wait', 'page-load-timeout', 'script-timeout',
+      'idle-timeout',
     ],
     alias: { s: 'session' },
   };
@@ -35,6 +36,12 @@ export async function main(argv: string[]): Promise<void> {
   }
 
   const sessionName = args.session || process.env.SE_CLI_SESSION || 'default';
+  // Validate the session name: it is used in file paths (e.g. --persistent
+  // profile dirs), so reject path separators and traversal attempts.
+  if (!/^[\w.-]+$/.test(sessionName) || sessionName === '.' || sessionName === '..') {
+    console.error(`Error: Invalid session name: "${sessionName}". Use only letters, digits, _ - .`);
+    process.exit(1);
+  }
   const cwd = process.cwd();
   const workspaceDir = findWorkspaceDir(cwd);
   const session = new Session(workspaceDir, sessionName);
@@ -65,7 +72,11 @@ export async function main(argv: string[]): Promise<void> {
       const wsHash = workspaceHash(workspaceDir);
       openOpts.profilePath = path.join(baseDaemonDir(), 'profiles', wsHash, sessionName);
     }
-    await session.startDaemon(openOpts);
+    if (args['idle-timeout'] !== undefined) openOpts.idleTimeout = Number(args['idle-timeout']);
+    const startResult = await session.startDaemon(openOpts);
+    if (startResult === 'reused') {
+      console.log(`(reusing existing browser session "${sessionName}" — no new window opened. Run "se-cli close" to stop it.)`);
+    }
     if (url) {
       const resp = await session.run(['goto', url], cwd, { raw: args.raw, json: args.json });
       render(resp);
@@ -104,7 +115,61 @@ export async function main(argv: string[]): Promise<void> {
   }
 
   if (cmd === 'close') {
+    if (args.all) {
+      // Close every session across ALL workspaces — multiple projects each
+      // run their own daemon+browser window, so closing only the current
+      // workspace's sessions would leave windows piling up elsewhere.
+      const registry = new Registry(baseDaemonDir());
+      const entries = registry.listAllSessions();
+      for (const { config } of entries) {
+        const sess = new Session(config.workspaceDir, config.name);
+        try { await sess.stop(); } catch {}
+      }
+      return;
+    }
     await session.stop();
+    return;
+  }
+
+  if (cmd === 'logs') {
+    // Print the tail of this session's daemon + CLI log files. The daemon is
+    // detached and its stdio is unreachable from the CLI, so the log files
+    // under %LOCALAPPDATA%/ms-se-cli/daemon/logs are the only window into
+    // its runtime behavior (driver builds, resets, crashes, command times).
+    const logDir = path.join(baseDaemonDir(), 'logs');
+    const wsHash = workspaceHash(workspaceDir);
+    const tail = Math.max(1, Number(args['tail'] || 50));
+    const files = [
+      `${wsHash}-${sessionName}.daemon.log`,
+      `${wsHash}-${sessionName}.cli.log`,
+    ];
+    let printed = false;
+    for (const f of files) {
+      const fp = path.join(logDir, f);
+      if (!fs.existsSync(fp)) continue;
+      printed = true;
+      console.log(`--- ${f} ---`);
+      const lines = fs.readFileSync(fp, 'utf8').split('\n').filter(Boolean);
+      for (const line of lines.slice(-tail)) console.log(line);
+    }
+    if (!printed) console.log('(no log files yet — run `se-cli open` first)');
+    return;
+  }
+
+  if (cmd === 'sessions') {
+    // Global session overview across all workspaces. Each project (workspace)
+    // owns a daemon + browser window; this shows which are still alive so the
+    // user can close the ones they no longer need.
+    const registry = new Registry(baseDaemonDir());
+    const entries = registry.listAllSessions();
+    for (const { config } of entries) {
+      const alive = await new Session(config.workspaceDir, config.name).canConnect();
+      const status = alive ? 'live' : 'dead';
+      const mode = config.headed ? 'headed' : 'headless';
+      console.log(
+        `${config.workspaceDir}\t${config.name}\t${status}\t${config.browserName}\t${mode}\t${new Date(config.timestamp).toISOString()}`
+      );
+    }
     return;
   }
 
@@ -196,12 +261,7 @@ export async function main(argv: string[]): Promise<void> {
   // Strip CLI-level flags (--raw, --json, --headed, --browser, --cdp, -s, --session,
   // --persistent, --help) so the daemon only sees the command and its tool-specific
   // flags (e.g. --filename, --depth, --regex, --submit).
-  const cliFlags = new Set(['raw', 'json', 'headed', 'persistent', 'help', 'browser', 'cdp', 's', 'session', 'profile']);
-  const forwardArgs = argv.filter(arg => {
-    const m = arg.match(/^-{1,2}([\w-]+)(=.*)?$/);
-    if (!m) return true; // positional arg — keep
-    return !cliFlags.has(m[1]);
-  });
+  const forwardArgs = filterCliFlags(argv);
   let resp: ServerMessage;
   try {
     resp = await session.run(forwardArgs, cwd, { raw: args.raw, json: args.json });
@@ -214,6 +274,33 @@ export async function main(argv: string[]): Promise<void> {
     process.exit(1);
   }
   render(resp);
+}
+
+/**
+ * Strip CLI-level flags from the tool command args before forwarding to the
+ * daemon. Handles both `--flag=value` and `--flag value` (space-separated)
+ * forms — the space-separated value must be consumed too, otherwise it would
+ * leak through as a positional arg (e.g. `-s dev click e1` would forward
+ * 'dev' as an extra argument).
+ */
+export function filterCliFlags(argv: string[]): string[] {
+  const cliFlags = new Set(['raw', 'json', 'headed', 'persistent', 'help', 'browser', 'cdp', 's', 'session', 'profile', 'idle-timeout']);
+  const valueFlags = new Set(['browser', 'cdp', 'profile', 's', 'session']);
+  const forwardArgs: string[] = [];
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    const m = arg.match(/^-{1,2}([\w-]+)(=.*)?$/);
+    if (!m || !cliFlags.has(m[1])) {
+      forwardArgs.push(arg);
+      continue;
+    }
+    // CLI-level flag — strip it, and consume its space-separated value
+    // (only when the next arg looks like a value, not another flag).
+    if (!m[2] && valueFlags.has(m[1]) && i + 1 < argv.length && !/^-{1,2}[a-zA-Z]/.test(argv[i + 1])) {
+      i++;
+    }
+  }
+  return forwardArgs;
 }
 
 export function findWorkspaceDir(cwd: string): string {
@@ -234,7 +321,9 @@ Usage:
   se-cli open [url] [--browser=chrome|edge|firefox] [--headed] [--cdp=url] [--profile=path] [--persistent]
   se-cli install [claude|cursor|generic]
   se-cli mcp-server               start MCP server (stdio mode for VS Code / AI agents)
-  se-cli close
+  se-cli close [--all]            stop current session; --all stops every session (all projects)
+  se-cli sessions                 list all sessions across all projects (live/dead)
+  se-cli logs [--tail=N]          show recent daemon log lines for this session
   se-cli list
   se-cli close-all
   se-cli kill-all
@@ -330,6 +419,7 @@ Flags:
   --cdp=<url>             attach to running Chrome via CDP
   --profile=<path>        use a persistent browser profile directory
   --persistent            keep browser profile across sessions (auto-assigns profile path)
+  --idle-timeout=<min>    auto-close idle daemon after N minutes (default 30; 0 = never)
 
 Wait & Retry (v0.4):
   --timeout=<ms>          per-command explicit-wait timeout (default 5000)
@@ -344,5 +434,6 @@ Wait & Retry (v0.4):
 Environment:
   SE_CLI_TIMEOUT / SE_CLI_WAIT / SE_CLI_RETRY / SE_CLI_RETRY_INTERVAL
   SE_CLI_IMPLICIT_WAIT / SE_CLI_PAGE_LOAD_TIMEOUT / SE_CLI_SCRIPT_TIMEOUT
+  SE_CLI_IDLE_TIMEOUT   daemon idle timeout in minutes (same as --idle-timeout)
 `);
 }

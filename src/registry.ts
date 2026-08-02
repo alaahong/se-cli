@@ -9,7 +9,16 @@ export interface SessionConfig {
   workspaceDir: string;
   persistent: boolean;
   browserName: 'chrome' | 'edge' | 'firefox';
+  headed?: boolean;
+  cdpEndpoint?: string;
+  profilePath?: string;
+  idleTimeout?: number;
   pid?: number;
+}
+
+export interface AllSessionsEntry {
+  wsHash: string;
+  config: SessionConfig;
 }
 
 export class Registry {
@@ -49,6 +58,24 @@ export class Registry {
       }
     }
     return sessions;
+  }
+
+  /**
+   * List sessions across ALL workspaces (used by `se-cli sessions` /
+   * `se-cli close --all`). The registry base dir contains one subdirectory
+   * per workspace hash, each holding *.session files.
+   */
+  listAllSessions(): AllSessionsEntry[] {
+    if (!fs.existsSync(this.baseDir)) return [];
+    const entries: AllSessionsEntry[] = [];
+    for (const wsHash of fs.readdirSync(this.baseDir)) {
+      const dir = path.join(this.baseDir, wsHash);
+      if (!fs.statSync(dir).isDirectory()) continue;
+      for (const session of this.listSessions(wsHash)) {
+        entries.push({ wsHash, config: session });
+      }
+    }
+    return entries;
   }
 
   deleteSession(wsHash: string, sessionName: string): void {

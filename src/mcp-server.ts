@@ -22,6 +22,7 @@ import { Session } from './session';
 import { baseDaemonDir, workspaceHash } from './config';
 import { Registry } from './registry';
 import { detectBrowser } from './detect-browser';
+import { FileLogger } from './logger';
 import * as path from 'path';
 import * as fs from 'fs';
 import type { ServerMessage } from './protocol';
@@ -934,9 +935,20 @@ export class McpServer {
   private initialized = false;
   private workspaceDir: string;
   private sessions: Map<string, Session> = new Map();
+  private queue: Promise<void> = Promise.resolve();
 
   constructor(workspaceDir?: string) {
     this.workspaceDir = workspaceDir || this.findWorkspaceDir(process.cwd());
+
+    // Redirect console.* and stderr into a log file. stdout is reserved for
+    // JSON-RPC responses and MCP clients (VS Code, Claude Desktop) typically
+    // don't read the server's stderr either — without this, uncaught
+    // exceptions and stray console output from the long-lived server would
+    // be lost. Original console/stderr are preserved for callers that opt out.
+    const mcpLogger = new FileLogger(path.join(baseDaemonDir(), 'logs'), 'mcp.log');
+    mcpLogger.installConsoleRedirect();
+    mcpLogger.installStderrRedirect();
+
     this.rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
@@ -946,13 +958,17 @@ export class McpServer {
     // Suppress stdout from the daemon/Session so it doesn't corrupt JSON-RPC.
     // stderr is fine — MCP clients read stderr separately.
     this.rl.on('line', (line: string) => {
-      this.handleLine(line).catch((err) => {
-        // Fatal error in message handling — send internal error
-        this.sendResponse(-1, undefined, {
-          code: INTERNAL_ERROR,
-          message: `Internal error: ${err.message}`,
+      // Serialize requests through a promise chain: concurrent handling
+      // (e.g. a client burst) would race on the same daemon/session.
+      this.queue = this.queue
+        .then(() => this.handleLine(line))
+        .catch((err) => {
+          // Fatal error in message handling — send internal error
+          this.sendResponse(-1, undefined, {
+            code: INTERNAL_ERROR,
+            message: `Internal error: ${err.message}`,
+          });
         });
-      });
     });
 
     this.rl.on('close', () => {
@@ -1107,22 +1123,39 @@ export class McpServer {
     if (name === 'browser_open') {
       const result = await this.handleOpen(args, sessionName);
       this.sendResponse(id, {
-        content: [{ type: 'text', text: result }],
-        isError: false,
+        content: [{ type: 'text', text: result.text }],
+        isError: !result.ok,
       });
       return;
     }
 
     if (name === 'browser_close') {
       const session = this.sessions.get(sessionName);
-      if (session) {
-        try { await session.stop(); } catch {}
-        this.sessions.delete(sessionName);
+      if (!session) {
+        // The daemon may exist but was started outside this MCP process
+        // (e.g. via CLI) — don't claim success for a session we never opened.
+        this.sendResponse(id, {
+          content: [{
+            type: 'text',
+            text: `No browser session managed by this MCP server: "${sessionName}". Use browser_open first, or "se-cli close" to stop CLI-started sessions.`,
+          }],
+          isError: true,
+        });
+        return;
       }
-      this.sendResponse(id, {
-        content: [{ type: 'text', text: 'Browser session closed.' }],
-        isError: false,
-      });
+      try {
+        await session.stop();
+        this.sessions.delete(sessionName);
+        this.sendResponse(id, {
+          content: [{ type: 'text', text: 'Browser session closed.' }],
+          isError: false,
+        });
+      } catch (e: any) {
+        this.sendResponse(id, {
+          content: [{ type: 'text', text: `Error closing session: ${e.message}` }],
+          isError: true,
+        });
+      }
       return;
     }
 
@@ -1136,13 +1169,23 @@ export class McpServer {
     }
 
     if (name === 'browser_close_all') {
+      let failures = 0;
       for (const [sName, session] of this.sessions) {
-        try { await session.stop(); } catch {}
-        this.sessions.delete(sName);
+        try {
+          await session.stop();
+          this.sessions.delete(sName);
+        } catch {
+          failures++;
+        }
       }
       this.sendResponse(id, {
-        content: [{ type: 'text', text: 'All browser sessions closed.' }],
-        isError: false,
+        content: [{
+          type: 'text',
+          text: failures === 0
+            ? 'All browser sessions closed.'
+            : `${failures} session(s) failed to close.`,
+        }],
+        isError: failures > 0,
       });
       return;
     }
@@ -1177,11 +1220,11 @@ export class McpServer {
     return mapToolToCliArgs(toolName, args);
   }
 
-  private async handleOpen(args: any, sessionName: string): Promise<string> {
+  private async handleOpen(args: any, sessionName: string): Promise<{ ok: boolean; text: string }> {
     const session = this.getSession(sessionName);
     const { opts: openOpts, error } = buildOpenOptions(args, this.workspaceDir, sessionName);
     if (error) {
-      return error;
+      return { ok: false, text: error };
     }
 
     try {
@@ -1197,9 +1240,9 @@ export class McpServer {
           result += `\nError navigating: ${resp.error}`;
         }
       }
-      return result;
+      return { ok: true, text: result };
     } catch (e: any) {
-      return `Error starting browser: ${e.message}`;
+      return { ok: false, text: `Error starting browser: ${e.message}` };
     }
   }
 
