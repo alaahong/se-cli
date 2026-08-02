@@ -65,6 +65,30 @@ const idleTimeoutArg = Number(args.find(a => a.startsWith('--idle-timeout='))?.s
 const idleTimeoutMin = Number.isFinite(idleTimeoutArg)
   ? idleTimeoutArg
   : Number(process.env.SE_CLI_IDLE_TIMEOUT) || 30;
+// v0.8: open-time environment emulation flags. Parsed here (not in the tool
+// layer) because they configure the driver at build time, and they are
+// persisted in the SessionConfig so a driver rebuild replays them.
+const { parseViewport, parseGeolocation } = require('./tools/emulation-state');
+const emulation: Record<string, any> = {};
+const emuViewport = args.find(a => a.startsWith('--viewport='))?.slice('--viewport='.length);
+if (emuViewport) emulation.viewport = parseViewport(emuViewport);
+const emuUserAgent = args.find(a => a.startsWith('--user-agent='))?.slice('--user-agent='.length);
+if (emuUserAgent) emulation.userAgent = emuUserAgent;
+const emuLocale = args.find(a => a.startsWith('--locale='))?.slice('--locale='.length);
+if (emuLocale) emulation.locale = emuLocale;
+const emuColorScheme = args.find(a => a.startsWith('--color-scheme='))?.slice('--color-scheme='.length);
+if (emuColorScheme) {
+  if (emuColorScheme !== 'light' && emuColorScheme !== 'dark') {
+    throw new Error(`Invalid --color-scheme: "${emuColorScheme}". Expected light or dark`);
+  }
+  emulation.colorScheme = emuColorScheme;
+}
+const emuTimezone = args.find(a => a.startsWith('--timezone='))?.slice('--timezone='.length);
+if (emuTimezone) emulation.timezone = emuTimezone;
+const emuGeolocation = args.find(a => a.startsWith('--geolocation='))?.slice('--geolocation='.length);
+if (emuGeolocation) emulation.geolocation = parseGeolocation(emuGeolocation);
+const emuPermissions = args.find(a => a.startsWith('--permissions='))?.slice('--permissions='.length);
+if (emuPermissions) emulation.permissions = emuPermissions.split(',').map(p => p.trim()).filter(Boolean);
 const version = require('../../package.json').version;
 
 const ALLOWED_BROWSERS = new Set(['chrome', 'edge', 'firefox']);
@@ -228,6 +252,19 @@ async function buildDriver(): Promise<void> {
   driver = await Promise.race([buildPromise, timeoutPromise]);
   driverInitError = null;
   logger.info('driver', `built ${browserName} driver in ${Date.now() - start}ms${headed ? ' (headed)' : ' (headless)'}`);
+  // v0.8: replay the open-time emulation flags on the fresh driver. Failures
+  // (e.g. unsupported capabilities on Firefox) are logged, not fatal — the
+  // driver itself is healthy and the rest of the session keeps working.
+  if (Object.keys(emulation).length > 0) {
+    const { applyEmulation, setEmulationState } = require('./tools/emulation-state');
+    setEmulationState(emulation);
+    try {
+      const warnings = await applyEmulation(driver);
+      for (const w of warnings) logger.warn('emulation', w);
+    } catch (e: any) {
+      logger.warn('emulation', `failed to apply emulation: ${e.message}`);
+    }
+  }
 }
 
 async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
@@ -301,6 +338,10 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
       // on the new driver. Without this, console/requests/routes commands
       // would use stale listeners after a driver crash.
       resetNetworkDebugState();
+      // Reset the cached CDP connection — the new driver gets a fresh one.
+      // The emulation STATE itself is kept so buildDriver() replays it.
+      const { resetEmulationState } = require('./tools/emulation-state');
+      resetEmulationState();
     }
     logger.warn('cmd', `${toolName} ${Date.now() - start}ms ${code}: ${errMsg}`);
     return { ok: false, error: errMsg, code };
@@ -445,6 +486,7 @@ const config: SessionConfig = {
   cdpEndpoint,
   profilePath,
   idleTimeout: idleTimeoutMin,
+  emulation: Object.keys(emulation).length > 0 ? emulation : undefined,
   pid: process.pid,
 };
 registry.writeSession(wsHash, config);

@@ -25,6 +25,8 @@ export async function main(argv: string[]): Promise<void> {
       'timeout', 'wait', 'retry', 'retry-interval',
       'implicit-wait', 'page-load-timeout', 'script-timeout',
       'idle-timeout',
+      // v0.8 open-time environment emulation flags
+      'viewport', 'user-agent', 'locale', 'color-scheme', 'timezone', 'geolocation', 'permissions',
     ],
     alias: { s: 'session' },
   };
@@ -73,6 +75,31 @@ export async function main(argv: string[]): Promise<void> {
       openOpts.profilePath = path.join(baseDaemonDir(), 'profiles', wsHash, sessionName);
     }
     if (args['idle-timeout'] !== undefined) openOpts.idleTimeout = Number(args['idle-timeout']);
+    // v0.8: environment emulation flags — validated here so the CLI reports
+    // a clear error before any browser is spawned.
+    const emulation: any = {};
+    if (args.viewport) {
+      const { parseViewport } = require('./daemon/tools/emulation-state');
+      emulation.viewport = parseViewport(args.viewport);
+    }
+    if (args['user-agent']) emulation.userAgent = args['user-agent'];
+    if (args.locale) emulation.locale = args.locale;
+    if (args['color-scheme']) {
+      if (args['color-scheme'] !== 'light' && args['color-scheme'] !== 'dark') {
+        console.error('Error: --color-scheme must be "light" or "dark"');
+        process.exit(1);
+      }
+      emulation.colorScheme = args['color-scheme'];
+    }
+    if (args.timezone) emulation.timezone = args.timezone;
+    if (args.geolocation) {
+      const { parseGeolocation } = require('./daemon/tools/emulation-state');
+      emulation.geolocation = parseGeolocation(args.geolocation);
+    }
+    if (args.permissions) {
+      emulation.permissions = args.permissions.split(',').map((p: string) => p.trim()).filter(Boolean);
+    }
+    if (Object.keys(emulation).length > 0) openOpts.emulation = emulation;
     const startResult = await session.startDaemon(openOpts);
     if (startResult === 'reused') {
       console.log(`(reusing existing browser session "${sessionName}" — no new window opened. Run "se-cli close" to stop it.)`);
@@ -294,11 +321,11 @@ export function filterCliFlags(argv: string[]): string[] {
       forwardArgs.push(arg);
       continue;
     }
-    // CLI-level flag — strip it, and consume its space-separated value
-    // (only when the next arg looks like a value, not another flag).
-    if (!m[2] && valueFlags.has(m[1]) && i + 1 < argv.length && !/^-{1,2}[a-zA-Z]/.test(argv[i + 1])) {
-      i++;
-    }
+  // CLI-level flag — strip it, and consume its space-separated value
+  // (only when the next arg looks like a value, not another flag).
+  if (!m[2] && valueFlags.has(m[1]) && i + 1 < argv.length && !/^-{1,2}[a-zA-Z]/.test(argv[i + 1])) {
+    i++;
+  }
   }
   return forwardArgs;
 }
@@ -318,7 +345,7 @@ function printHelp(): void {
   console.log(`se-cli - token-efficient Selenium browser automation
 
 Usage:
-  se-cli open [url] [--browser=chrome|edge|firefox] [--headed] [--cdp=url] [--profile=path] [--persistent]
+  se-cli open [url] [--browser=chrome|edge|firefox] [--headed] [--cdp=url] [--profile=path] [--persistent] [--viewport=WxH] [--user-agent=ua] [--locale=tag] [--color-scheme=light|dark] [--timezone=tz] [--geolocation=lat,lon] [--permissions=geolocation]
   se-cli install [claude|cursor|generic]
   se-cli mcp-server               start MCP server (stdio mode for VS Code / AI agents)
   se-cli close [--all]            stop current session; --all stops every session (all projects)
@@ -420,6 +447,15 @@ Flags:
   --profile=<path>        use a persistent browser profile directory
   --persistent            keep browser profile across sessions (auto-assigns profile path)
   --idle-timeout=<min>    auto-close idle daemon after N minutes (default 30; 0 = never)
+
+Emulation (v0.8, open-time; Chrome/Edge full, Firefox viewport only):
+  --viewport=<WxH>        page viewport size, e.g. 1280x720
+  --user-agent=<string>   override the browser user agent
+  --locale=<tag>          override the page locale, e.g. zh-CN
+  --color-scheme=<light|dark>  emulate prefers-color-scheme
+  --timezone=<id>         override the timezone, e.g. America/New_York
+  --geolocation=<lat,lon[,accuracy]>  override geolocation
+  --permissions=<list>    grant permissions, e.g. geolocation,camera
 
 Wait & Retry (v0.4):
   --timeout=<ms>          per-command explicit-wait timeout (default 5000)

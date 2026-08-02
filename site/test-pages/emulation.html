@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Emulation Probe</title>
+</head>
+<body>
+  <h1>Emulation Probe</h1>
+  <pre id="probe"></pre>
+  <script>
+    const probe = {
+      userAgent: navigator.userAgent,
+      viewport: {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        dpr: window.devicePixelRatio,
+      },
+      colorScheme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      locale: navigator.language,
+      intlLocale: Intl.DateTimeFormat().resolvedOptions().locale,
+      hasTouch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+    };
+    document.getElementById('probe').textContent = JSON.stringify(probe, null, 2);
+    window.__probe = probe;
+  </script>
+</body>
+</html>

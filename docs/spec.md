@@ -617,7 +617,7 @@ await driver.executeScript(
 All capabilities via CDP `Emulation.*` / `Network.*` domains, BiDi as fallback.
 Selenium has no native equivalent, but CDP makes this trivial to port.
 
-- [ ] `open --geolocation=lat,lng --timezone=America/Los_Angeles --locale=zh-CN --color-scheme=dark --viewport=WxH --user-agent="..." --permissions=geolocation,notifications`
+- [x] `open --geolocation=lat,lng --timezone=America/Los_Angeles --locale=zh-CN --color-scheme=dark --viewport=WxH --user-agent="..." --permissions=geolocation,notifications`
 - [ ] `device "iPhone 13"` — apply preset (UA + viewport + touch + deviceScaleFactor)
 - [ ] `device-list` — list built-in device profiles (reference Playwright DeviceDescriptors)
 - [ ] `emulate --offline` — go offline

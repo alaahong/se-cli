@@ -399,6 +399,24 @@ await driver.wait(until.elementIsVisible(el), 5000);
 await driver.wait(until.elementIsEnabled(el), 5000);
 ```
 
+## Emulation (v0.8)
+
+Emulate device and environment characteristics at session open. Chrome/Edge support
+everything via CDP; Firefox supports viewport only.
+
+```bash
+# Open with a custom viewport (all browsers)
+se-cli open https://example.com --viewport=390x844
+
+# Emulate a mobile device environment (Chrome/Edge)
+se-cli open https://example.com --user-agent="Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)" --viewport=390x844 --color-scheme=dark
+
+# Emulate locale, timezone, geolocation (Chrome/Edge)
+se-cli open https://example.com --locale=zh-CN --timezone=Asia/Shanghai --geolocation=39.9,116.4 --permissions=geolocation
+
+# After opening, emulation state is replayed automatically if the driver rebuilds.
+```
+
 ## MCP Server Mode
 
 se-cli can run as an MCP (Model Context Protocol) server, exposing all browser automation
