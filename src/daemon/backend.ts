@@ -345,7 +345,8 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
     'emulate': () => ({
       toolName: 'browser_emulate',
       toolParams: {
-        offline: parsed.offline || undefined,
+        // Keep explicit false so `--offline=false` can clear an offline state.
+        offline: parsed.offline !== undefined ? parsed.offline : undefined,
         throttleNetwork: parsed['throttle-network'],
         throttleCpu: parsed['throttle-cpu'],
         reset: parsed.reset || false,

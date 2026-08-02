@@ -191,7 +191,9 @@ export async function applyEmulation(driver: any): Promise<string[]> {
   }
 
   // Runtime network/CPU emulation (`emulate` command, v0.8).
-  if (state.offline || state.throttleNetwork) {
+  // `offline !== undefined` (not just truthy) so an explicit `--offline=false`
+  // sends the restore command instead of silently keeping the browser offline.
+  if (state.offline !== undefined || state.throttleNetwork) {
     if (chromium) {
       const t = state.throttleNetwork || {};
       await cdpSend(driver, 'Network.emulateNetworkConditions', {

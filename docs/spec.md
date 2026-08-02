@@ -624,7 +624,7 @@ Selenium has no native equivalent, but CDP makes this trivial to port.
 - [x] `emulate --throttle-network=slow3g` — `slow3g|fast3g|custom:--download=,--upload=,--latency=`
 - [x] `emulate --throttle-cpu=4` — CPU slowdown rate
 - [x] `emulate --reset` — restore all emulation
-- [ ] Emulation state integrated into `state-save` (persist emulate configuration)
+- [x] Emulation state integrated into `state-save` (persist emulate configuration)
 
 ### v0.9: MCP Server & AI Ecosystem (Must-Have) ✅ (partially implemented)
 
