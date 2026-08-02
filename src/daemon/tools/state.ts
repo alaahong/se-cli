@@ -2,12 +2,14 @@ import { Response } from '../../response';
 import * as fs from 'fs';
 import * as path from 'path';
 import { safeFilename } from './shared';
+import { getEmulationState, setEmulationState, applyEmulation, describeEmulation } from './emulation-state';
 
 interface BrowserState {
   url: string;
   cookies: any[];
   localStorage: Record<string, string>;
   sessionStorage: Record<string, string>;
+  emulation?: any;
   savedAt: string;
 }
 
@@ -31,24 +33,28 @@ export async function browser_state_save(
   //    the driver to be on a matching domain).
   const url = await driver.getCurrentUrl();
 
-  // 5. Assemble the state object.
+  // 5. Capture the active emulation state (v0.8) so state-load can replay it.
+  const emulation = getEmulationState();
+
+  // 6. Assemble the state object.
   const state: BrowserState = {
     url,
     cookies,
     localStorage: localStorageData || {},
     sessionStorage: sessionStorageData || {},
+    emulation: Object.keys(emulation).length > 0 ? emulation : undefined,
     savedAt: new Date().toISOString(),
   };
 
-  // 6. Write to .se-cli/<filename> (same I/O pattern as screenshot.ts).
+  // 7. Write to .se-cli/<filename> (same I/O pattern as screenshot.ts).
   const outDir = path.join(process.cwd(), '.se-cli');
   fs.mkdirSync(outDir, { recursive: true });
   const filename = params.filename ? safeFilename(params.filename) : `state-${Date.now()}.json`;
   const file = path.join(outDir, filename);
   fs.writeFileSync(file, JSON.stringify(state, null, 2));
 
-  response.addCode(`const cookies = await driver.manage().getCookies();\nconst localStorageData = await driver.executeScript('return (() => { const o = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); o[k] = localStorage.getItem(k); } return o; })();');\nconst sessionStorageData = await driver.executeScript('return (() => { const o = {}; for (let i = 0; i < sessionStorage.length; i++) { const k = sessionStorage.key(i); o[k] = sessionStorage.getItem(k); } return o; })();');\nconst url = await driver.getCurrentUrl();\nfs.writeFileSync('${filename}', JSON.stringify({ url, cookies, localStorage: localStorageData, sessionStorage: sessionStorageData, savedAt: new Date().toISOString() }, null, 2));`);
-  response.addResult(`[State](.se-cli/${filename}) (${cookies.length} cookies, ${Object.keys(state.localStorage).length} localStorage items, ${Object.keys(state.sessionStorage).length} sessionStorage items)`);
+  response.addCode(`const cookies = await driver.manage().getCookies();\nconst localStorageData = await driver.executeScript('return (() => { const o = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); o[k] = localStorage.getItem(k); } return o; })();');\nconst sessionStorageData = await driver.executeScript('return (() => { const o = {}; for (let i = 0; i < sessionStorage.length; i++) { const k = sessionStorage.key(i); o[k] = sessionStorage.getItem(k); } return o; })();');\nconst url = await driver.getCurrentUrl();\nfs.writeFileSync('${filename}', JSON.stringify({ url, cookies, localStorage: localStorageData, sessionStorage: sessionStorageData, emulation: ${JSON.stringify(emulation)}, savedAt: new Date().toISOString() }, null, 2));`);
+  response.addResult(`[State](.se-cli/${filename}) (${cookies.length} cookies, ${Object.keys(state.localStorage).length} localStorage items, ${Object.keys(state.sessionStorage).length} sessionStorage items${state.emulation ? `, emulation: ${describeEmulation(state.emulation)}` : ''})`);
 }
 
 export async function browser_state_load(
@@ -132,6 +138,29 @@ export async function browser_state_load(
     await driver.executeScript('sessionStorage.setItem(arguments[0], arguments[1]);', k, sessionStorageData[k]);
   }
 
-  response.addCode(`const state = JSON.parse(fs.readFileSync('${filename}', 'utf8'));\nawait driver.get(state.url);\nawait driver.manage().deleteAllCookies();\nfor (const cookie of state.cookies) { await driver.manage().addCookie(cookie); }\nfor (const k of Object.keys(state.localStorage)) { await driver.executeScript('localStorage.setItem(arguments[0], arguments[1]);', k, state.localStorage[k]); }\nfor (const k of Object.keys(state.sessionStorage)) { await driver.executeScript('sessionStorage.setItem(arguments[0], arguments[1]);', k, state.sessionStorage[k]); }`);
-  response.addResult(`loaded state from ${filename} (${cookies.length} cookies, ${lsKeys.length} localStorage items, ${ssKeys.length} sessionStorage items)`);
+  // 8. Restore emulation state (v0.8) — replayed via CDP/BiDi after navigation.
+  //    Guard against hand-edited files: only apply known keys.
+  let emulationRestored = false;
+  const patch: any = {};
+  if (state.emulation && typeof state.emulation === 'object') {
+    const emu = state.emulation;
+    if (emu.viewport && typeof emu.viewport === 'object') patch.viewport = emu.viewport;
+    if (typeof emu.userAgent === 'string') patch.userAgent = emu.userAgent;
+    if (typeof emu.locale === 'string') patch.locale = emu.locale;
+    if (emu.colorScheme === 'light' || emu.colorScheme === 'dark') patch.colorScheme = emu.colorScheme;
+    if (typeof emu.timezone === 'string') patch.timezone = emu.timezone;
+    if (emu.geolocation && typeof emu.geolocation === 'object') patch.geolocation = emu.geolocation;
+    if (Array.isArray(emu.permissions)) patch.permissions = emu.permissions;
+    if (typeof emu.offline === 'boolean') patch.offline = emu.offline;
+    if (emu.throttleNetwork && typeof emu.throttleNetwork === 'object') patch.throttleNetwork = emu.throttleNetwork;
+    if (typeof emu.throttleCpu === 'number') patch.throttleCpu = emu.throttleCpu;
+    if (Object.keys(patch).length > 0) {
+      setEmulationState(patch);
+      await applyEmulation(driver);
+      emulationRestored = true;
+    }
+  }
+
+  response.addCode(`const state = JSON.parse(fs.readFileSync('${filename}', 'utf8'));\nawait driver.get(state.url);\nawait driver.manage().deleteAllCookies();\nfor (const cookie of state.cookies) { await driver.manage().addCookie(cookie); }\nfor (const k of Object.keys(state.localStorage)) { await driver.executeScript('localStorage.setItem(arguments[0], arguments[1]);', k, state.localStorage[k]); }\nfor (const k of Object.keys(state.sessionStorage)) { await driver.executeScript('sessionStorage.setItem(arguments[0], arguments[1]);', k, state.sessionStorage[k]); }${emulationRestored ? `\n// emulation restored: ${describeEmulation(patch)}` : ''}`);
+  response.addResult(`loaded state from ${filename} (${cookies.length} cookies, ${lsKeys.length} localStorage items, ${ssKeys.length} sessionStorage items${emulationRestored ? `, emulation: ${describeEmulation(patch)}` : ''})`);
 }
