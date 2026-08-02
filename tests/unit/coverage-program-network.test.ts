@@ -518,19 +518,29 @@ describe('main()', () => {
   // ── open ─────────────────────────────────────────────────
 
   it('open with URL: calls startDaemon and session.run with goto', async () => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
     await main(['open', 'https://example.com']);
 
     expect(mockSession.startDaemon).toHaveBeenCalledTimes(1);
-    expect(mockSession.startDaemon).toHaveBeenCalledWith({});
+    // No --browser flag: auto-detects the first available browser (Edge first)
+    expect(mockSession.startDaemon).toHaveBeenCalledWith({ browserName: 'edge' });
     expect(mockSession.run).toHaveBeenCalledTimes(1);
     expect(mockSession.run.mock.calls[0][0]).toEqual(['goto', 'https://example.com']);
   });
 
   it('open with no URL: calls startDaemon but not run', async () => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
     await main(['open']);
 
     expect(mockSession.startDaemon).toHaveBeenCalledTimes(1);
     expect(mockSession.run).not.toHaveBeenCalled();
+  });
+
+  it('open without --browser exits(1) when no browser is detected', async () => {
+    vi.mocked(fs.existsSync).mockReturnValue(false);
+    await expect(main(['open', 'https://example.com'])).rejects.toThrow('exit:1');
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(mockSession.startDaemon).not.toHaveBeenCalled();
   });
 
   it('open --browser=firefox --headed: passes browserName and headed to startDaemon', async () => {
@@ -543,6 +553,7 @@ describe('main()', () => {
   });
 
   it('open --persistent: sets persistent and auto-assigns profilePath', async () => {
+    vi.mocked(fs.existsSync).mockReturnValue(true);
     await main(['open', '--persistent']);
 
     const callArgs = mockSession.startDaemon.mock.calls[0][0];

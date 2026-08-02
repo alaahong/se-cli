@@ -21,6 +21,7 @@ import * as readline from 'readline';
 import { Session } from './session';
 import { baseDaemonDir, workspaceHash } from './config';
 import { Registry } from './registry';
+import { detectBrowser } from './detect-browser';
 import * as path from 'path';
 import * as fs from 'fs';
 import type { ServerMessage } from './protocol';
@@ -1169,29 +1170,24 @@ export class McpServer {
     });
   }
 
-  /**
-   * Map an MCP tool name + arguments to CLI args for the daemon.
-   */
+/**
+ * Map an MCP tool name + arguments to CLI args for the daemon.
+ */
   private mapToolToCliArgs(toolName: string, args: any): string[] | null {
     return mapToolToCliArgs(toolName, args);
   }
 
   private async handleOpen(args: any, sessionName: string): Promise<string> {
     const session = this.getSession(sessionName);
-    const openOpts: any = {};
-    if (args.browser) openOpts.browserName = args.browser;
-    if (args.headed) openOpts.headed = true;
-    if (args.cdp) openOpts.cdpEndpoint = args.cdp;
-    if (args.profile) openOpts.profilePath = args.profile;
-    if (args.persistent) {
-      openOpts.persistent = true;
-      const wsHash = workspaceHash(this.workspaceDir);
-      openOpts.profilePath = path.join(baseDaemonDir(), 'profiles', wsHash, sessionName);
+    const { opts: openOpts, error } = buildOpenOptions(args, this.workspaceDir, sessionName);
+    if (error) {
+      return error;
     }
 
     try {
       await session.startDaemon(openOpts);
-      let result = `Browser session "${sessionName}" started (${args.browser || 'chrome'}, ${args.headed ? 'headed' : 'headless'}).`;
+      const browserName = openOpts.browserName || 'chrome';
+      let result = `Browser session "${sessionName}" started (${browserName}, ${args.headed ? 'headed' : 'headless'}).`;
 
       if (args.url) {
         const resp = await session.run(['goto', args.url], process.cwd(), { raw: false, json: false });
@@ -1244,6 +1240,43 @@ export class McpServer {
     this.sessions.clear();
     this.rl.close();
   }
+}
+
+/**
+ * Build the startDaemon options for `browser_open`.
+ *
+ * Auto-detects the browser (Edge → Chrome → Firefox) when neither `browser`
+ * nor `cdp` is given. Returns an error message (not an exception) when no
+ * browser is found, since the MCP server is a long-lived process — unlike the
+ * CLI which exits with code 1 in that case.
+ */
+export function buildOpenOptions(
+  args: any,
+  workspaceDir: string,
+  sessionName: string,
+): { opts: any; error?: string } {
+  const openOpts: any = {};
+  if (args.browser) {
+    openOpts.browserName = args.browser;
+  } else if (!args.cdp) {
+    const detected = detectBrowser();
+    if (!detected) {
+      return {
+        opts: openOpts,
+        error: 'Error starting browser: No browser detected. Install Edge, Chrome, or Firefox, or pass browser ("chrome"|"edge"|"firefox").',
+      };
+    }
+    openOpts.browserName = detected;
+  }
+  if (args.headed) openOpts.headed = true;
+  if (args.cdp) openOpts.cdpEndpoint = args.cdp;
+  if (args.profile) openOpts.profilePath = args.profile;
+  if (args.persistent) {
+    openOpts.persistent = true;
+    const wsHash = workspaceHash(workspaceDir);
+    openOpts.profilePath = path.join(baseDaemonDir(), 'profiles', wsHash, sessionName);
+  }
+  return { opts: openOpts };
 }
 
 // ─── Entry Point ─────────────────────────────────────────────────────────────
