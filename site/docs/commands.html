@@ -84,6 +84,7 @@
         <button class="cmd-tab" data-tab="config" role="tab" data-i18n="cmd.tab.config">Config</button>
         <button class="cmd-tab" data-tab="assert" role="tab">Assertions <span class="ver-badge">v0.6</span></button>
         <button class="cmd-tab" data-tab="network" role="tab">Network &amp; Debug <span class="ver-badge">v0.7</span></button>
+        <button class="cmd-tab" data-tab="emulation" role="tab">Emulation <span class="ver-badge">v0.8</span></button>
         <button class="cmd-tab" data-tab="flags" role="tab" data-i18n="cmd.tab.flags">Flags</button>
       </div>
 
@@ -268,6 +269,24 @@
           </tbody>
         </table>
         <div class="alert alert-info"><span class="alert-icon">i</span><div><strong>v0.7 shipped.</strong> Network interception and console capture use the Selenium BiDi protocol (<code>log.entryAdded</code>, <code>Network.addIntercept</code>). The <code>highlight</code> command is pure JS injection and works on all browsers — no BiDi required. BiDi listeners initialize lazily on first use of any network/debug command.</div></div>
+      </div>
+
+      <div class="cmd-panel" data-panel="emulation">
+        <table class="cmd-table">
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>device &lt;name&gt;</code></td><td>Apply a device preset (viewport + UA + deviceScaleFactor + touch) <span class="badge badge-version">v0.8</span></td></tr>
+            <tr><td><code>device-list</code></td><td>List all built-in device presets <span class="badge badge-version">v0.8</span></td></tr>
+            <tr><td><code>open --viewport=&lt;WxH&gt;</code></td><td>Page viewport size, e.g. <code>1280x720</code> <span class="badge badge-version">v0.8</span></td></tr>
+            <tr><td><code>open --user-agent=&lt;ua&gt;</code></td><td>Override the browser user agent <span class="badge badge-version">v0.8</span></td></tr>
+            <tr><td><code>open --locale=&lt;tag&gt;</code></td><td>Override page locale, e.g. <code>zh-CN</code> <span class="badge badge-version">v0.8</span></td></tr>
+            <tr><td><code>open --color-scheme=&lt;light|dark&gt;</code></td><td>Emulate <code>prefers-color-scheme</code> <span class="badge badge-version">v0.8</span></td></tr>
+            <tr><td><code>open --timezone=&lt;id&gt;</code></td><td>Override timezone, e.g. <code>America/New_York</code> <span class="badge badge-version">v0.8</span></td></tr>
+            <tr><td><code>open --geolocation=&lt;lat,lon[,accuracy]&gt;</code></td><td>Override geolocation <span class="badge badge-version">v0.8</span></td></tr>
+            <tr><td><code>open --permissions=&lt;list&gt;</code></td><td>Grant permissions, e.g. <code>geolocation,camera</code> <span class="badge badge-version">v0.8</span></td></tr>
+          </tbody>
+        </table>
+        <div class="alert alert-info"><span class="alert-icon">i</span><div><strong>v0.8 shipped.</strong> Emulation uses CDP (<code>Emulation.*</code>, <code>Network.*</code>, <code>Browser.*</code>) on Chrome/Edge; Firefox supports viewport via WebDriver BiDi. Open-time flags are replayed automatically if the driver rebuilds.</div></div>
       </div>
 
       <div class="cmd-panel" data-panel="flags">

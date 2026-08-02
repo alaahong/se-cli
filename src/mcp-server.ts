@@ -723,6 +723,28 @@ export const toolDefinitions: ToolDef[] = [
       },
     },
   },
+  // ── v0.8: Device & Environment Emulation ──
+  {
+    name: 'browser_device',
+    description: 'Apply a device preset (viewport, user agent, deviceScaleFactor, touch). Chrome/Edge full support; Firefox viewport only. Run browser_device_list for available presets.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Device preset name (e.g. "iPhone 13")' },
+        session: { type: 'string', description: 'Session name' },
+      },
+    },
+  },
+  {
+    name: 'browser_device_list',
+    description: 'List all built-in device presets.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        session: { type: 'string', description: 'Session name' },
+      },
+    },
+  },
 ];
 
 // ─── Tool-to-CLI Arg Mapping ─────────────────────────────────────────────────
@@ -915,6 +937,15 @@ export function mapToolToCliArgs(toolName: string, args: any): string[] | null {
       cliArgs.push(...sessionFlag);
       return cliArgs;
     }
+    // v0.8: Device & Environment Emulation
+    case 'browser_device': {
+      const cliArgs: string[] = ['device'];
+      if (args.name) cliArgs.push(args.name);
+      cliArgs.push(...sessionFlag);
+      return cliArgs;
+    }
+    case 'browser_device_list':
+      return ['device-list', ...sessionFlag];
 
     // Session management handled separately in handleToolsCall
     case 'browser_open':
