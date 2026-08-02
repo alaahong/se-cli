@@ -331,6 +331,15 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
         all: parsed.all || false,
       },
     }),
+    // v0.8: Device & Environment Emulation
+    'device': () => ({
+      toolName: 'browser_device',
+      toolParams: { name: positional[0] },
+    }),
+    'device-list': () => ({
+      toolName: 'browser_device_list',
+      toolParams: {},
+    }),
   };
   const factory = commands[cmd];
   if (!factory) throw new Error(`Unknown command: ${cmd}`);

@@ -155,6 +155,30 @@ se-cli close
 | `mousewheel <dx> <dy>` | Scroll wheel by offsets (v0.5) |
 | `actions-chain <json>` | Chain multiple actions in one perform() (v0.5) |
 
+### Emulation (v0.8)
+
+Device & environment emulation via CDP (`Emulation.*` / `Network.*` / `Browser.*`) on Chrome/Edge, with viewport support on Firefox via WebDriver BiDi. Emulation flags set at `open` are persisted and replayed automatically if the driver rebuilds.
+
+| Command | Description |
+|---------|-------------|
+| `device <name>` | Apply a device preset (viewport + UA + deviceScaleFactor + touch) (v0.8) |
+| `device-list` | List all built-in device presets (v0.8) |
+| `open --viewport=<WxH>` | Page viewport size, e.g. `1280x720` (v0.8) |
+| `open --user-agent=<ua>` | Override the browser user agent (v0.8, Chrome/Edge) |
+| `open --locale=<tag>` | Override page locale, e.g. `zh-CN` (v0.8, Chrome/Edge) |
+| `open --color-scheme=<light\|dark>` | Emulate `prefers-color-scheme` (v0.8, Chrome/Edge) |
+| `open --timezone=<id>` | Override timezone, e.g. `America/New_York` (v0.8, Chrome/Edge) |
+| `open --geolocation=<lat,lon[,accuracy]>` | Override geolocation (v0.8, Chrome/Edge) |
+| `open --permissions=<list>` | Grant permissions, e.g. `geolocation,camera` (v0.8, Chrome/Edge) |
+
+Built-in presets reference Playwright DeviceDescriptors: `Desktop Chrome`, `iPhone 13/14/15/15 Pro`, `iPad Pro 11`, `Pixel 7/8`, `Galaxy S23/S24`. Chrome/Edge apply the full preset via CDP (including `mobile`/`hasTouch`); Firefox applies the viewport via BiDi.
+
+```bash
+se-cli open https://example.com --viewport=390x844 --color-scheme=dark
+se-cli device "iPhone 13"          # full device emulation (Chrome/Edge)
+se-cli device-list                 # list presets
+```
+
 ### Assertions (v0.6)
 
 Web-First assertions inspired by Playwright. Each `expect` command polls the page until the condition is met (or the timeout expires), then exits with code `0` (pass) or `1` (fail) — ideal for CI pipelines and agent verification flows.

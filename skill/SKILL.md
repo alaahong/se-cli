@@ -414,6 +414,11 @@ se-cli open https://example.com --user-agent="Mozilla/5.0 (iPhone; CPU iPhone OS
 # Emulate locale, timezone, geolocation (Chrome/Edge)
 se-cli open https://example.com --locale=zh-CN --timezone=Asia/Shanghai --geolocation=39.9,116.4 --permissions=geolocation
 
+# Device presets (Playwright DeviceDescriptors subset)
+se-cli device-list                # list presets
+se-cli device "iPhone 13"         # apply preset (viewport + UA + scale + touch)
+se-cli device                     # show current emulation state
+
 # After opening, emulation state is replayed automatically if the driver rebuilds.
 ```
 

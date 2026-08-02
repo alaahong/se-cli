@@ -64,6 +64,8 @@ import { browser_highlight } from './highlight';
 import { browser_console } from './console';
 import { browser_requests, browser_request } from './requests';
 import { browser_route, browser_route_list, browser_unroute } from './route';
+// v0.8: Device & Environment Emulation
+import { browser_device, browser_device_list } from './device';
 
 export const tools: Record<string, (driver: any, params: any, response: any) => Promise<void>> = {
   browser_goto,
@@ -126,4 +128,7 @@ export const tools: Record<string, (driver: any, params: any, response: any) => 
   browser_route,
   browser_route_list,
   browser_unroute,
+  // v0.8: Device & Environment Emulation
+  browser_device,
+  browser_device_list,
 };

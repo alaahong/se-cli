@@ -1400,6 +1400,43 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
       // setLocaleOverride affects Intl APIs, not navigator.language.
       expect(probe.intlLocale).toMatch(/^fr/);
     });
+
+    // ── v0.8: device presets ──────────────────────────────────────
+
+    (skip ? it.skip : it)('lists built-in device presets', async () => {
+      await run(['open', EMULATION_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['--raw', 'device-list'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('iPhone 13');
+      expect(result).toContain('Pixel 7');
+      expect(result).toContain('390x664@3x');
+    });
+
+    (skip ? it.skip : it)('applies a device preset viewport', async () => {
+      await run(['open', EMULATION_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['device', 'iPhone 13'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('applied');
+      // Emulation takes effect at runtime — reload so the page re-reads values.
+      await run(['reload'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      const probe = await readProbe();
+      expect(probe.viewport.width).toBe(390);
+      expect(probe.viewport.height).toBe(664);
+    });
+
+    (skip ? it.skip : it)('rejects an unknown device preset', async () => {
+      await run(['open', EMULATION_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['device', 'Commodore 64'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('Unknown device');
+    });
+
+    (skipFirefoxEmulation ? it.skip : it)('applies device UA via CDP', async () => {
+      await run(['open', EMULATION_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await run(['device', 'Pixel 7'], { SE_CLI_SESSION: S() });
+      await run(['reload'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      const probe = await readProbe();
+      expect(probe.userAgent).toContain('Pixel 7');
+    });
   });
 });
 
