@@ -27,6 +27,12 @@ export interface EmulationGeolocation {
   accuracy?: number;
 }
 
+export interface EmulationThrottleNetwork {
+  download?: number; // kbps
+  upload?: number; // kbps
+  latency?: number; // ms
+}
+
 export interface EmulationState {
   viewport?: EmulationViewport;
   userAgent?: string;
@@ -35,6 +41,10 @@ export interface EmulationState {
   timezone?: string;
   geolocation?: EmulationGeolocation;
   permissions?: string[];
+  // Runtime state set via `emulate` (v0.8) — also replayed on driver rebuild.
+  offline?: boolean;
+  throttleNetwork?: EmulationThrottleNetwork | null;
+  throttleCpu?: number | null;
 }
 
 const state: EmulationState = {};
@@ -46,6 +56,10 @@ export function setEmulationState(next: Partial<EmulationState>): void {
   // open with flags must remove viewport/UA, not just zero them out).
   for (const k of Object.keys(state)) delete (state as any)[k];
   Object.assign(state, next);
+}
+
+export function updateEmulationState(patch: Partial<EmulationState>): void {
+  Object.assign(state, patch);
 }
 
 export function getEmulationState(): EmulationState {
@@ -176,6 +190,30 @@ export async function applyEmulation(driver: any): Promise<string[]> {
     }
   }
 
+  // Runtime network/CPU emulation (`emulate` command, v0.8).
+  if (state.offline || state.throttleNetwork) {
+    if (chromium) {
+      const t = state.throttleNetwork || {};
+      await cdpSend(driver, 'Network.emulateNetworkConditions', {
+        offline: !!state.offline,
+        latency: t.latency ?? 0,
+        // CDP uses bytes/second; we accept kbps on the CLI.
+        downloadThroughput: state.offline ? 0 : (t.download !== undefined ? t.download * 1000 : -1),
+        uploadThroughput: state.offline ? 0 : (t.upload !== undefined ? t.upload * 1000 : -1),
+      });
+    } else {
+      warnings.push('network emulation is not supported on Firefox');
+    }
+  }
+
+  if (state.throttleCpu) {
+    if (chromium) {
+      await cdpSend(driver, 'Emulation.setCPUThrottlingRate', { rate: state.throttleCpu });
+    } else {
+      warnings.push('CPU throttling is not supported on Firefox');
+    }
+  }
+
   return warnings;
 }
 
@@ -238,6 +276,29 @@ export function parseGeolocation(value: string): EmulationGeolocation {
   return { latitude, longitude, accuracy };
 }
 
+export function parseThrottleNetwork(value: string): EmulationThrottleNetwork {
+  const v = value.trim();
+  if (v === 'slow3g') return { download: 400, upload: 400, latency: 400 };
+  if (v === 'fast3g') return { download: 1500, upload: 750, latency: 100 };
+  if (v === 'gprs') return { download: 50, upload: 20, latency: 500 };
+  const m = /^custom:(.*)$/.exec(v);
+  if (m) {
+    const t: EmulationThrottleNetwork = {};
+    for (const part of m[1].split(',')) {
+      if (!part) continue;
+      const [k, val] = part.split('=');
+      const num = parseFloat(val);
+      if (!Number.isFinite(num)) throw new Error(`Invalid custom throttle value: "${part}"`);
+      if (k === 'download') t.download = num;
+      else if (k === 'upload') t.upload = num;
+      else if (k === 'latency') t.latency = num;
+      else throw new Error(`Unknown custom throttle key: "${k}" (expected download, upload, latency)`);
+    }
+    return t;
+  }
+  throw new Error(`Invalid --throttle-network: "${value}". Expected slow3g, fast3g, gprs, or custom:download=,upload=,latency=`);
+}
+
 export function describeEmulation(stateToDescribe: EmulationState = state): string {
   const parts: string[] = [];
   if (stateToDescribe.viewport) {
@@ -253,5 +314,15 @@ export function describeEmulation(stateToDescribe: EmulationState = state): stri
   if (stateToDescribe.permissions && stateToDescribe.permissions.length > 0) {
     parts.push(`permissions=${stateToDescribe.permissions.join(',')}`);
   }
+  if (stateToDescribe.offline) parts.push('offline');
+  if (stateToDescribe.throttleNetwork) {
+    const t = stateToDescribe.throttleNetwork;
+    const bits: string[] = [];
+    if (t.download !== undefined) bits.push(`down=${t.download}kbps`);
+    if (t.upload !== undefined) bits.push(`up=${t.upload}kbps`);
+    if (t.latency !== undefined) bits.push(`latency=${t.latency}ms`);
+    parts.push(`throttle(${bits.join(',')})`);
+  }
+  if (stateToDescribe.throttleCpu) parts.push(`cpu=${stateToDescribe.throttleCpu}x`);
   return parts.length > 0 ? parts.join(' ') : '(no emulation active)';
 }

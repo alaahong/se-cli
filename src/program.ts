@@ -437,6 +437,16 @@ Network & Debugging (v0.7):
   unroute <index>           remove specific route
   unroute --all             remove all routes
 
+Emulation (v0.8):
+  device <name>             apply device preset (e.g. "iPhone 13")
+  device-list               list built-in device presets
+  device                    show current emulation state
+  emulate                   show current emulation state
+  emulate --offline         go offline (Chrome/Edge)
+  emulate --throttle-network=slow3g|fast3g|gprs|custom:download=,upload=,latency=
+  emulate --throttle-cpu=4  CPU slowdown rate (Chrome/Edge)
+  emulate --reset           restore runtime emulation (keeps open-time flags)
+
 Flags:
   --raw                   output only the result value
   --json                  structured JSON output

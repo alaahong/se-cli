@@ -745,6 +745,20 @@ export const toolDefinitions: ToolDef[] = [
       },
     },
   },
+  {
+    name: 'browser_emulate',
+    description: 'Apply or reset runtime network/CPU emulation (offline, throttling). Chrome/Edge only. Use --reset to restore.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        offline: { type: 'boolean', description: 'Go offline' },
+        throttleNetwork: { type: 'string', description: 'slow3g | fast3g | gprs | custom:download=,upload=,latency=' },
+        throttleCpu: { type: 'number', description: 'CPU slowdown rate (>= 1)' },
+        reset: { type: 'boolean', description: 'Reset all runtime emulation' },
+        session: { type: 'string', description: 'Session name' },
+      },
+    },
+  },
 ];
 
 // ─── Tool-to-CLI Arg Mapping ─────────────────────────────────────────────────

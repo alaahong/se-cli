@@ -181,7 +181,7 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
   // Parse flags from rest using minimist
   // Include wait/retry flags in the known options
   const parsed = parseArgs(rest, {
-    boolean: ['submit', 'no-wait', 'not', 'exact', 'hide', 'all', 'clear'],
+    boolean: ['submit', 'no-wait', 'not', 'exact', 'hide', 'all', 'clear', 'offline', 'reset'],
     string: [
       'filename', 'depth', 'regex',
       // v0.4 wait/retry flags
@@ -190,6 +190,8 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
       // v0.7 network/debug flags
       'status', 'body', 'headers', 'style', 'since',
       'filter', 'method',
+      // v0.8 emulation flags
+      'throttle-network', 'throttle-cpu',
     ],
     alias: {},
   });
@@ -339,6 +341,15 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
     'device-list': () => ({
       toolName: 'browser_device_list',
       toolParams: {},
+    }),
+    'emulate': () => ({
+      toolName: 'browser_emulate',
+      toolParams: {
+        offline: parsed.offline || undefined,
+        throttleNetwork: parsed['throttle-network'],
+        throttleCpu: parsed['throttle-cpu'],
+        reset: parsed.reset || false,
+      },
     }),
   };
   const factory = commands[cmd];
