@@ -5,6 +5,7 @@ import { Registry, SessionConfig } from '../registry';
 import { baseDaemonDir } from '../config';
 import type { ClientMessage, ServerMessage } from '../protocol';
 import { resetAll as resetNetworkDebugState } from './tools/network-state';
+import { parseViewport, parseGeolocation, applyEmulation, setEmulationState, resetEmulationState } from './tools/emulation-state';
 
 // ── Hide driver console windows on Windows ────────────────────────────
 // selenium-webdriver launches two kinds of console processes on Windows,
@@ -68,7 +69,6 @@ const idleTimeoutMin = Number.isFinite(idleTimeoutArg)
 // v0.8: open-time environment emulation flags. Parsed here (not in the tool
 // layer) because they configure the driver at build time, and they are
 // persisted in the SessionConfig so a driver rebuild replays them.
-const { parseViewport, parseGeolocation } = require('./tools/emulation-state');
 const emulation: Record<string, any> = {};
 const emuViewport = args.find(a => a.startsWith('--viewport='))?.slice('--viewport='.length);
 if (emuViewport) emulation.viewport = parseViewport(emuViewport);
@@ -256,7 +256,6 @@ async function buildDriver(): Promise<void> {
   // (e.g. unsupported capabilities on Firefox) are logged, not fatal — the
   // driver itself is healthy and the rest of the session keeps working.
   if (Object.keys(emulation).length > 0) {
-    const { applyEmulation, setEmulationState } = require('./tools/emulation-state');
     setEmulationState(emulation);
     try {
       const warnings = await applyEmulation(driver);
@@ -340,7 +339,6 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
       resetNetworkDebugState();
       // Reset the cached CDP connection — the new driver gets a fresh one.
       // The emulation STATE itself is kept so buildDriver() replays it.
-      const { resetEmulationState } = require('./tools/emulation-state');
       resetEmulationState();
     }
     logger.warn('cmd', `${toolName} ${Date.now() - start}ms ${code}: ${errMsg}`);

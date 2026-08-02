@@ -458,4 +458,18 @@ describe('browser_emulate', () => {
     const response = new Response({ raw: false, json: false });
     await expect(browser_emulate(driver, { offline: true }, response)).rejects.toThrow('not supported on Firefox');
   });
+
+  it('restores online with explicit offline=false after being offline', async () => {
+    const { driver, sent } = makeChromiumDriver();
+    setEmulationState({ offline: true });
+    const response = new Response({ raw: false, json: false });
+    await browser_emulate(driver, { offline: false }, response);
+    const state = getEmulationState();
+    expect(state.offline).toBe(false);
+    expect(response.serialize()).toContain('emulation applied');
+    // The restore command must be sent — the browser would otherwise stay offline.
+    expect(sent).toContainEqual(['Network.emulateNetworkConditions', {
+      offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1,
+    }]);
+  });
 });

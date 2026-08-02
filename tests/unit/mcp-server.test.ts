@@ -541,6 +541,40 @@ describe('MCP Server — mapToolToCliArgs', () => {
       .toEqual(['unroute', '--all']);
   });
 
+  // ── v0.8: Device & Environment Emulation ──
+  it('maps browser_device by name', () => {
+    expect(mapToolToCliArgs('browser_device', { name: 'iPhone 13' }))
+      .toEqual(['device', 'iPhone 13']);
+  });
+
+  it('maps browser_device without a name (show state)', () => {
+    expect(mapToolToCliArgs('browser_device', {})).toEqual(['device']);
+  });
+
+  it('maps browser_device_list', () => {
+    expect(mapToolToCliArgs('browser_device_list', {})).toEqual(['device-list']);
+  });
+
+  it('maps browser_emulate with offline', () => {
+    expect(mapToolToCliArgs('browser_emulate', { offline: true }))
+      .toEqual(['emulate', '--offline']);
+  });
+
+  it('maps browser_emulate with explicit offline=false', () => {
+    expect(mapToolToCliArgs('browser_emulate', { offline: false }))
+      .toEqual(['emulate', '--offline=false']);
+  });
+
+  it('maps browser_emulate with throttle network and CPU', () => {
+    expect(mapToolToCliArgs('browser_emulate', { throttleNetwork: 'slow3g', throttleCpu: 4 }))
+      .toEqual(['emulate', '--throttle-network=slow3g', '--throttle-cpu=4']);
+  });
+
+  it('maps browser_emulate reset', () => {
+    expect(mapToolToCliArgs('browser_emulate', { reset: true }))
+      .toEqual(['emulate', '--reset']);
+  });
+
   // ── Session Management ──
   it('maps browser_open to empty array (handled separately)', () => {
     expect(mapToolToCliArgs('browser_open', {})).toEqual([]);

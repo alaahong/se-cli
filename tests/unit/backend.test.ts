@@ -141,6 +141,39 @@ describe('parseCommand', () => {
       expect(r.toolParams.target).toBe('e1');
       expect(r.toolParams.value).toBe('hello');
     });
+
+    it('parses emulate --offline', () => {
+      const r = parseCommand(['emulate', '--offline']);
+      expect(r.toolName).toBe('browser_emulate');
+      expect(r.toolParams.offline).toBe(true);
+    });
+
+    it('parses emulate --offline=false (explicit restore)', () => {
+      const r = parseCommand(['emulate', '--offline=false']);
+      expect(r.toolName).toBe('browser_emulate');
+      expect(r.toolParams.offline).toBe(false);
+    });
+
+    it('parses emulate --throttle-network and --throttle-cpu', () => {
+      const r = parseCommand(['emulate', '--throttle-network=slow3g', '--throttle-cpu=4']);
+      expect(r.toolName).toBe('browser_emulate');
+      expect(r.toolParams.throttleNetwork).toBe('slow3g');
+      expect(r.toolParams.throttleCpu).toBe('4');
+    });
+
+    it('parses emulate --reset', () => {
+      const r = parseCommand(['emulate', '--reset']);
+      expect(r.toolName).toBe('browser_emulate');
+      expect(r.toolParams.reset).toBe(true);
+    });
+
+    it('maps device and device-list commands', () => {
+      const d = parseCommand(['device', 'iPhone 13']);
+      expect(d.toolName).toBe('browser_device');
+      expect(d.toolParams.name).toBe('iPhone 13');
+      const l = parseCommand(['device-list']);
+      expect(l.toolName).toBe('browser_device_list');
+    });
   });
 
   describe('v0.2 commands', () => {

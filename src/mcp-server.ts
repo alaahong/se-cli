@@ -960,6 +960,15 @@ export function mapToolToCliArgs(toolName: string, args: any): string[] | null {
     }
     case 'browser_device_list':
       return ['device-list', ...sessionFlag];
+    case 'browser_emulate': {
+      const cliArgs: string[] = ['emulate'];
+      if (args.offline !== undefined) cliArgs.push(args.offline ? '--offline' : '--offline=false');
+      if (args.throttleNetwork) cliArgs.push(`--throttle-network=${args.throttleNetwork}`);
+      if (args.throttleCpu !== undefined) cliArgs.push(`--throttle-cpu=${args.throttleCpu}`);
+      if (args.reset) cliArgs.push('--reset');
+      cliArgs.push(...sessionFlag);
+      return cliArgs;
+    }
 
     // Session management handled separately in handleToolsCall
     case 'browser_open':
