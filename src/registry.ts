@@ -13,6 +13,9 @@ export interface SessionConfig {
   cdpEndpoint?: string;
   profilePath?: string;
   idleTimeout?: number;
+  // v0.8: open-time emulation flags (viewport/UA/locale/color-scheme/
+  // timezone/geolocation/permissions), replayed after a driver rebuild.
+  emulation?: Record<string, any>;
   pid?: number;
 }
 

@@ -48,7 +48,7 @@ export class Session {
    *          browser window was spawned), 'started' if a new daemon was
    *          launched (a fresh browser window appears when headed).
    */
-  async startDaemon(opts: { browserName?: string; headed?: boolean; cdpEndpoint?: string; profilePath?: string; persistent?: boolean; idleTimeout?: number } = {}): Promise<'started' | 'reused'> {
+  async startDaemon(opts: { browserName?: string; headed?: boolean; cdpEndpoint?: string; profilePath?: string; persistent?: boolean; idleTimeout?: number; emulation?: Record<string, any> } = {}): Promise<'started' | 'reused'> {
     // If a daemon is already running on this socket, verify it's responsive.
     if (await this.canConnect()) {
       try {
@@ -75,6 +75,18 @@ export class Session {
     if (opts.profilePath) args.push(`--profile=${opts.profilePath}`);
     if (opts.persistent) args.push('--persistent');
     if (opts.idleTimeout !== undefined) args.push(`--idle-timeout=${opts.idleTimeout}`);
+    // v0.8: open-time emulation flags, passed through verbatim so the daemon
+    // can persist them in the SessionConfig and replay them on driver rebuild.
+    if (opts.emulation) {
+      const emu = opts.emulation;
+      if (emu.viewport) args.push(`--viewport=${emu.viewport.width}x${emu.viewport.height}`);
+      if (emu.userAgent) args.push(`--user-agent=${emu.userAgent}`);
+      if (emu.locale) args.push(`--locale=${emu.locale}`);
+      if (emu.colorScheme) args.push(`--color-scheme=${emu.colorScheme}`);
+      if (emu.timezone) args.push(`--timezone=${emu.timezone}`);
+      if (emu.geolocation) args.push(`--geolocation=${emu.geolocation.latitude},${emu.geolocation.longitude}${emu.geolocation.accuracy !== undefined ? `,${emu.geolocation.accuracy}` : ''}`);
+      if (emu.permissions && emu.permissions.length > 0) args.push(`--permissions=${emu.permissions.join(',')}`);
+    }
 
     const child: ChildProcess = spawn(process.execPath, args, {
       detached: true,
@@ -189,6 +201,7 @@ export class Session {
                   profilePath: config.profilePath,
                   persistent: config.persistent,
                   idleTimeout: config.idleTimeout,
+                  emulation: config.emulation,
                 });
               }
             } catch {

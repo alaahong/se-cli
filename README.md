@@ -291,6 +291,13 @@ Network interception, console capture, and visual debugging tools powered by Sel
 | `--page-load-timeout=<ms>` | Page load timeout (v0.4) |
 | `--script-timeout=<ms>` | Script timeout for async eval (v0.4) |
 | `--no-wait` | Shorthand for --wait=none --timeout=0 (v0.4) |
+| `--viewport=<WxH>` | Page viewport size, e.g. 1280x720 (v0.8) |
+| `--user-agent=<ua>` | Override the browser user agent (v0.8, Chrome/Edge) |
+| `--locale=<tag>` | Override page locale, e.g. zh-CN (v0.8, Chrome/Edge) |
+| `--color-scheme=<light\|dark>` | Emulate prefers-color-scheme (v0.8, Chrome/Edge) |
+| `--timezone=<id>` | Override timezone, e.g. America/New_York (v0.8, Chrome/Edge) |
+| `--geolocation=<lat,lon[,accuracy]>` | Override geolocation (v0.8, Chrome/Edge) |
+| `--permissions=<list>` | Grant permissions, e.g. geolocation,camera (v0.8, Chrome/Edge) |
 
 ### Logging
 

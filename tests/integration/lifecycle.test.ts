@@ -1345,6 +1345,61 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
       ], { SE_CLI_SESSION: S() });
       expect(headersResult).toContain('test-value');
     });
+
+    // ── v0.8: Device & Environment Emulation ──────────────────────
+
+    const EMULATION_URL = () => server.url('emulation.html');
+
+    const readProbe = async () => JSON.parse((await run(['--raw', 'eval', 'JSON.stringify(window.__probe)'], { SE_CLI_SESSION: S() })).trim());
+
+    (skip ? it.skip : it)('applies --viewport via emulation', async () => {
+      await run(['open', EMULATION_URL(), `--browser=${browser}`, '--viewport=500x400'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      const probe = await readProbe();
+      expect(probe.viewport.width).toBe(500);
+      expect(probe.viewport.height).toBe(400);
+    });
+
+    (skip ? it.skip : it)('rejects an invalid --viewport value', async () => {
+      await expect(run(['open', EMULATION_URL(), `--browser=${browser}`, '--viewport=abc'], { SE_CLI_SESSION: S() }))
+        .rejects.toThrow('Invalid --viewport');
+    });
+
+    (skip ? it.skip : it)('rejects an invalid --geolocation value', async () => {
+      await expect(run(['open', EMULATION_URL(), `--browser=${browser}`, '--geolocation=abc'], { SE_CLI_SESSION: S() }))
+        .rejects.toThrow('Invalid --geolocation');
+    });
+
+    const skipFirefoxEmulation = skip || browser === 'firefox';
+
+    (skipFirefoxEmulation ? it.skip : it)('applies --user-agent via CDP', async () => {
+      await run(['open', EMULATION_URL(), `--browser=${browser}`, '--user-agent=se-cli-e2e-test-agent'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      const probe = await readProbe();
+      expect(probe.userAgent).toContain('se-cli-e2e-test-agent');
+    });
+
+    (skipFirefoxEmulation ? it.skip : it)('applies --color-scheme via CDP', async () => {
+      await run(['open', EMULATION_URL(), `--browser=${browser}`, '--color-scheme=dark'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      const probe = await readProbe();
+      expect(probe.colorScheme).toBe('dark');
+    });
+
+    (skipFirefoxEmulation ? it.skip : it)('applies --timezone via CDP', async () => {
+      await run(['open', EMULATION_URL(), `--browser=${browser}`, '--timezone=America/New_York'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      const probe = await readProbe();
+      expect(probe.timezone).toBe('America/New_York');
+    });
+
+    (skipFirefoxEmulation ? it.skip : it)('applies --locale via CDP', async () => {
+      await run(['open', EMULATION_URL(), `--browser=${browser}`, '--locale=fr-FR'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      const probe = await readProbe();
+      // setLocaleOverride affects Intl APIs, not navigator.language.
+      expect(probe.intlLocale).toMatch(/^fr/);
+    });
   });
 });
 
