@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import * as path from 'path';
 import { detectBrowser, browserCandidates, BROWSER_PROBE_ORDER } from '../../src/detect-browser';
 
 function makeCheck(present: string[]): (p: string) => boolean {
@@ -27,6 +28,24 @@ describe('browserCandidates', () => {
     expect(browserCandidates('firefox', 'win32')[0]).toContain('firefox.exe');
     expect(browserCandidates('firefox', 'darwin')).toEqual(['/Applications/Firefox.app/Contents/MacOS/firefox']);
     expect(browserCandidates('firefox', 'linux')).toContain('/usr/bin/firefox');
+  });
+
+  it('includes snap and flatpak install locations on linux', () => {
+    expect(browserCandidates('firefox', 'linux')).toContain('/snap/bin/firefox');
+    expect(browserCandidates('firefox', 'linux')).toContain('/var/lib/flatpak/exports/bin/org.mozilla.firefox');
+    expect(browserCandidates('chrome', 'linux')).toContain('/snap/bin/google-chrome');
+    expect(browserCandidates('edge', 'linux')).toContain('/snap/bin/microsoft-edge');
+  });
+
+  it('searches PATH for browser executables on linux', () => {
+    process.env.PATH = ['/opt/browsers', '/usr/local/bin'].join(path.delimiter);
+    const firefox = browserCandidates('firefox', 'linux');
+    expect(firefox).toContain(path.join('/opt/browsers', 'firefox'));
+    expect(firefox).toContain(path.join('/usr/local/bin', 'firefox-esr'));
+
+    const chrome = browserCandidates('chrome', 'linux');
+    expect(chrome).toContain(path.join('/opt/browsers', 'chromium-browser'));
+    delete process.env.PATH;
   });
 });
 

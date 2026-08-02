@@ -21,6 +21,7 @@ import * as readline from 'readline';
 import { Session } from './session';
 import { baseDaemonDir, workspaceHash } from './config';
 import { Registry } from './registry';
+import { detectBrowser } from './detect-browser';
 import * as path from 'path';
 import * as fs from 'fs';
 import type { ServerMessage } from './protocol';
@@ -1179,7 +1180,18 @@ export class McpServer {
   private async handleOpen(args: any, sessionName: string): Promise<string> {
     const session = this.getSession(sessionName);
     const openOpts: any = {};
-    if (args.browser) openOpts.browserName = args.browser;
+    if (args.browser) {
+      openOpts.browserName = args.browser;
+    } else if (!args.cdp) {
+      // Same auto-detection as the CLI: probe Edge → Chrome → Firefox.
+      // Unlike the CLI we return an error message instead of exiting,
+      // since the MCP server is a long-lived process.
+      const detected = detectBrowser();
+      if (!detected) {
+        return 'Error starting browser: No browser detected. Install Edge, Chrome, or Firefox, or pass browser ("chrome"|"edge"|"firefox").';
+      }
+      openOpts.browserName = detected;
+    }
     if (args.headed) openOpts.headed = true;
     if (args.cdp) openOpts.cdpEndpoint = args.cdp;
     if (args.profile) openOpts.profilePath = args.profile;
@@ -1191,7 +1203,8 @@ export class McpServer {
 
     try {
       await session.startDaemon(openOpts);
-      let result = `Browser session "${sessionName}" started (${args.browser || 'chrome'}, ${args.headed ? 'headed' : 'headless'}).`;
+      const browserName = openOpts.browserName || 'chrome';
+      let result = `Browser session "${sessionName}" started (${browserName}, ${args.headed ? 'headed' : 'headless'}).`;
 
       if (args.url) {
         const resp = await session.run(['goto', args.url], process.cwd(), { raw: false, json: false });

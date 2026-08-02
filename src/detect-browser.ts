@@ -12,6 +12,13 @@ function programFiles(x86: boolean): string {
   return process.env[envKey] || (x86 ? 'C:\\Program Files (x86)' : 'C:\\Program Files');
 }
 
+// Candidates discovered via PATH lookup (covers snap/flatpak on Linux,
+// /usr/local/bin installs, homebrew, and any custom PATH entry).
+function inPath(binNames: string[]): string[] {
+  const dirs = (process.env.PATH || '').split(path.delimiter).filter((d) => d);
+  return dirs.flatMap((dir) => binNames.map((bin) => path.join(dir, bin)));
+}
+
 export function browserCandidates(browser: BrowserName, platform: NodeJS.Platform = process.platform): string[] {
   const home = os.homedir();
   if (platform === 'win32') {
@@ -43,14 +50,33 @@ export function browserCandidates(browser: BrowserName, platform: NodeJS.Platfor
         return ['/Applications/Firefox.app/Contents/MacOS/firefox'];
     }
   }
-  // linux and everything else: common executable locations
+  // linux and everything else: common executable locations, snap/flatpak
+  // installs (Ubuntu 22.04+ ships Firefox as a snap), and PATH lookup.
   switch (browser) {
     case 'edge':
-      return ['/usr/bin/microsoft-edge', '/usr/bin/microsoft-edge-stable'];
+      return [
+        '/usr/bin/microsoft-edge',
+        '/usr/bin/microsoft-edge-stable',
+        '/snap/bin/microsoft-edge',
+        ...inPath(['microsoft-edge', 'microsoft-edge-stable']),
+      ];
     case 'chrome':
-      return ['/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser'];
+      return [
+        '/usr/bin/google-chrome',
+        '/usr/bin/google-chrome-stable',
+        '/usr/bin/chromium',
+        '/usr/bin/chromium-browser',
+        '/snap/bin/google-chrome',
+        ...inPath(['google-chrome', 'google-chrome-stable', 'chromium', 'chromium-browser']),
+      ];
     case 'firefox':
-      return ['/usr/bin/firefox', '/usr/bin/firefox-esr'];
+      return [
+        '/usr/bin/firefox',
+        '/usr/bin/firefox-esr',
+        '/snap/bin/firefox',
+        '/var/lib/flatpak/exports/bin/org.mozilla.firefox',
+        ...inPath(['firefox', 'firefox-esr']),
+      ];
   }
   return [];
 }
