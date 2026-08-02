@@ -274,7 +274,7 @@ Network interception, console capture, and visual debugging tools powered by Sel
 | `--raw` | Output only the result value (for scripting) |
 | `--json` | Structured JSON output |
 | `-s=<name>` | Use named session |
-| `--browser=chrome\|edge\|firefox` | Browser selection (default: chrome) |
+| `--browser=chrome\|edge\|firefox` | Browser selection (default: auto-detect Edge → Chrome → Firefox) |
 | `--headed` | Show browser window (default: headless) |
 | `--cdp=<url>` | Attach to running Chrome via CDP |
 | `--profile=<path>` | Use a persistent browser profile directory |

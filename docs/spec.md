@@ -99,7 +99,7 @@ se-cli -s=<name> <cmd>         # Named session
 se-cli --raw <cmd>             # Output only the value
 se-cli --json <cmd>            # Structured JSON output
 se-cli -s=<name> <cmd>         # Specify session
-se-cli open --browser=chrome   # chrome (default) | edge | firefox
+se-cli open --browser=chrome   # chrome | edge | firefox (default: auto-detect Edge → Chrome → Firefox)
 se-cli open --headed           # Default is headless
 se-cli open --cdp=<url>        # Attach to a running Chrome
 ```

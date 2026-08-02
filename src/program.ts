@@ -3,6 +3,7 @@ import { Session } from './session';
 import { Registry } from './registry';
 import { baseDaemonDir, workspaceHash } from './config';
 import { render } from './output';
+import { detectBrowser } from './detect-browser';
 import type { ServerMessage } from './protocol';
 import {
   loadConfigFile,
@@ -43,7 +44,18 @@ export async function main(argv: string[]): Promise<void> {
   if (cmd === 'open') {
     const url = args._[1];
     const openOpts: any = {};
-    if (args.browser) openOpts.browserName = args.browser;
+    if (args.browser) {
+      openOpts.browserName = args.browser;
+    } else if (!args.cdp) {
+      // No explicit --browser and no CDP attach: probe installed browsers
+      // in the order Edge → Chrome → Firefox, and fail if none is found.
+      const detected = detectBrowser();
+      if (!detected) {
+        console.error('Error: No browser detected. Install Edge, Chrome, or Firefox, or specify --browser=<name>.');
+        process.exit(1);
+      }
+      openOpts.browserName = detected;
+    }
     if (args.headed) openOpts.headed = true;
     if (args.cdp) openOpts.cdpEndpoint = args.cdp;
     if (args.profile) openOpts.profilePath = args.profile;
@@ -313,7 +325,7 @@ Flags:
   --raw                   output only the result value
   --json                  structured JSON output
   -s=<name>               session name
-  --browser=chrome        browser (default chrome)
+  --browser=chrome        browser (default: auto-detect Edge → Chrome → Firefox)
   --headed                show browser window (default headless)
   --cdp=<url>             attach to running Chrome via CDP
   --profile=<path>        use a persistent browser profile directory
