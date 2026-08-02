@@ -419,6 +419,12 @@ se-cli device-list                # list presets
 se-cli device "iPhone 13"         # apply preset (viewport + UA + scale + touch)
 se-cli device                     # show current emulation state
 
+# Runtime network/CPU emulation (Chrome/Edge)
+se-cli emulate --offline                     # go offline
+se-cli emulate --throttle-network=slow3g     # slow3g | fast3g | gprs | custom:download=,upload=,latency=
+se-cli emulate --throttle-cpu=4              # CPU slowdown 4x
+se-cli emulate --reset                       # restore runtime emulation (keeps open flags)
+
 # After opening, emulation state is replayed automatically if the driver rebuilds.
 ```
 

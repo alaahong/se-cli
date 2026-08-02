@@ -6,8 +6,12 @@ import {
   applyEmulation,
   parseViewport,
   parseGeolocation,
+  parseThrottleNetwork,
+  updateEmulationState,
   describeEmulation,
 } from '../../src/daemon/tools/emulation-state';
+import { browser_emulate } from '../../src/daemon/tools/emulate';
+import { Response } from '../../src/response';
 
 function makeChromiumDriver() {
   const sent: Array<[string, any]> = [];
@@ -313,5 +317,145 @@ describe('emulation-state applyEmulation', () => {
     setEmulationState({ permissions: ['camera'] });
     await applyEmulation(driver);
     expect(sent[0][1].origin).toBe('*');
+  });
+});
+
+describe('emulation-state network/CPU (emulate)', () => {
+  beforeEach(() => {
+    setEmulationState({});
+    resetEmulationState();
+  });
+
+  it('parses throttle presets', () => {
+    expect(parseThrottleNetwork('slow3g')).toEqual({ download: 400, upload: 400, latency: 400 });
+    expect(parseThrottleNetwork('fast3g')).toEqual({ download: 1500, upload: 750, latency: 100 });
+    expect(parseThrottleNetwork('gprs')).toEqual({ download: 50, upload: 20, latency: 500 });
+  });
+
+  it('parses custom throttle with download/upload/latency', () => {
+    expect(parseThrottleNetwork('custom:download=100,upload=50,latency=200'))
+      .toEqual({ download: 100, upload: 50, latency: 200 });
+  });
+
+  it('rejects invalid throttle values', () => {
+    expect(() => parseThrottleNetwork('bogus')).toThrow(/Invalid --throttle-network/);
+    expect(() => parseThrottleNetwork('custom:download=abc')).toThrow(/Invalid custom throttle/);
+    expect(() => parseThrottleNetwork('custom:foo=1')).toThrow(/Unknown custom throttle key/);
+  });
+
+  it('applies offline + network throttle via CDP (kbps -> bytes/s)', async () => {
+    const { driver, sent } = makeChromiumDriver();
+    setEmulationState({ offline: true, throttleNetwork: { download: 400, upload: 400, latency: 400 } });
+    const warnings = await applyEmulation(driver);
+    expect(warnings).toEqual([]);
+    expect(sent).toContainEqual(['Network.emulateNetworkConditions', {
+      offline: true, latency: 400, downloadThroughput: 0, uploadThroughput: 0,
+    }]);
+  });
+
+  it('applies throttle without offline via CDP', async () => {
+    const { driver, sent } = makeChromiumDriver();
+    setEmulationState({ throttleNetwork: { download: 100, upload: 50, latency: 200 } });
+    await applyEmulation(driver);
+    expect(sent).toContainEqual(['Network.emulateNetworkConditions', {
+      offline: false, latency: 200, downloadThroughput: 100000, uploadThroughput: 50000,
+    }]);
+  });
+
+  it('applies CPU throttling via CDP', async () => {
+    const { driver, sent } = makeChromiumDriver();
+    setEmulationState({ throttleCpu: 4 });
+    await applyEmulation(driver);
+    expect(sent).toContainEqual(['Emulation.setCPUThrottlingRate', { rate: 4 }]);
+  });
+
+  it('warns on Firefox for network/CPU emulation', async () => {
+    const { driver } = makeFirefoxDriver();
+    setEmulationState({ offline: true, throttleCpu: 4 });
+    const warnings = await applyEmulation(driver);
+    expect(warnings).toEqual([
+      'network emulation is not supported on Firefox',
+      'CPU throttling is not supported on Firefox',
+    ]);
+  });
+
+  it('describes runtime state', () => {
+    setEmulationState({ offline: true, throttleNetwork: { download: 400, latency: 400 }, throttleCpu: 2 });
+    const desc = describeEmulation();
+    expect(desc).toContain('offline');
+    expect(desc).toContain('down=400kbps');
+    expect(desc).toContain('latency=400ms');
+    expect(desc).toContain('cpu=2x');
+  });
+});
+
+describe('browser_emulate', () => {
+  beforeEach(() => {
+    setEmulationState({});
+    resetEmulationState();
+  });
+
+  it('shows current state when no flags given', async () => {
+    const { driver } = makeChromiumDriver();
+    const response = new Response({ raw: false, json: false });
+    await browser_emulate(driver, {}, response);
+    expect(response.serialize()).toContain('no emulation active');
+  });
+
+  it('applies offline flag', async () => {
+    const { driver, sent } = makeChromiumDriver();
+    const response = new Response({ raw: false, json: false });
+    await browser_emulate(driver, { offline: true }, response);
+    expect(response.serialize()).toContain('emulation applied');
+    expect(response.serialize()).toContain('offline');
+    expect(sent).toContainEqual(['Network.emulateNetworkConditions', {
+      offline: true, latency: 0, downloadThroughput: 0, uploadThroughput: 0,
+    }]);
+  });
+
+  it('applies custom network throttle', async () => {
+    const { driver } = makeChromiumDriver();
+    const response = new Response({ raw: false, json: false });
+    await browser_emulate(driver, { throttleNetwork: 'custom:download=100,upload=50,latency=200' }, response);
+    const text = response.serialize();
+    expect(text).toContain('down=100kbps');
+    expect(text).toContain('up=50kbps');
+    expect(text).toContain('latency=200ms');
+  });
+
+  it('applies CPU throttle', async () => {
+    const { driver, sent } = makeChromiumDriver();
+    const response = new Response({ raw: false, json: false });
+    await browser_emulate(driver, { throttleCpu: '4' }, response);
+    expect(response.serialize()).toContain('cpu=4x');
+    expect(sent).toContainEqual(['Emulation.setCPUThrottlingRate', { rate: 4 }]);
+  });
+
+  it('rejects an invalid CPU throttle', async () => {
+    const { driver } = makeChromiumDriver();
+    const response = new Response({ raw: false, json: false });
+    await expect(browser_emulate(driver, { throttleCpu: '0' }, response)).rejects.toThrow(/Invalid --throttle-cpu/);
+  });
+
+  it('resets only runtime state, keeping open flags', async () => {
+    const { driver, sent } = makeChromiumDriver();
+    setEmulationState({ locale: 'zh-CN', offline: true, throttleNetwork: { download: 400, upload: 400, latency: 400 } });
+    const response = new Response({ raw: false, json: false });
+    await browser_emulate(driver, { reset: true }, response);
+    const state = getEmulationState();
+    expect(state.locale).toBe('zh-CN'); // open-time flag preserved
+    expect(state.offline).toBeUndefined();
+    expect(state.throttleNetwork).toBeNull();
+    expect(state.throttleCpu).toBeNull();
+    expect(response.serialize()).toContain('emulation reset');
+    expect(response.serialize()).toContain('locale=zh-CN');
+    // After reset there is no network throttle state, so no CDP command is sent.
+    expect(sent).not.toContainEqual(expect.arrayContaining(['Network.emulateNetworkConditions']));
+  });
+
+  it('throws on Firefox', async () => {
+    const { driver } = makeFirefoxDriver();
+    const response = new Response({ raw: false, json: false });
+    await expect(browser_emulate(driver, { offline: true }, response)).rejects.toThrow('not supported on Firefox');
   });
 });

@@ -66,6 +66,7 @@ import { browser_requests, browser_request } from './requests';
 import { browser_route, browser_route_list, browser_unroute } from './route';
 // v0.8: Device & Environment Emulation
 import { browser_device, browser_device_list } from './device';
+import { browser_emulate } from './emulate';
 
 export const tools: Record<string, (driver: any, params: any, response: any) => Promise<void>> = {
   browser_goto,
@@ -131,4 +132,5 @@ export const tools: Record<string, (driver: any, params: any, response: any) => 
   // v0.8: Device & Environment Emulation
   browser_device,
   browser_device_list,
+  browser_emulate,
 };

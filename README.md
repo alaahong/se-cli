@@ -163,6 +163,11 @@ Device & environment emulation via CDP (`Emulation.*` / `Network.*` / `Browser.*
 |---------|-------------|
 | `device <name>` | Apply a device preset (viewport + UA + deviceScaleFactor + touch) (v0.8) |
 | `device-list` | List all built-in device presets (v0.8) |
+| `emulate` | Show current emulation state (v0.8) |
+| `emulate --offline` | Go offline (v0.8, Chrome/Edge) |
+| `emulate --throttle-network=<profile>` | Throttle network: `slow3g`\|`fast3g`\|`gprs`\|`custom:download=,upload=,latency=` (v0.8, Chrome/Edge) |
+| `emulate --throttle-cpu=<rate>` | CPU slowdown rate, e.g. `4` (v0.8, Chrome/Edge) |
+| `emulate --reset` | Restore runtime emulation (keeps open-time flags) (v0.8) |
 | `open --viewport=<WxH>` | Page viewport size, e.g. `1280x720` (v0.8) |
 | `open --user-agent=<ua>` | Override the browser user agent (v0.8, Chrome/Edge) |
 | `open --locale=<tag>` | Override page locale, e.g. `zh-CN` (v0.8, Chrome/Edge) |
@@ -177,6 +182,9 @@ Built-in presets reference Playwright DeviceDescriptors: `Desktop Chrome`, `iPho
 se-cli open https://example.com --viewport=390x844 --color-scheme=dark
 se-cli device "iPhone 13"          # full device emulation (Chrome/Edge)
 se-cli device-list                 # list presets
+se-cli emulate --throttle-network=slow3g   # network throttling (Chrome/Edge)
+se-cli emulate --offline                    # go offline (Chrome/Edge)
+se-cli emulate --reset                      # restore runtime emulation
 ```
 
 ### Assertions (v0.6)

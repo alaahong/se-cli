@@ -1437,6 +1437,39 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
       const probe = await readProbe();
       expect(probe.userAgent).toContain('Pixel 7');
     });
+
+    // ── v0.8: emulate (network/CPU) ───────────────────────────────
+
+    (skip ? it.skip : it)('shows current emulation state', async () => {
+      await run(['open', EMULATION_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['--raw', 'emulate'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('no emulation active');
+    });
+
+    (skipFirefoxEmulation ? it.skip : it)('applies network throttle and resets', async () => {
+      await run(['open', EMULATION_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const applied = await run(['emulate', '--throttle-network=slow3g'], { SE_CLI_SESSION: S() });
+      expect(applied).toContain('emulation applied');
+      expect(applied).toContain('throttle');
+      const state = await run(['--raw', 'emulate'], { SE_CLI_SESSION: S() });
+      expect(state).toContain('throttle');
+      const reset = await run(['emulate', '--reset'], { SE_CLI_SESSION: S() });
+      expect(reset).toContain('emulation reset');
+      const after = await run(['--raw', 'emulate'], { SE_CLI_SESSION: S() });
+      expect(after).toContain('no emulation active');
+    });
+
+    (skipFirefoxEmulation ? it.skip : it)('applies CPU throttle', async () => {
+      await run(['open', EMULATION_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      const result = await run(['emulate', '--throttle-cpu=4'], { SE_CLI_SESSION: S() });
+      expect(result).toContain('cpu=4x');
+    });
+
+    (skipFirefoxEmulation ? it.skip : it)('rejects an invalid throttle value', async () => {
+      await run(['open', EMULATION_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await expect(run(['emulate', '--throttle-network=bogus'], { SE_CLI_SESSION: S() }))
+        .rejects.toThrow('Invalid --throttle-network');
+    });
   });
 });
 
