@@ -12,6 +12,12 @@ function programFiles(x86: boolean): string {
   return process.env[envKey] || (x86 ? 'C:\\Program Files (x86)' : 'C:\\Program Files');
 }
 
+// Windows candidate paths must use backslashes even when the code runs on
+// another platform (tests inject platform 'win32' on Linux CI runners).
+function winPath(...parts: string[]): string {
+  return parts.join('\\');
+}
+
 // Candidates discovered via PATH lookup (covers snap/flatpak on Linux,
 // /usr/local/bin installs, homebrew, and any custom PATH entry).
 function inPath(binNames: string[]): string[] {
@@ -27,20 +33,20 @@ export function browserCandidates(browser: BrowserName, platform: NodeJS.Platfor
         return [
           // Per-user installs live under %LocalAppData% (e.g. Edge auto-update
           // on Windows without admin rights) — Chrome already covers this.
-          path.join(process.env.LOCALAPPDATA || path.join(home, 'AppData', 'Local'), 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-          path.join(programFiles(true), 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-          path.join(programFiles(false), 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+          winPath(process.env.LOCALAPPDATA || winPath(home, 'AppData', 'Local'), 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+          winPath(programFiles(true), 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+          winPath(programFiles(false), 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
         ];
       case 'chrome':
         return [
-          path.join(programFiles(false), 'Google', 'Chrome', 'Application', 'chrome.exe'),
-          path.join(programFiles(true), 'Google', 'Chrome', 'Application', 'chrome.exe'),
-          path.join(home, 'AppData', 'Local', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+          winPath(programFiles(false), 'Google', 'Chrome', 'Application', 'chrome.exe'),
+          winPath(programFiles(true), 'Google', 'Chrome', 'Application', 'chrome.exe'),
+          winPath(home, 'AppData', 'Local', 'Google', 'Chrome', 'Application', 'chrome.exe'),
         ];
       case 'firefox':
         return [
-          path.join(programFiles(false), 'Mozilla Firefox', 'firefox.exe'),
-          path.join(programFiles(true), 'Mozilla Firefox', 'firefox.exe'),
+          winPath(programFiles(false), 'Mozilla Firefox', 'firefox.exe'),
+          winPath(programFiles(true), 'Mozilla Firefox', 'firefox.exe'),
         ];
     }
   } else if (platform === 'darwin') {
