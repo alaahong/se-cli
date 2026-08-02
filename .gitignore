@@ -5,3 +5,12 @@ dist/
 coverage/
 .trae-html-share-packages/
 se-cli-audit-report/
+
+# IDE / editor
+.idea/
+*.iml
+.vs/
+.history/
+*.swp
+.DS_Store
+Thumbs.db
