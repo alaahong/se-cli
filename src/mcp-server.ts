@@ -1170,35 +1170,18 @@ export class McpServer {
     });
   }
 
-  /**
-   * Map an MCP tool name + arguments to CLI args for the daemon.
-   */
+/**
+ * Map an MCP tool name + arguments to CLI args for the daemon.
+ */
   private mapToolToCliArgs(toolName: string, args: any): string[] | null {
     return mapToolToCliArgs(toolName, args);
   }
 
   private async handleOpen(args: any, sessionName: string): Promise<string> {
     const session = this.getSession(sessionName);
-    const openOpts: any = {};
-    if (args.browser) {
-      openOpts.browserName = args.browser;
-    } else if (!args.cdp) {
-      // Same auto-detection as the CLI: probe Edge → Chrome → Firefox.
-      // Unlike the CLI we return an error message instead of exiting,
-      // since the MCP server is a long-lived process.
-      const detected = detectBrowser();
-      if (!detected) {
-        return 'Error starting browser: No browser detected. Install Edge, Chrome, or Firefox, or pass browser ("chrome"|"edge"|"firefox").';
-      }
-      openOpts.browserName = detected;
-    }
-    if (args.headed) openOpts.headed = true;
-    if (args.cdp) openOpts.cdpEndpoint = args.cdp;
-    if (args.profile) openOpts.profilePath = args.profile;
-    if (args.persistent) {
-      openOpts.persistent = true;
-      const wsHash = workspaceHash(this.workspaceDir);
-      openOpts.profilePath = path.join(baseDaemonDir(), 'profiles', wsHash, sessionName);
+    const { opts: openOpts, error } = buildOpenOptions(args, this.workspaceDir, sessionName);
+    if (error) {
+      return error;
     }
 
     try {
@@ -1257,6 +1240,43 @@ export class McpServer {
     this.sessions.clear();
     this.rl.close();
   }
+}
+
+/**
+ * Build the startDaemon options for `browser_open`.
+ *
+ * Auto-detects the browser (Edge → Chrome → Firefox) when neither `browser`
+ * nor `cdp` is given. Returns an error message (not an exception) when no
+ * browser is found, since the MCP server is a long-lived process — unlike the
+ * CLI which exits with code 1 in that case.
+ */
+export function buildOpenOptions(
+  args: any,
+  workspaceDir: string,
+  sessionName: string,
+): { opts: any; error?: string } {
+  const openOpts: any = {};
+  if (args.browser) {
+    openOpts.browserName = args.browser;
+  } else if (!args.cdp) {
+    const detected = detectBrowser();
+    if (!detected) {
+      return {
+        opts: openOpts,
+        error: 'Error starting browser: No browser detected. Install Edge, Chrome, or Firefox, or pass browser ("chrome"|"edge"|"firefox").',
+      };
+    }
+    openOpts.browserName = detected;
+  }
+  if (args.headed) openOpts.headed = true;
+  if (args.cdp) openOpts.cdpEndpoint = args.cdp;
+  if (args.profile) openOpts.profilePath = args.profile;
+  if (args.persistent) {
+    openOpts.persistent = true;
+    const wsHash = workspaceHash(workspaceDir);
+    openOpts.profilePath = path.join(baseDaemonDir(), 'profiles', wsHash, sessionName);
+  }
+  return { opts: openOpts };
 }
 
 // ─── Entry Point ─────────────────────────────────────────────────────────────

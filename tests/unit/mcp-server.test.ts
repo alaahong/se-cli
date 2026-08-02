@@ -1,5 +1,10 @@
-import { describe, it, expect } from 'vitest';
-import { mapToolToCliArgs, toolDefinitions, type ToolDef } from '../../src/mcp-server';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { mapToolToCliArgs, toolDefinitions, buildOpenOptions, type ToolDef } from '../../src/mcp-server';
+
+vi.mock('../../src/detect-browser', () => ({
+  detectBrowser: vi.fn(),
+}));
+import { detectBrowser } from '../../src/detect-browser';
 
 describe('MCP Server — Tool Definitions', () => {
   it('should have at least 40 tools', () => {
@@ -586,5 +591,53 @@ describe('MCP Server — mapToolToCliArgs', () => {
     expect(mapToolToCliArgs('browser_snapshot', {})).toEqual(['snapshot']);
     expect(mapToolToCliArgs('browser_go_back', {})).toEqual(['go-back']);
     expect(mapToolToCliArgs('browser_tab_list', {})).toEqual(['tab-list']);
+  });
+});
+
+describe('MCP Server — buildOpenOptions', () => {
+  beforeEach(() => {
+    vi.mocked(detectBrowser).mockReset();
+  });
+
+  it('uses the given browser when provided', () => {
+    const { opts, error } = buildOpenOptions({ browser: 'firefox' }, '/ws', 's1');
+    expect(error).toBeUndefined();
+    expect(opts).toEqual({ browserName: 'firefox' });
+    expect(detectBrowser).not.toHaveBeenCalled();
+  });
+
+  it('auto-detects the browser when browser is missing', () => {
+    vi.mocked(detectBrowser).mockReturnValue('edge');
+    const { opts, error } = buildOpenOptions({}, '/ws', 's1');
+    expect(error).toBeUndefined();
+    expect(opts.browserName).toBe('edge');
+    expect(detectBrowser).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns an error message when no browser is detected', () => {
+    vi.mocked(detectBrowser).mockReturnValue(null);
+    const { opts, error } = buildOpenOptions({}, '/ws', 's1');
+    expect(opts).toEqual({});
+    expect(error).toContain('No browser detected');
+  });
+
+  it('does not auto-detect when cdp is given', () => {
+    const { opts, error } = buildOpenOptions({ cdp: 'http://localhost:9222' }, '/ws', 's1');
+    expect(error).toBeUndefined();
+    expect(opts).toEqual({ cdpEndpoint: 'http://localhost:9222' });
+    expect(detectBrowser).not.toHaveBeenCalled();
+  });
+
+  it('propagates headed, profile, and persistent flags', () => {
+    vi.mocked(detectBrowser).mockReturnValue('chrome');
+    const { opts } = buildOpenOptions({ headed: true, profile: '/tmp/p' }, '/ws', 's1');
+    expect(opts.headed).toBe(true);
+    expect(opts.profilePath).toBe('/tmp/p');
+
+    const persistent = buildOpenOptions({ persistent: true }, '/ws', 'mySession');
+    expect(persistent.error).toBeUndefined();
+    expect(persistent.opts.persistent).toBe(true);
+    expect(persistent.opts.profilePath).toContain('profiles');
+    expect(persistent.opts.profilePath).toContain('mySession');
   });
 });
