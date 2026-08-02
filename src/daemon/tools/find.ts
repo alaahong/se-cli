@@ -72,6 +72,9 @@ export async function browser_find(
     }
     const re = new RegExp(pattern, flags);
     lines.forEach((line, i) => {
+      // Reset lastIndex — with the /g flag, re.test() leaves lastIndex
+      // set after a match, causing subsequent lines to be skipped.
+      re.lastIndex = 0;
       if (re.test(line)) {
         const start = Math.max(0, i - 3);
         const end = Math.min(lines.length, i + 4);

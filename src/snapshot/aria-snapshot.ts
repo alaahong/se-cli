@@ -52,6 +52,18 @@ export function generateAriaSnapshotScript(): string {
     const explicit = el.getAttribute('role');
     if (explicit) return explicit;
     const tag = el.tagName.toLowerCase();
+    // <input> role depends on its type: a checkbox must be reported as
+    // 'checkbox', not 'textbox', so agents can distinguish control types.
+    if (tag === 'input') {
+      var type = (el.type || 'text').toLowerCase();
+      if (type === 'checkbox') return 'checkbox';
+      if (type === 'radio') return 'radio';
+      if (type === 'button' || type === 'submit' || type === 'reset' || type === 'image') return 'button';
+      if (type === 'search') return 'searchbox';
+      if (type === 'number') return 'spinbutton';
+      if (type === 'range') return 'slider';
+      return 'textbox';
+    }
     if (tag in TAG_TO_ROLE) return TAG_TO_ROLE[tag];
     return null;
   }

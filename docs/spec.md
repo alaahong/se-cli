@@ -75,11 +75,28 @@ d:\code\opensource\se-cli\
 ```bash
 se-cli open [url]              # Start daemon + browser
 se-cli close                   # Close browser + daemon
+se-cli close --all             # Close every session across ALL workspaces
+se-cli sessions                # List all sessions across all projects (live/dead)
 se-cli list                    # List all sessions
 se-cli close-all               # Close all sessions
 se-cli kill-all                # Force-kill all processes
+se-cli logs [--tail=N]         # Tail this session's daemon + CLI logs (default 50)
 se-cli -s=<name> <cmd>         # Named session
 ```
+
+**Idle timeout**: daemons auto-close after 30 min without activity (configurable via
+`--idle-timeout=<min>` or `SE_CLI_IDLE_TIMEOUT`; `0` disables it). The saved
+`idleTimeout` in the session file is restored when the daemon restarts.
+
+**Logging**: the daemon runs detached (its stdio is unref'd), so all diagnostics
+land in `baseDaemonDir()/logs/`:
+- `<wsHash>-<session>.daemon.log` — daemon lifecycle, driver builds/resets, per-command duration + result code
+- `<wsHash>-<session>.cli.log` — CLI-side session events
+- `mcp.log` — MCP server console/stderr (stdout stays reserved for JSON-RPC)
+
+Files rotate at 2 MB (2 backups). `SE_CLI_LOG_LEVEL=debug|info|warn|error`
+(default `info`) controls verbosity. Command summaries never include argument
+values (e.g. `fill` passwords).
 
 ### 3.2 Tool Commands (forwarded to the daemon)
 

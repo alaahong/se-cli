@@ -95,4 +95,15 @@ describe('aria snapshot script', () => {
     const script = generateAriaSnapshotScript();
     expect(script).toContain('el.shadowRoot.children');
   });
+
+  it('script resolves input roles from type (checkbox/radio/button/search/number/range)', () => {
+    const script = generateAriaSnapshotScript();
+    expect(script).toContain("if (type === 'checkbox') return 'checkbox'");
+    expect(script).toContain("if (type === 'radio') return 'radio'");
+    expect(script).toContain("if (type === 'button' || type === 'submit' || type === 'reset' || type === 'image') return 'button'");
+    expect(script).toContain("if (type === 'search') return 'searchbox'");
+    expect(script).toContain("if (type === 'number') return 'spinbutton'");
+    expect(script).toContain("if (type === 'range') return 'slider'");
+    expect(script).toContain("return 'textbox'");
+  });
 });

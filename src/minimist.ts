@@ -32,12 +32,19 @@ export function parseArgs(argv: string[], opts: ParseOptions): ParsedArgs {
     if (eqMatch) {
       const isShort = eqMatch[1] === '-';
       const key = isShort ? (opts.alias[eqMatch[2]] || eqMatch[2]) : eqMatch[2];
-      result[key] = eqMatch[3];
+      const value = eqMatch[3];
+      if (allBoolean.has(key)) {
+        // --flag=false / --flag=0 must produce false, not true.
+        result[key] = value !== 'false' && value !== '0';
+      } else {
+        result[key] = value;
+      }
       i++;
       continue;
     }
 
-    const flagMatch = arg.match(/^(-{1,2})([\w-]+)$/);
+    // Negative numbers (e.g. mousewheel -100 -50) are positionals, not flags.
+    const flagMatch = /^-\d/.test(arg) ? null : arg.match(/^(-{1,2})([\w-]+)$/);
     if (flagMatch) {
       const isShort = flagMatch[1] === '-';
       const key = isShort ? (opts.alias[flagMatch[2]] || flagMatch[2]) : flagMatch[2];

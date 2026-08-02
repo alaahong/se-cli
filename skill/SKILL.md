@@ -232,9 +232,25 @@ se-cli click e1 --no-wait             # Skip waiting (--wait=none --timeout=0)
 ### Sessions
 ```bash
 se-cli -s=<name> <cmd>
+se-cli open --idle-timeout=10    # Auto-close idle daemon after 10 min (0 = never)
+se-cli sessions                  # All sessions across all projects (live/dead)
 se-cli list
+se-cli close                     # Close current session
+se-cli close --all               # Close every session across all projects
 se-cli close-all
 ```
+
+### Logs
+The daemon runs detached, so diagnostics go to file logs:
+`%LOCALAPPDATA%\ms-se-cli\daemon\logs\` (Windows) or `~/.cache/ms-se-cli/daemon/logs/`.
+
+```bash
+se-cli logs                      # Tail current session's daemon + CLI logs (50 lines)
+se-cli logs --tail=200           # More lines
+SE_CLI_LOG_LEVEL=debug se-cli ...  # Raise verbosity (debug|info|warn|error, default info)
+```
+
+Log files rotate at 2 MB (2 backups). Command summaries record tool name, duration, and result code — never argument values (e.g. `fill` passwords).
 
 ## Snapshots
 
