@@ -26,11 +26,14 @@ export async function browser_fill(
     await el.sendKeys(Key.CONTROL, 'a', Key.NULL);
     await el.sendKeys(Key.DELETE);
   }
+  // v0.9: role-based codegen (--locator-style=role|css|ref, default role).
+  // Capture the code BEFORE the action: `--submit` may navigate away (form
+  // submission), which stales the element and breaks the locator scripts.
+  const code = await codegenBy(driver, el, params.locatorStyle || 'role', params.target);
   await el.sendKeys(params.value);
   if (params.submit) {
     await el.sendKeys(Key.ENTER);
   }
-  const code = await codegenBy(driver, el, params.locatorStyle || 'role', params.target);
   if (code.note) response.addCode(`// ${code.note}`);
   response.addCode(`await driver.findElement(${code.expression}).sendKeys('${params.value}');`);
   response.addResult('filled');

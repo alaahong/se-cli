@@ -476,6 +476,18 @@ describe('tool handlers', () => {
       expect(el.sendKeys).toHaveBeenCalledWith('hello');
     });
 
+    it('captures the locator codegen BEFORE filling (submit may navigate)', async () => {
+      const driver = makeMockDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_fill(driver, { target: 'e1', value: 'hello', submit: true }, response);
+      const el = await driver.findElement.mock.results[0].value;
+      // codegen runs via executeScript (locator heuristics) — must happen
+      // before any sendKeys so a form submission cannot stale the element.
+      const codegenCall = driver.executeScript.mock.invocationCallOrder[0];
+      const sendKeysCall = el.sendKeys.mock.invocationCallOrder[0];
+      expect(codegenCall).toBeLessThan(sendKeysCall);
+    });
+
     it('sends ENTER when submit=true', async () => {
       const driver = makeMockDriver();
       const response = new Response({ raw: false, json: false });

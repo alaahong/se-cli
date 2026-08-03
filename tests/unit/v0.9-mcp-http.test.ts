@@ -209,6 +209,30 @@ describe('MCP Streamable HTTP transport', () => {
     }
   });
 
+  it('handles EADDRINUSE on listen with a clean error instead of crashing', async () => {
+    // Occupy a port first.
+    const blocker = http.createServer();
+    await new Promise<void>((resolve) => blocker.listen(0, '127.0.0.1', resolve));
+    const addr = blocker.address() as any;
+    const mcp = new McpServer(tmpDir, 'http');
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as any);
+    try {
+      startHttpServer(mcp, { port: addr.port, host: '127.0.0.1' });
+      await expect(new Promise<void>((resolve, reject) => {
+        // The error event fires asynchronously after listen; the handler
+        // calls console.error + process.exit(1) which we spy on.
+        setTimeout(resolve, 500);
+      })).resolves.toBeUndefined();
+      expect(errSpy).toHaveBeenCalledWith(expect.stringContaining('already in use'));
+      expect(exitSpy).toHaveBeenCalledWith(1);
+    } finally {
+      errSpy.mockRestore();
+      exitSpy.mockRestore();
+      blocker.close();
+    }
+  });
+
   it('stdio mode still writes responses to stdout (regression)', async () => {
     const stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
     try {

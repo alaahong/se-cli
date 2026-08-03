@@ -1520,6 +1520,17 @@ export function startHttpServer(mcp: McpServer, options: HttpServerOptions): htt
     // Logged to the mcp.log file (console was redirected in the constructor).
     console.log(`se-cli MCP server (streamable HTTP) listening on http://${host}:${options.port}${MCP_PATH}`);
   });
+
+  // Bind failures (port already in use, permission denied) must not crash
+  // the daemon with an unhandled 'error' event.
+  server.on('error', (err: any) => {
+    if (err && err.code === 'EADDRINUSE') {
+      console.error(`se-cli MCP server: port ${options.port} is already in use. Use --port to pick another port.`);
+    } else {
+      console.error(`se-cli MCP server: ${err && err.message ? err.message : err}`);
+    }
+    mcp.closeSessions().finally(() => process.exit(1));
+  });
   return server;
 }
 

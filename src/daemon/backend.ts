@@ -9,6 +9,17 @@ import {
   type WaitConfig,
 } from '../wait-config';
 
+/**
+ * Map a tool name to the CLI command name used as the per-command
+ * configuration key. CLI command names are hyphenated (run-code,
+ * generate-locator, dialog-accept, actions-chain), while tool names use
+ * underscores — normalizing here keeps DEFAULTS.perCommand and
+ * .se-cli.json perCommand entries (which use CLI names) effective.
+ */
+export function toolCommandName(toolName: string): string {
+  return toolName.replace('browser_', '').replace(/_/g, '-');
+}
+
 export async function callTool(
   driver: any,
   toolName: string,
@@ -31,7 +42,7 @@ export async function callTool(
   }
 
   // Resolve the effective wait/retry/timeout configuration
-  const commandName = toolName.replace('browser_', '');
+  const commandName = toolCommandName(toolName);
   const config = resolveConfig(flags, cwd, process.env as any, commandName);
 
   // Apply timeout settings to the driver
