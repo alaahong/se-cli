@@ -15,12 +15,15 @@ import {
 } from './wait-config';
 import * as path from 'path';
 import * as fs from 'fs';
+import { installSkills, parseAgentList, detectInstalledAgents, listAgentTargets, AGENTS } from './install';
 
 export async function main(argv: string[]): Promise<void> {
   const opts = {
-    boolean: ['headed', 'raw', 'json', 'persistent', 'help', 'no-wait'],
+    boolean: ['headed', 'raw', 'json', 'persistent', 'help', 'no-wait', 'skills', 'force', 'list-agents'],
     string: [
       'browser', 'filename', 'depth', 's', 'session', 'cdp', 'profile', 'tail',
+      // v0.9: skill installation
+      'agent', 'path',
       // v0.4 wait/retry flags
       'timeout', 'wait', 'retry', 'retry-interval',
       'implicit-wait', 'page-load-timeout', 'script-timeout',
@@ -119,25 +122,80 @@ export async function main(argv: string[]): Promise<void> {
   }
 
   if (cmd === 'install') {
-    const target = args._[1] || 'claude'; // 默认 claude
-    const targetMap: Record<string, string> = {
-      'claude': path.join('.claude', 'skills', 'se-cli'),
-      'cursor': path.join('.cursor', 'skills', 'se-cli'),
-      'generic': path.join('.agents', 'skills', 'se-cli'),
-    };
-    const skillDir = targetMap[target];
-    if (!skillDir) {
-      console.error(`Unknown target: ${target}. Supported: claude, cursor, generic`);
+    // v0.9: multi-target skill installation
+    //   se-cli install [--skills] [--agent=claude,cursor,copilot] [--path=dir] [--force] [--list-agents]
+
+    if (args['list-agents']) {
+      for (const { name, dir } of listAgentTargets()) {
+        console.log(`${name}\t${dir}`);
+      }
+      console.log('custom\t<requires --path=<dir>>');
+      return;
+    }
+
+    if (args.path && args.agent) {
+      console.error('Error: --path and --agent are mutually exclusive.');
       process.exit(1);
     }
-    const skillSource = path.join(__dirname, '..', 'skill', 'SKILL.md');
-    if (!fs.existsSync(skillSource)) {
+
+    let targets: string[];
+    if (args.path) {
+      targets = ['custom'];
+    } else if (args.agent) {
+      try {
+        targets = parseAgentList(args.agent);
+      } catch (e: any) {
+        console.error(`Error: ${e.message}`);
+        process.exit(1);
+      }
+    } else {
+      // Legacy positional form: `se-cli install claude` (v0.2).
+      const positional = args._[1];
+      if (positional && AGENTS[positional]) {
+        targets = [positional];
+      } else if (positional) {
+        console.error(`Unknown target: ${positional}. Supported: ${Object.keys(AGENTS).join(', ')}, custom (with --path).`);
+        process.exit(1);
+      } else {
+        // Auto-detect which agent directories exist in this project.
+        targets = detectInstalledAgents(cwd);
+        if (targets.length === 0) {
+          console.error(
+            'Error: No agent skill directories detected (.claude/, .cursor/, .github/copilot/). ' +
+              'Use --agent=<names> or --path=<dir> to choose a target.'
+          );
+          process.exit(1);
+        }
+      }
+    }
+
+    const sourceDir = path.join(__dirname, '..', 'skill');
+    if (!fs.existsSync(path.join(sourceDir, 'SKILL.md'))) {
       console.error('SKILL.md not found in package. This may be a development installation.');
       process.exit(1);
     }
-    fs.mkdirSync(skillDir, { recursive: true });
-    fs.copyFileSync(skillSource, path.join(skillDir, 'SKILL.md'));
-    console.log(`Skill installed to ${skillDir}`);
+
+    let result: { installed: string[]; skipped: string[] };
+    try {
+      result = installSkills({
+        targets,
+        cwd,
+        force: !!args.force,
+        sourceDir,
+        customDir: args.path,
+      });
+    } catch (e: any) {
+      console.error(`Error: ${e.message}`);
+      process.exit(1);
+    }
+
+    for (const file of result.installed) console.log(`Installed SKILL.md to ${file}`);
+    for (const file of result.skipped) {
+      console.log(`Skipped (already exists, use --force to overwrite): ${file}`);
+    }
+    if (result.installed.length === 0 && result.skipped.length === 0) {
+      console.log('Nothing to install.');
+    }
     return;
   }
 
@@ -346,7 +404,7 @@ function printHelp(): void {
 
 Usage:
   se-cli open [url] [--browser=chrome|edge|firefox] [--headed] [--cdp=url] [--profile=path] [--persistent] [--viewport=WxH] [--user-agent=ua] [--locale=tag] [--color-scheme=light|dark] [--timezone=tz] [--geolocation=lat,lon] [--permissions=geolocation]
-  se-cli install [claude|cursor|generic]
+  se-cli install [--skills] [--agent=claude,cursor,copilot] [--path=dir] [--force] [--list-agents]
   se-cli mcp-server               start MCP server (stdio mode for VS Code / AI agents)
   se-cli close [--all]            stop current session; --all stops every session (all projects)
   se-cli sessions                 list all sessions across all projects (live/dead)

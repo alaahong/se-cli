@@ -774,10 +774,20 @@ describe('main()', () => {
 
   // ── install ──────────────────────────────────────────────
 
-  it('install claude: copies SKILL.md to .claude/skills/se-cli/', async () => {
-    vi.mocked(fs.existsSync).mockReturnValue(true);
+  // Source SKILL.md always exists; destination and agent dirs do not, so the
+  // v0.9 install flow copies (and never skips) into the requested target.
+  function mockInstallFs(): void {
+    vi.mocked(fs.existsSync).mockImplementation((p: any) => {
+      const s = String(p);
+      return s.includes('skill') && s.endsWith('SKILL.md') && !s.includes('.claude') &&
+        !s.includes('.cursor') && !s.includes('.agents');
+    });
     vi.mocked(fs.mkdirSync).mockImplementation(() => undefined as any);
     vi.mocked(fs.copyFileSync).mockImplementation(() => undefined);
+  }
+
+  it('install claude: copies SKILL.md to .claude/skills/se-cli/', async () => {
+    mockInstallFs();
 
     await main(['install', 'claude']);
 
@@ -786,13 +796,11 @@ describe('main()', () => {
       { recursive: true },
     );
     expect(fs.copyFileSync).toHaveBeenCalled();
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Skill installed'));
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Installed SKILL.md to'));
   });
 
   it('install cursor: copies SKILL.md to .cursor/skills/se-cli/', async () => {
-    vi.mocked(fs.existsSync).mockReturnValue(true);
-    vi.mocked(fs.mkdirSync).mockImplementation(() => undefined as any);
-    vi.mocked(fs.copyFileSync).mockImplementation(() => undefined);
+    mockInstallFs();
 
     await main(['install', 'cursor']);
 
@@ -803,9 +811,7 @@ describe('main()', () => {
   });
 
   it('install generic: copies SKILL.md to .agents/skills/se-cli/', async () => {
-    vi.mocked(fs.existsSync).mockReturnValue(true);
-    vi.mocked(fs.mkdirSync).mockImplementation(() => undefined as any);
-    vi.mocked(fs.copyFileSync).mockImplementation(() => undefined);
+    mockInstallFs();
 
     await main(['install', 'generic']);
 
@@ -813,6 +819,27 @@ describe('main()', () => {
       expect.stringContaining(path.join('.agents', 'skills', 'se-cli')),
       { recursive: true },
     );
+  });
+
+  it('install --agent=claude,cursor installs into multiple targets', async () => {
+    mockInstallFs();
+
+    await main(['install', '--agent=claude,cursor']);
+
+    expect(fs.mkdirSync).toHaveBeenCalledWith(
+      expect.stringContaining(path.join('.claude', 'skills', 'se-cli')),
+      { recursive: true },
+    );
+    expect(fs.mkdirSync).toHaveBeenCalledWith(
+      expect.stringContaining(path.join('.cursor', 'skills', 'se-cli')),
+      { recursive: true },
+    );
+  });
+
+  it('install --list-agents prints supported agents', async () => {
+    await main(['install', '--list-agents']);
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('claude'));
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('copilot'));
   });
 
   it('install with unknown target: exits with code 1', async () => {
@@ -827,17 +854,14 @@ describe('main()', () => {
     expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('SKILL.md not found'));
   });
 
-  it('install with no target defaults to claude', async () => {
-    vi.mocked(fs.existsSync).mockReturnValue(true);
-    vi.mocked(fs.mkdirSync).mockImplementation(() => undefined as any);
-    vi.mocked(fs.copyFileSync).mockImplementation(() => undefined);
+  it('install with no target and no agent directories: exits with code 1', async () => {
+    vi.mocked(fs.existsSync).mockImplementation((p: any) => {
+      const s = String(p);
+      return s.includes('skill') && s.endsWith('SKILL.md');
+    });
 
-    await main(['install']);
-
-    expect(fs.mkdirSync).toHaveBeenCalledWith(
-      expect.stringContaining(path.join('.claude', 'skills', 'se-cli')),
-      { recursive: true },
-    );
+    await expect(main(['install'])).rejects.toThrow('exit:1');
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('No agent skill directories detected'));
   });
 
   // ── config ───────────────────────────────────────────────
