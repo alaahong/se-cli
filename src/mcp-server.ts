@@ -18,6 +18,7 @@
  */
 
 import * as readline from 'readline';
+import * as http from 'http';
 import { Session } from './session';
 import { baseDaemonDir, workspaceHash } from './config';
 import { Registry } from './registry';
@@ -1031,15 +1032,27 @@ export function mapToolToCliArgs(toolName: string, args: any): string[] | null {
 
 // ─── MCP Server ──────────────────────────────────────────────────────────────
 
+export type McpTransport = 'stdio' | 'http';
+
+export interface HttpServerOptions {
+  port: number;
+  host?: string;
+}
+
 export class McpServer {
-  private rl: readline.Interface;
+  private rl: readline.Interface | null = null;
   private initialized = false;
   private workspaceDir: string;
   private sessions: Map<string, Session> = new Map();
   private queue: Promise<void> = Promise.resolve();
+  private transport: McpTransport;
+  // The transport writes JSON-RPC response lines; stdio writes to stdout,
+  // the HTTP transport captures lines per-request instead.
+  private writeResponse: (line: string) => void = (line) => process.stdout.write(line);
 
-  constructor(workspaceDir?: string) {
+  constructor(workspaceDir?: string, transport: McpTransport = 'stdio') {
     this.workspaceDir = workspaceDir || this.findWorkspaceDir(process.cwd());
+    this.transport = transport;
 
     // Redirect console.* and stderr into a log file. stdout is reserved for
     // JSON-RPC responses and MCP clients (VS Code, Claude Desktop) typically
@@ -1050,40 +1063,72 @@ export class McpServer {
     mcpLogger.installConsoleRedirect();
     mcpLogger.installStderrRedirect();
 
-    this.rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-      terminal: false,
-    });
+    if (transport === 'stdio') {
+      this.rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+        terminal: false,
+      });
 
-    // Suppress stdout from the daemon/Session so it doesn't corrupt JSON-RPC.
-    // stderr is fine — MCP clients read stderr separately.
-    this.rl.on('line', (line: string) => {
-      // Serialize requests through a promise chain: concurrent handling
-      // (e.g. a client burst) would race on the same daemon/session.
-      this.queue = this.queue
-        .then(() => this.handleLine(line))
-        .catch((err) => {
-          // Fatal error in message handling — send internal error
-          this.sendResponse(-1, undefined, {
-            code: INTERNAL_ERROR,
-            message: `Internal error: ${err.message}`,
+      // Suppress stdout from the daemon/Session so it doesn't corrupt JSON-RPC.
+      // stderr is fine — MCP clients read stderr separately.
+      this.rl.on('line', (line: string) => {
+        // Serialize requests through a promise chain: concurrent handling
+        // (e.g. a client burst) would race on the same daemon/session.
+        this.queue = this.queue
+          .then(() => this.handleLine(line))
+          .catch((err) => {
+            // Fatal error in message handling — send internal error
+            this.writeResponse(
+              JSON.stringify({
+                jsonrpc: '2.0',
+                id: -1,
+                error: {
+                  code: INTERNAL_ERROR,
+                  message: `Internal error: ${err.message}`,
+                },
+              }) + '\n'
+            );
           });
-        });
-    });
+      });
 
-    this.rl.on('close', () => {
-      // stdin closed — shut down
-      this.shutdown();
-    });
+      this.rl.on('close', () => {
+        // stdin closed — shut down
+        this.shutdown();
+      });
+    }
   }
 
   /**
-   * Start the MCP server. Reads JSON-RPC messages from stdin until closed.
+   * Start the MCP server. stdio mode reads JSON-RPC messages from stdin;
+   * http mode starts a Streamable HTTP server on the configured port.
    */
-  start(): void {
-    // The readline interface is already set up in the constructor.
-    // Nothing else to do — the server runs in the event loop.
+  start(options?: HttpServerOptions): void {
+    if (this.transport === 'http') {
+      startHttpServer(this, options || { port: 8931 });
+      return;
+    }
+    // stdio: the readline interface is already set up in the constructor.
+  }
+
+  /**
+   * Run a JSON-RPC message through the serialized request queue. Used by the
+   * HTTP transport; stdio goes through handleLine() instead.
+   */
+  enqueueMessage(msg: JsonRpcMessage): Promise<void> {
+    const run = this.queue.then(() => this.handleMessage(msg));
+    this.queue = run.catch(() => {});
+    return run;
+  }
+
+  /**
+   * Stop every browser session managed by this server (used by HTTP DELETE).
+   */
+  async closeSessions(): Promise<void> {
+    for (const [, session] of this.sessions) {
+      try { await session.stop(); } catch {}
+    }
+    this.sessions.clear();
   }
 
   private findWorkspaceDir(cwd: string): string {
@@ -1117,7 +1162,10 @@ export class McpServer {
       });
       return;
     }
+    await this.handleMessage(msg);
+  }
 
+  private async handleMessage(msg: JsonRpcMessage): Promise<void> {
     // Notifications don't have an id — no response needed
     if (!('id' in msg) || msg.id === undefined || msg.id === null) {
       // Handle notification
@@ -1373,17 +1421,189 @@ export class McpServer {
     } else {
       response.result = result;
     }
-    process.stdout.write(JSON.stringify(response) + '\n');
+    this.writeResponse(JSON.stringify(response) + '\n');
   }
 
   private async shutdown(): Promise<void> {
-    // Close all sessions
-    for (const [, session] of this.sessions) {
-      try { await session.stop(); } catch {}
-    }
-    this.sessions.clear();
-    this.rl.close();
+    await this.closeSessions();
+    this.rl?.close();
   }
+}
+
+// ─── Streamable HTTP transport ──────────────────────────────────────────────
+//
+// Implements the MCP Streamable HTTP transport (2025-06-18 spec):
+//   POST /mcp  — JSON-RPC request; responds application/json (initialize,
+//                requests without SSE accept) or text/event-stream
+//   GET  /mcp  — SSE stream for server-initiated messages (kept open; se-cli
+//                sends none, so the stream only carries keep-alive comments)
+//   DELETE /mcp — terminate the session and close managed browser sessions
+//
+// Session lifecycle: a session id is minted on initialize and echoed back
+// via the Mcp-Session-Id header on subsequent requests.
+
+const MCP_PATH = '/mcp';
+const KEEPALIVE_INTERVAL_MS = 15000;
+const crypto = require('crypto') as typeof import('crypto');
+
+function isJsonRpcMessage(value: any): value is JsonRpcRequest | JsonRpcNotification {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    'method' in value &&
+    typeof (value as JsonRpcRequest).method === 'string'
+  );
+}
+
+/**
+ * Start the Streamable HTTP server for an McpServer instance.
+ * Returns the http.Server (useful for tests with port 0).
+ */
+export function startHttpServer(mcp: McpServer, options: HttpServerOptions): http.Server {
+  const host = options.host || '127.0.0.1';
+  const httpSessions = new Set<string>();
+  // Serialize POST handling at the HTTP layer: the MCP server captures
+  // response lines on the shared McpServer instance, so concurrent requests
+  // must not interleave.
+  let postChain: Promise<void> = Promise.resolve();
+
+  const server = http.createServer((req, res) => {
+    const url = new URL(req.url || '/', 'http://localhost');
+    if (url.pathname !== MCP_PATH) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Not found. MCP endpoint: /mcp' }));
+      return;
+    }
+
+    if (req.method === 'GET') {
+      // Server-initiated SSE stream. se-cli has no server-initiated events,
+      // so the stream stays open with periodic keep-alive comments.
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      });
+      // flushHeaders() is required for SSE: without it the client's HTTP
+      // parser (no Content-Length / chunked framing) waits for EOF before
+      // delivering the response.
+      res.flushHeaders();
+      const keepAlive = setInterval(() => {
+        if (!res.writableEnded) res.write(': keep-alive\n\n');
+      }, KEEPALIVE_INTERVAL_MS);
+      res.on('close', () => clearInterval(keepAlive));
+      return;
+    }
+
+    if (req.method === 'DELETE') {
+      mcp.closeSessions().finally(() => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({}));
+      });
+      return;
+    }
+
+    if (req.method !== 'POST') {
+      res.writeHead(405, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Method not allowed' }));
+      return;
+    }
+
+    const run = postChain.then(async () => {
+      let body = '';
+      for await (const chunk of req) body += chunk;
+      handleHttpPost(mcp, req, res, body, httpSessions);
+    });
+    postChain = run.catch(() => {});
+  });
+
+  server.listen(options.port, host, () => {
+    // Logged to the mcp.log file (console was redirected in the constructor).
+    console.log(`se-cli MCP server (streamable HTTP) listening on http://${host}:${options.port}${MCP_PATH}`);
+  });
+  return server;
+}
+
+function handleHttpPost(
+  mcp: McpServer,
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+  body: string,
+  httpSessions: Set<string>,
+): void {
+  const sessionId = req.headers['mcp-session-id'] as string | undefined;
+
+  let msg: any;
+  try {
+    msg = JSON.parse(body);
+  } catch {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(
+      JSON.stringify({
+        jsonrpc: '2.0',
+        id: null,
+        error: { code: PARSE_ERROR, message: 'Parse error: invalid JSON' },
+      })
+    );
+    return;
+  }
+
+  if (!isJsonRpcMessage(msg)) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(
+      JSON.stringify({
+        jsonrpc: '2.0',
+        id: null,
+        error: { code: INVALID_REQUEST, message: 'Invalid Request' },
+      })
+    );
+    return;
+  }
+
+  const isInitialize = msg.method === 'initialize';
+  const accept = String(req.headers.accept || '');
+  const wantsSse = accept.includes('text/event-stream') && !isInitialize;
+
+  // Capture the response line instead of writing it to stdout.
+  let captured: string | null = null;
+  const prevWriter = (mcp as any).writeResponse;
+  (mcp as any).writeResponse = (line: string) => { captured = line; };
+
+  mcp
+    .enqueueMessage(msg)
+    .catch(() => {})
+    .finally(() => {
+      (mcp as any).writeResponse = prevWriter;
+
+      if (!captured) {
+        // Notification — Accepted, no body.
+        res.writeHead(202, { 'Content-Type': 'application/json' });
+        res.end();
+        return;
+      }
+
+      // Mint a session id on initialize; echo valid ids otherwise.
+      let responseSessionId: string | undefined;
+      if (isInitialize) {
+        responseSessionId = crypto.randomUUID();
+        httpSessions.add(responseSessionId);
+      } else if (sessionId && httpSessions.has(sessionId)) {
+        responseSessionId = sessionId;
+      }
+
+      const headers: Record<string, string> = {};
+      if (responseSessionId) headers['Mcp-Session-Id'] = responseSessionId;
+
+      if (wantsSse) {
+        headers['Content-Type'] = 'text/event-stream';
+        res.writeHead(200, headers);
+        res.write(`event: message\ndata: ${captured}\n\n`);
+        res.end();
+      } else {
+        headers['Content-Type'] = 'application/json';
+        res.writeHead(200, headers);
+        res.end(captured);
+      }
+    });
 }
 
 /**
@@ -1425,7 +1645,7 @@ export function buildOpenOptions(
 
 // ─── Entry Point ─────────────────────────────────────────────────────────────
 
-export function startMcpServer(workspaceDir?: string): void {
-  const server = new McpServer(workspaceDir);
-  server.start();
+export function startMcpServer(workspaceDir?: string, options?: { http?: boolean; port?: number; host?: string }): void {
+  const server = new McpServer(workspaceDir, options?.http ? 'http' : 'stdio');
+  server.start(options?.http ? { port: options.port || 8931, host: options.host } : undefined);
 }
