@@ -1,8 +1,9 @@
 import { Response } from '../../response';
-import { findElement, byToString } from './shared';
+import { findElement } from './shared';
+import { codegenBy } from './locator';
 import { waitForElementState, type WaitConfig } from '../../wait-config';
 
-export async function browser_click(driver: any, params: { target: string; _wait?: WaitConfig }, response: Response): Promise<void> {
+export async function browser_click(driver: any, params: { target: string; locatorStyle?: string; _wait?: WaitConfig }, response: Response): Promise<void> {
   const el = await findElement(driver, params.target);
 
   // v0.4: wait for element to reach desired state before clicking
@@ -11,10 +12,15 @@ export async function browser_click(driver: any, params: { target: string; _wait
     if (waitCode) response.addCode(waitCode);
   }
 
+  // v0.9: role-based codegen (--locator-style=role|css|ref, default role).
+  // Capture the code BEFORE clicking: a click may navigate away (e.g. a
+  // link), which stales the element and breaks the locator scripts.
+  const code = await codegenBy(driver, el, params.locatorStyle || 'role', params.target);
   await el.click();
   const title = await driver.getTitle();
   const url = await driver.getCurrentUrl();
   response.addPage({ url, title });
-  response.addCode(`await driver.findElement(${byToString(params.target)}).click();`);
+  if (code.note) response.addCode(`// ${code.note}`);
+  response.addCode(`await driver.findElement(${code.expression}).click();`);
   response.addResult('clicked');
 }

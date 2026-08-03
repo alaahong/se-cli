@@ -192,6 +192,8 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
       'filter', 'method',
       // v0.8 emulation flags
       'throttle-network', 'throttle-cpu',
+      // v0.9 locator flags
+      'locator-style',
     ],
     alias: {},
   });
@@ -208,6 +210,11 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
   if (parsed['script-timeout'] !== undefined) flags['script-timeout'] = String(parsed['script-timeout']);
   if (parsed['no-wait'] !== undefined) flags['no-wait'] = true;
 
+  // v0.9: role-based codegen style — only included when explicitly set so
+  // default toolParams stay stable for tests and MCP mappings.
+  const locatorStyle = parsed['locator-style'];
+  const ls = (o: any) => (locatorStyle ? { ...o, locatorStyle } : o);
+
   const commands: Record<string, () => { toolName: string; toolParams: any }> = {
     'goto': () => ({ toolName: 'browser_goto', toolParams: { url: positional[0] } }),
     'go-back': () => ({ toolName: 'browser_go_back', toolParams: {} }),
@@ -215,19 +222,28 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
     'reload': () => ({ toolName: 'browser_reload', toolParams: {} }),
     'title': () => ({ toolName: 'browser_title', toolParams: {} }),
     'url': () => ({ toolName: 'browser_url', toolParams: {} }),
-    'click': () => ({ toolName: 'browser_click', toolParams: { target: positional[0] } }),
-    'fill': () => ({ toolName: 'browser_fill', toolParams: { target: positional[0], value: positional[1], submit: parsed.submit } }),
+    'click': () => ({ toolName: 'browser_click', toolParams: ls({ target: positional[0] }) }),
+    'fill': () => ({ toolName: 'browser_fill', toolParams: ls({ target: positional[0], value: positional[1], submit: parsed.submit }) }),
     'type': () => ({ toolName: 'browser_type', toolParams: { value: positional[0] } }),
     'press': () => ({ toolName: 'browser_press', toolParams: { key: positional[0] } }),
-    'select': () => ({ toolName: 'browser_select', toolParams: { target: positional[0], value: positional[1] } }),
-    'check': () => ({ toolName: 'browser_check', toolParams: { target: positional[0] } }),
-    'uncheck': () => ({ toolName: 'browser_uncheck', toolParams: { target: positional[0] } }),
+    'select': () => ({ toolName: 'browser_select', toolParams: ls({ target: positional[0], value: positional[1] }) }),
+    'check': () => ({ toolName: 'browser_check', toolParams: ls({ target: positional[0] }) }),
+    'uncheck': () => ({ toolName: 'browser_uncheck', toolParams: ls({ target: positional[0] }) }),
     'snapshot': () => ({ toolName: 'browser_snapshot', toolParams: { target: positional[0], depth: parsed.depth ? parseInt(parsed.depth) : undefined, filename: parsed.filename } }),
     'find': () => ({ toolName: 'browser_find', toolParams: { text: positional[0], regex: parsed.regex } }),
     'screenshot': () => ({ toolName: 'browser_screenshot', toolParams: { target: positional[0], filename: parsed.filename } }),
     'eval': () => ({ toolName: 'browser_eval', toolParams: { script: positional[0], target: positional[1] } }),
     // v0.9: run-code — arbitrary Selenium snippets
     'run-code': () => ({ toolName: 'browser_run_code', toolParams: { code: positional[0] } }),
+    // v0.9: generate-locator — best locator for a ref
+    'generate-locator': () => ({
+      toolName: 'browser_generate_locator',
+      toolParams: {
+        target: positional[0],
+        all: parsed.all || false,
+        style: parsed.style,
+      },
+    }),
     'cookie-list': () => ({ toolName: 'browser_cookie_list', toolParams: {} }),
     'cookie-get': () => ({ toolName: 'browser_cookie_get', toolParams: { name: positional[0] } }),
     'cookie-set': () => ({ toolName: 'browser_cookie_set', toolParams: { name: positional[0], value: positional[1] } }),
@@ -256,8 +272,8 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
       throw new Error(`Unknown config subcommand: ${subCmd}. Supported: get, set, list, init`);
     },
     // v0.5: Interaction Completion
-    'hover': () => ({ toolName: 'browser_hover', toolParams: { target: positional[0] } }),
-    'dblclick': () => ({ toolName: 'browser_dblclick', toolParams: { target: positional[0] } }),
+    'hover': () => ({ toolName: 'browser_hover', toolParams: ls({ target: positional[0] }) }),
+    'dblclick': () => ({ toolName: 'browser_dblclick', toolParams: ls({ target: positional[0] }) }),
     'drag': () => ({ toolName: 'browser_drag', toolParams: { start: positional[0], end: positional[1] } }),
     'dialog-accept': () => ({ toolName: 'browser_dialog_accept', toolParams: { text: positional[0] } }),
     'dialog-dismiss': () => ({ toolName: 'browser_dialog_dismiss', toolParams: {} }),

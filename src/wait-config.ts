@@ -87,6 +87,8 @@ export const DEFAULTS: { wait: WaitConfig; timeouts: TimeoutConfig; perCommand: 
     eval:     { wait: { state: 'none' } },
     // v0.9: run-code — arbitrary Selenium snippet, no implicit waiting
     'run-code': { wait: { state: 'none' } },
+    // v0.9: generate-locator — read-only inspection, no implicit waiting
+    'generate-locator': { wait: { state: 'none' } },
     find:     { wait: { state: 'none' } },
     screenshot: { wait: { state: 'none' } },
     'dialog-accept':  { wait: { state: 'none' } },

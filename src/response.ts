@@ -14,6 +14,8 @@ export class Response {
 
   constructor(private opts: ResponseOptions) {}
 
+  get options(): ResponseOptions { return this.opts; }
+
   addPage(meta: PageMeta): void { this.page = meta; }
   addSnapshot(yaml: string): void { this.snapshot = yaml; }
   addCode(line: string): void { this.code.push(line); }

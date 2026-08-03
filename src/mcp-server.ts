@@ -186,11 +186,12 @@ export const toolDefinitions: ToolDef[] = [
   // ── Interaction ──
   {
     name: 'browser_click',
-    description: 'Click an element. Use a ref (e1, e2...) from snapshot or a CSS selector.',
+    description: 'Click an element. Use a ref (e1, e2...) from snapshot or a CSS selector. Emits role-based Selenium code by default (--locator-style=role), or data-se-ref style with locatorStyle="ref".',
     inputSchema: {
       type: 'object',
       properties: {
         target: { type: 'string', description: 'Element ref (e1) or CSS selector' },
+        locatorStyle: { type: 'string', enum: ['role', 'css', 'ref'], description: 'Codegen locator style (default: role)' },
         session: { type: 'string', description: 'Session name' },
       },
       required: ['target'],
@@ -198,13 +199,14 @@ export const toolDefinitions: ToolDef[] = [
   },
   {
     name: 'browser_fill',
-    description: 'Fill an input field with text. Optionally submit the form.',
+    description: 'Fill an input field with text. Optionally submit the form. Emits role-based Selenium code by default (--locator-style=role), or data-se-ref style with locatorStyle="ref".',
     inputSchema: {
       type: 'object',
       properties: {
         target: { type: 'string', description: 'Element ref (e1) or CSS selector' },
         value: { type: 'string', description: 'Text to enter' },
         submit: { type: 'boolean', description: 'Submit the form after filling' },
+        locatorStyle: { type: 'string', enum: ['role', 'css', 'ref'], description: 'Codegen locator style (default: role)' },
         session: { type: 'string', description: 'Session name' },
       },
       required: ['target', 'value'],
@@ -242,6 +244,7 @@ export const toolDefinitions: ToolDef[] = [
       properties: {
         target: { type: 'string', description: 'Element ref or CSS selector of the <select>' },
         value: { type: 'string', description: 'Option value to select' },
+        locatorStyle: { type: 'string', enum: ['role', 'css', 'ref'], description: 'Codegen locator style (default: role)' },
         session: { type: 'string', description: 'Session name' },
       },
       required: ['target', 'value'],
@@ -254,6 +257,7 @@ export const toolDefinitions: ToolDef[] = [
       type: 'object',
       properties: {
         target: { type: 'string', description: 'Element ref or CSS selector' },
+        locatorStyle: { type: 'string', enum: ['role', 'css', 'ref'], description: 'Codegen locator style (default: role)' },
         session: { type: 'string', description: 'Session name' },
       },
       required: ['target'],
@@ -266,6 +270,7 @@ export const toolDefinitions: ToolDef[] = [
       type: 'object',
       properties: {
         target: { type: 'string', description: 'Element ref or CSS selector' },
+        locatorStyle: { type: 'string', enum: ['role', 'css', 'ref'], description: 'Codegen locator style (default: role)' },
         session: { type: 'string', description: 'Session name' },
       },
       required: ['target'],
@@ -278,6 +283,7 @@ export const toolDefinitions: ToolDef[] = [
       type: 'object',
       properties: {
         target: { type: 'string', description: 'Element ref or CSS selector' },
+        locatorStyle: { type: 'string', enum: ['role', 'css', 'ref'], description: 'Codegen locator style (default: role)' },
         session: { type: 'string', description: 'Session name' },
       },
       required: ['target'],
@@ -290,6 +296,7 @@ export const toolDefinitions: ToolDef[] = [
       type: 'object',
       properties: {
         target: { type: 'string', description: 'Element ref or CSS selector' },
+        locatorStyle: { type: 'string', enum: ['role', 'css', 'ref'], description: 'Codegen locator style (default: role)' },
         session: { type: 'string', description: 'Session name' },
       },
       required: ['target'],
@@ -370,6 +377,21 @@ export const toolDefinitions: ToolDef[] = [
         session: { type: 'string', description: 'Session name' },
       },
       required: ['code'],
+    },
+  },
+  {
+    name: 'browser_generate_locator',
+    description:
+      'Inspect the best locator(s) for a snapshot ref (v0.9). Reports the recommended locator (role-based by default, falling back to id/css/xpath) with match counts, without performing any action. The recommended locator has matchCount 1 and the highest stability (role > id > css > xpath).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        target: { type: 'string', description: 'Element ref, e.g. "e7"' },
+        all: { type: 'boolean', description: 'List all candidate locators with match counts' },
+        style: { type: 'string', enum: ['role', 'id', 'css', 'xpath'], description: 'Force a specific locator type' },
+        session: { type: 'string', description: 'Session name' },
+      },
+      required: ['target'],
     },
   },
 
@@ -801,23 +823,23 @@ export function mapToolToCliArgs(toolName: string, args: any): string[] | null {
 
     // Interaction
     case 'browser_click':
-      return ['click', args.target, ...sessionFlag];
+      return ['click', args.target, ...(args.locatorStyle ? [`--locator-style=${args.locatorStyle}`] : []), ...sessionFlag];
     case 'browser_fill':
-      return ['fill', args.target, args.value, ...(args.submit ? ['--submit'] : []), ...sessionFlag];
+      return ['fill', args.target, args.value, ...(args.submit ? ['--submit'] : []), ...(args.locatorStyle ? [`--locator-style=${args.locatorStyle}`] : []), ...sessionFlag];
     case 'browser_type':
       return ['type', args.value, ...sessionFlag];
     case 'browser_press':
       return ['press', args.key, ...sessionFlag];
     case 'browser_select':
-      return ['select', args.target, args.value, ...sessionFlag];
+      return ['select', args.target, args.value, ...(args.locatorStyle ? [`--locator-style=${args.locatorStyle}`] : []), ...sessionFlag];
     case 'browser_check':
-      return ['check', args.target, ...sessionFlag];
+      return ['check', args.target, ...(args.locatorStyle ? [`--locator-style=${args.locatorStyle}`] : []), ...sessionFlag];
     case 'browser_uncheck':
-      return ['uncheck', args.target, ...sessionFlag];
+      return ['uncheck', args.target, ...(args.locatorStyle ? [`--locator-style=${args.locatorStyle}`] : []), ...sessionFlag];
     case 'browser_hover':
-      return ['hover', args.target, ...sessionFlag];
+      return ['hover', args.target, ...(args.locatorStyle ? [`--locator-style=${args.locatorStyle}`] : []), ...sessionFlag];
     case 'browser_dblclick':
-      return ['dblclick', args.target, ...sessionFlag];
+      return ['dblclick', args.target, ...(args.locatorStyle ? [`--locator-style=${args.locatorStyle}`] : []), ...sessionFlag];
     case 'browser_drag':
       return ['drag', args.start, args.end, ...sessionFlag];
 
@@ -854,6 +876,13 @@ export function mapToolToCliArgs(toolName: string, args: any): string[] | null {
     }
     case 'browser_run_code': {
       const cliArgs: string[] = ['run-code', args.code];
+      cliArgs.push(...sessionFlag);
+      return cliArgs;
+    }
+    case 'browser_generate_locator': {
+      const cliArgs: string[] = ['generate-locator', args.target];
+      if (args.all) cliArgs.push('--all');
+      if (args.style) cliArgs.push(`--style=${args.style}`);
       cliArgs.push(...sessionFlag);
       return cliArgs;
     }

@@ -384,6 +384,34 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
     expect(stillAlive).toBe('Example Domain');
   });
 
+  (skip ? it.skip : it)('generate-locator recommends a unique locator and emits role-based codegen (v0.9)', async () => {
+    await run(['open', BUTTONS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    // Find the unique "Increment +1" button via snapshot + find.
+    const snapshot = await run(['snapshot'], { SE_CLI_SESSION: S() });
+    const line = snapshot.split('\n').find((l) => l.includes('Increment +1'));
+    expect(line).toBeTruthy();
+    const ref = line!.match(/ref=(e\d+)/)![1];
+    // Recommended locator: role-based with matchCount 1.
+    const jsonOut = await run(['--json', 'generate-locator', ref], { SE_CLI_SESSION: S() });
+    const rows = JSON.parse(JSON.parse(jsonOut).result);
+    const rec = rows.find((r: any) => r.recommended);
+    expect(rec).toBeTruthy();
+    expect(rec.matchCount).toBe(1);
+    expect(rec.type).toBe('role');
+    // --raw prints only the expression.
+    const rawOut = (await run(['--raw', 'generate-locator', ref], { SE_CLI_SESSION: S() })).trim();
+    expect(rawOut).toContain("new By('role', { role: 'button'");
+    // The recommended expression is valid Selenium: clicking via it succeeds.
+    const clickResult = await run(['click', ref], { SE_CLI_SESSION: S() });
+    expect(clickResult).toContain("new By('role', { role: 'button', name: 'Increment +1' })");
+    // --locator-style=ref keeps the MVP data-se-ref codegen.
+    const refClick = await run(['click', ref, '--locator-style=ref'], { SE_CLI_SESSION: S() });
+    expect(refClick).toContain(`By.css('[data-se-ref="${ref}"]')`);
+    // Counter incremented by both clicks.
+    const count = (await run(['--raw', 'eval', "document.getElementById('count').textContent"], { SE_CLI_SESSION: S() })).trim();
+    expect(count).toBe('2');
+  });
+
   // --- Output modes ---
 
   (skip ? it.skip : it)('json output mode', async () => {

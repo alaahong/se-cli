@@ -1,5 +1,6 @@
 import { Response } from '../../response';
 import { findElement, findElementWithWait, byToString } from './shared';
+import { codegenBy } from './locator';
 import { waitForElementState, type WaitConfig } from '../../wait-config';
 
 /**
@@ -7,7 +8,7 @@ import { waitForElementState, type WaitConfig } from '../../wait-config';
  */
 export async function browser_hover(
   driver: any,
-  params: { target: string; _wait?: WaitConfig },
+  params: { target: string; locatorStyle?: string; _wait?: WaitConfig },
   response: Response,
 ): Promise<void> {
   const el = await findElementWithWait(driver, params.target, params._wait);
@@ -23,7 +24,9 @@ export async function browser_hover(
   const title = await driver.getTitle();
   const url = await driver.getCurrentUrl();
   response.addPage({ url, title });
-  response.addCode(`const el = await driver.findElement(${byToString(params.target)});\nawait driver.actions({ bridge: true }).move({ origin: el }).perform();`);
+  const code = await codegenBy(driver, el, params.locatorStyle || 'role', params.target);
+  if (code.note) response.addCode(`// ${code.note}`);
+  response.addCode(`const el = await driver.findElement(${code.expression});\nawait driver.actions({ bridge: true }).move({ origin: el }).perform();`);
   response.addResult('hovered');
 }
 
@@ -32,7 +35,7 @@ export async function browser_hover(
  */
 export async function browser_dblclick(
   driver: any,
-  params: { target: string; _wait?: WaitConfig },
+  params: { target: string; locatorStyle?: string; _wait?: WaitConfig },
   response: Response,
 ): Promise<void> {
   const el = await findElementWithWait(driver, params.target, params._wait);
@@ -48,7 +51,9 @@ export async function browser_dblclick(
   const title = await driver.getTitle();
   const url = await driver.getCurrentUrl();
   response.addPage({ url, title });
-  response.addCode(`const el = await driver.findElement(${byToString(params.target)});\nawait driver.actions({ bridge: true }).doubleClick(el).perform();`);
+  const code = await codegenBy(driver, el, params.locatorStyle || 'role', params.target);
+  if (code.note) response.addCode(`// ${code.note}`);
+  response.addCode(`const el = await driver.findElement(${code.expression});\nawait driver.actions({ bridge: true }).doubleClick(el).perform();`);
   response.addResult('double-clicked');
 }
 

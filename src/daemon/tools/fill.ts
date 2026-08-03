@@ -1,11 +1,12 @@
 import { Response } from '../../response';
-import { findElement, byToString } from './shared';
+import { findElement } from './shared';
+import { codegenBy } from './locator';
 import { Key } from 'selenium-webdriver';
 import { waitForElementState, type WaitConfig } from '../../wait-config';
 
 export async function browser_fill(
   driver: any,
-  params: { target: string; value: string; submit?: boolean; _wait?: WaitConfig },
+  params: { target: string; value: string; submit?: boolean; locatorStyle?: string; _wait?: WaitConfig },
   response: Response
 ): Promise<void> {
   const el = await findElement(driver, params.target);
@@ -29,6 +30,8 @@ export async function browser_fill(
   if (params.submit) {
     await el.sendKeys(Key.ENTER);
   }
-  response.addCode(`await driver.findElement(${byToString(params.target)}).sendKeys('${params.value}');`);
+  const code = await codegenBy(driver, el, params.locatorStyle || 'role', params.target);
+  if (code.note) response.addCode(`// ${code.note}`);
+  response.addCode(`await driver.findElement(${code.expression}).sendKeys('${params.value}');`);
   response.addResult('filled');
 }

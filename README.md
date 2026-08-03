@@ -258,6 +258,7 @@ Network interception, console capture, and visual debugging tools powered by Sel
 | `eval "<js>"` | Execute JavaScript, return result |
 | `eval "<js>" <ref>` | Execute JavaScript on element |
 | `run-code "<snippet>"` | Execute arbitrary Selenium snippet (receives `driver`, v0.9) |
+| `generate-locator <ref>` | Show recommended locator for a ref (v0.9) |
 | `title` | Get page title |
 | `url` | Get current URL |
 
@@ -423,6 +424,48 @@ se-cli click "$REF"
 > **Security**: `run-code` runs with full driver privileges — it can navigate,
 > click, read page data, and execute JavaScript. Agents should prefer dedicated
 > commands (`click`, `fill`, `snapshot`, ...) whenever possible.
+
+### Locators with generate-locator (v0.9)
+
+`generate-locator` inspects the best locator for a snapshot ref without performing
+an action. The recommended locator has match count 1 and the highest stability
+(role > id > css > xpath); role locators use the W3C accessibility-attributes
+strategy, which the selenium-webdriver JS binding exposes as
+`new By('role', { role, name })`.
+
+```bash
+se-cli snapshot
+# - button "Save Draft" [ref=e7]
+
+se-cli generate-locator e7
+# Recommended: new By('role', { role: 'button', name: 'Save Draft' })
+# Alternatives:
+#   By.id('save-draft-btn') (1 match)
+#   By.css('#save-draft-btn') (1 match)
+
+se-cli generate-locator e7 --all          # all candidates with match counts
+se-cli generate-locator e7 --style=id     # force a locator type
+se-cli --raw generate-locator e7          # only the recommended expression
+se-cli --json generate-locator e7         # structured [{type, locator, matchCount, recommended}]
+```
+
+### Role-based code generation (v0.9)
+
+Interaction commands (`click`, `fill`, `check`, `uncheck`, `select`, `hover`,
+`dblclick`) now emit role-based locators by default instead of runtime-injected
+`data-se-ref` attributes, so the emitted code works against production pages:
+
+```bash
+se-cli click e2
+# ### Ran Selenium code
+# await driver.findElement(new By('role', { role: 'button', name: 'Submit' })).click();
+
+se-cli click e2 --locator-style=ref        # MVP behavior: By.css('[data-se-ref="e2"]')
+se-cli click e2 --locator-style=css        # stable CSS selector (#id > tag.class > nth-of-type)
+```
+
+When the role locator matches multiple elements, the daemon falls back to a
+stable CSS selector and emits a comment explaining the fallback.
 
 ### Storage Management
 

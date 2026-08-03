@@ -23,6 +23,7 @@ import { browser_type } from '../../src/daemon/tools/type';
 import { browser_press } from '../../src/daemon/tools/press';
 import { browser_go_back, browser_go_forward, browser_reload } from '../../src/daemon/tools/navigation';
 import { browser_url } from '../../src/daemon/tools/url';
+import { ROLE_SCRIPT, CSS_INFO_SCRIPT, COUNT_ROLE_SCRIPT } from '../../src/daemon/tools/locator';
 import { AssertionError } from '../../src/daemon/tools/expect';
 import { parseCommand } from '../../src/daemon/backend';
 
@@ -40,8 +41,17 @@ function makeMockDriver(opts: any = {}): any {
     })),
     executeScript: vi.fn(async (...args: any[]) => {
       calls.push({ method: 'executeScript', args });
+      const script = args[0];
+      // v0.9: locator heuristics dispatch — role extraction and CSS info
+      // scripts must return structured data, everything else keeps the
+      // snapshot YAML default. Scripts are wrapped as
+      // `return (${ROLE_SCRIPT})(arguments[0]);` at the call site.
+      if (typeof script === 'string' && script.includes(ROLE_SCRIPT)) return opts.roleName ?? { role: 'button', name: 'Save Draft' };
+      if (typeof script === 'string' && script.includes(CSS_INFO_SCRIPT)) return opts.cssInfo ?? { id: '', classes: ['btn'], tag: 'button', nth: 1 };
+      if (typeof script === 'string' && script.includes(COUNT_ROLE_SCRIPT)) return opts.roleMatchCount ?? 1;
       return opts.scriptResult ?? '- link:\n  - More information... [ref=e1]';
     }),
+    findElements: vi.fn(async () => new Array(opts.matchCount ?? 1).fill({})),
     takeScreenshot: vi.fn(async () => 'BASE64PNG'),
     navigate: vi.fn(() => ({
       back: vi.fn(async () => {}),
@@ -403,7 +413,7 @@ describe('tool handlers', () => {
   });
 
   describe('browser_click', () => {
-    it('calls findElement and click, adds page meta and code', async () => {
+    it('calls findElement and click, adds page meta and role-based code (v0.9)', async () => {
       const driver = makeMockDriver({ title: 'Clicked Page', url: 'https://example.com/clicked' });
       const response = new Response({ raw: false, json: false });
       await browser_click(driver, { target: 'e1' }, response);
@@ -412,9 +422,26 @@ describe('tool handlers', () => {
       expect(out).toContain('### Page');
       expect(out).toContain('Clicked Page');
       expect(out).toContain('### Ran Selenium code');
-      expect(out).toContain(`By.css('[data-se-ref="e1"]')`);
+      expect(out).toContain(`new By('role', { role: 'button', name: 'Save Draft' })`);
       expect(out).toContain('.click()');
       expect(out).toContain('clicked');
+    });
+
+    it('emits data-se-ref code with --locator-style=ref', async () => {
+      const driver = makeMockDriver({ title: 'Clicked Page', url: 'https://example.com/clicked' });
+      const response = new Response({ raw: false, json: false });
+      await browser_click(driver, { target: 'e1', locatorStyle: 'ref' }, response);
+      const out = response.serialize();
+      expect(out).toContain(`By.css('[data-se-ref="e1"]')`);
+    });
+
+    it('falls back to CSS when the role locator is ambiguous', async () => {
+      const driver = makeMockDriver({ title: 'Page', url: 'https://example.com', matchCount: 2, roleMatchCount: 2 });
+      const response = new Response({ raw: false, json: false });
+      await browser_click(driver, { target: 'e1' }, response);
+      const out = response.serialize();
+      expect(out).toContain('role locator was ambiguous (2 matches); fell back to CSS');
+      expect(out).toContain(`By.css('button.btn')`);
     });
 
     it('uses CSS selector when target is not a ref', async () => {
@@ -422,18 +449,18 @@ describe('tool handlers', () => {
       const response = new Response({ raw: false, json: false });
       await browser_click(driver, { target: 'a.button' }, response);
       const out = response.serialize();
-      expect(out).toContain(`By.css('a.button')`);
+      expect(out).toContain(`new By('role', { role: 'button', name: 'Save Draft' })`);
     });
   });
 
   describe('browser_fill', () => {
-    it('calls findElement, clear, sendKeys and adds code', async () => {
+    it('calls findElement, clear, sendKeys and adds role-based code', async () => {
       const driver = makeMockDriver();
       const response = new Response({ raw: false, json: false });
       await browser_fill(driver, { target: 'e1', value: 'hello' }, response);
       expect(driver.findElement).toHaveBeenCalled();
       const out = response.serialize();
-      expect(out).toContain(`By.css('[data-se-ref="e1"]')`);
+      expect(out).toContain(`new By('role', { role: 'button', name: 'Save Draft' })`);
       expect(out).toContain('sendKeys');
       expect(out).toContain("'hello'");
       expect(out).toContain('filled');

@@ -1,10 +1,11 @@
 import { Response } from '../../response';
-import { findElement, byToString } from './shared';
+import { findElement } from './shared';
+import { codegenBy } from './locator';
 import { waitForElementState, type WaitConfig } from '../../wait-config';
 
 export async function browser_select(
   driver: any,
-  params: { target: string; value: string; _wait?: WaitConfig },
+  params: { target: string; value: string; locatorStyle?: string; _wait?: WaitConfig },
   response: Response
 ): Promise<void> {
   const el = await findElement(driver, params.target);
@@ -18,6 +19,8 @@ export async function browser_select(
   const { Select } = require('selenium-webdriver');
   const select = new Select(el);
   await select.selectByVisibleText(params.value);
-  response.addCode(`const select = new Select(driver.findElement(${byToString(params.target)})); await select.selectByVisibleText('${params.value}');`);
+  const code = await codegenBy(driver, el, params.locatorStyle || 'role', params.target);
+  if (code.note) response.addCode(`// ${code.note}`);
+  response.addCode(`const select = new Select(driver.findElement(${code.expression})); await select.selectByVisibleText('${params.value}');`);
   response.addResult(`selected ${params.value}`);
 }

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import * as path from 'path';
 import { Response } from '../../src/response';
+import { ROLE_SCRIPT, CSS_INFO_SCRIPT, COUNT_ROLE_SCRIPT } from '../../src/daemon/tools/locator';
 import { browser_dialog_accept, browser_dialog_dismiss } from '../../src/daemon/tools/dialog';
 import { browser_resize } from '../../src/daemon/tools/resize';
 import { browser_select } from '../../src/daemon/tools/select';
@@ -102,7 +103,16 @@ function makeMockDriver(opts: any = {}): any {
       alert: vi.fn(() => alertMock),
     })),
     wait: vi.fn(async () => {}),
-    executeScript: vi.fn(async () => null),
+    executeScript: vi.fn(async (...args: any[]) => {
+      // v0.9: locator heuristics dispatch. Scripts are wrapped as
+      // `return (${ROLE_SCRIPT})(arguments[0]);` at the call site.
+      const script = args[0];
+      if (typeof script === 'string' && script.includes(ROLE_SCRIPT)) return opts.roleName ?? { role: 'combobox', name: 'Country' };
+      if (typeof script === 'string' && script.includes(CSS_INFO_SCRIPT)) return opts.cssInfo ?? { id: 'country', classes: [], tag: 'select', nth: 1 };
+      if (typeof script === 'string' && script.includes(COUNT_ROLE_SCRIPT)) return opts.roleMatchCount ?? 1;
+      return null;
+    }),
+    findElements: vi.fn(async () => [mockEl]),
     _el: mockEl,
     _optionEl: mockOptionEl,
     _alert: alertMock,
@@ -237,7 +247,8 @@ describe('select.ts', () => {
       expect(driver.findElement).toHaveBeenCalled();
       expect(driver._optionEl.click).toHaveBeenCalled();
       expect(out.result).toBe('selected Japan');
-      expect(out.code.join('\n')).toContain("By.css('select#country')");
+      // v0.9: role-based codegen — combobox role locator preferred
+      expect(out.code.join('\n')).toContain("new By('role', { role: 'combobox'");
     });
 
     it('waits for element state when _wait is provided', async () => {
