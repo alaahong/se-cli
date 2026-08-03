@@ -78,6 +78,18 @@ describe('wait-config.ts', () => {
       expect(DEFAULTS.perCommand.eval?.wait?.state).toBe('none');
       expect(DEFAULTS.perCommand.find?.wait?.state).toBe('none');
     });
+
+    it('has per-command defaults for v0.9 commands (hyphenated keys)', () => {
+      expect(DEFAULTS.perCommand['run-code']?.wait?.state).toBe('none');
+      expect(DEFAULTS.perCommand['generate-locator']?.wait?.state).toBe('none');
+    });
+
+    it('resolveConfig honors hyphenated per-command entries (run-code)', () => {
+      const config = resolveConfig({}, process.cwd(), process.env as any, 'run-code');
+      expect(config.wait.state).toBe('none');
+      const genConfig = resolveConfig({}, process.cwd(), process.env as any, 'generate-locator');
+      expect(genConfig.wait.state).toBe('none');
+    });
   });
 
   // ── resolveConfig: 4-tier priority ──────────────────────────

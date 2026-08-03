@@ -1,5 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { parseCommand } from '../../src/daemon/backend';
+import { parseCommand, toolCommandName } from '../../src/daemon/backend';
+
+describe('toolCommandName', () => {
+  it('normalizes tool names to hyphenated CLI command names', () => {
+    expect(toolCommandName('browser_click')).toBe('click');
+    expect(toolCommandName('browser_run_code')).toBe('run-code');
+    expect(toolCommandName('browser_generate_locator')).toBe('generate-locator');
+    expect(toolCommandName('browser_dialog_accept')).toBe('dialog-accept');
+    expect(toolCommandName('browser_actions_chain')).toBe('actions-chain');
+    expect(toolCommandName('browser_emulate')).toBe('emulate');
+  });
+});
 
 describe('parseCommand', () => {
   it('maps goto to browser_goto with url', () => {

@@ -864,6 +864,16 @@ describe('main()', () => {
     expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('No agent skill directories detected'));
   });
 
+  it('install --agent without a value: exits with code 1 instead of crashing', async () => {
+    await expect(main(['install', '--agent'])).rejects.toThrow('exit:1');
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('--agent requires a value'));
+  });
+
+  it('install --path without a value: exits with code 1 instead of crashing', async () => {
+    await expect(main(['install', '--path'])).rejects.toThrow('exit:1');
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('--path requires a value'));
+  });
+
   // ── config ───────────────────────────────────────────────
 
   it('config get <key>: calls loadConfigFile and getConfigValue, prints value', async () => {

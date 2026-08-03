@@ -146,6 +146,14 @@ export async function main(argv: string[]): Promise<void> {
       console.error('Error: --path and --agent are mutually exclusive.');
       process.exit(1);
     }
+    if (args.agent !== undefined && typeof args.agent !== 'string') {
+      console.error('Error: --agent requires a value, e.g. --agent=claude,cursor (see --list-agents).');
+      process.exit(1);
+    }
+    if (args.path !== undefined && typeof args.path !== 'string') {
+      console.error('Error: --path requires a value, e.g. --path=./my-agent/skills/.');
+      process.exit(1);
+    }
 
     let targets: string[];
     if (args.path) {
