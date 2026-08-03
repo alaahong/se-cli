@@ -12,12 +12,14 @@ export async function browser_click(driver: any, params: { target: string; locat
     if (waitCode) response.addCode(waitCode);
   }
 
+  // v0.9: role-based codegen (--locator-style=role|css|ref, default role).
+  // Capture the code BEFORE clicking: a click may navigate away (e.g. a
+  // link), which stales the element and breaks the locator scripts.
+  const code = await codegenBy(driver, el, params.locatorStyle || 'role', params.target);
   await el.click();
   const title = await driver.getTitle();
   const url = await driver.getCurrentUrl();
   response.addPage({ url, title });
-  // v0.9: role-based codegen (--locator-style=role|css|ref, default role)
-  const code = await codegenBy(driver, el, params.locatorStyle || 'role', params.target);
   if (code.note) response.addCode(`// ${code.note}`);
   response.addCode(`await driver.findElement(${code.expression}).click();`);
   response.addResult('clicked');
