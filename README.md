@@ -610,6 +610,39 @@ Once enabled, all 40+ browser automation commands are available as MCP tools:
 se-cli mcp-server
 ```
 
+### Skills for AI agents (v0.9)
+
+`se-cli install` copies `skill/SKILL.md` (plus `skill/references/`) into the
+skill directories of your AI agent(s). SKILL.md carries spec-compliant
+frontmatter (`name`, `description`, `license: Apache-2.0`, `compatibility`).
+
+```bash
+# Auto-detect: install into every agent directory present in the project
+# (.claude/, .cursor/, .github/copilot/)
+se-cli install --skills
+
+# Explicit agents (comma-separated multi-target)
+se-cli install --agent=claude,cursor,copilot
+# Installed SKILL.md to .claude/skills/se-cli/SKILL.md
+# Installed SKILL.md to .cursor/skills/se-cli/SKILL.md
+# Installed SKILL.md to .github/copilot/skills/se-cli/SKILL.md
+
+# Custom location (mutually exclusive with --agent)
+se-cli install --path=./my-agent/skills/
+
+# Overwrite existing files / list supported agents
+se-cli install --force
+se-cli install --list-agents
+# claude    .claude/skills/se-cli
+# cursor    .cursor/skills/se-cli
+# copilot   .github/copilot/skills/se-cli
+# generic   .agents/skills/se-cli
+```
+
+Agent targets: `claude` → `.claude/skills/se-cli/`, `cursor` → `.cursor/skills/se-cli/`,
+`copilot` → `.github/copilot/skills/se-cli/`, `generic` → `.agents/skills/se-cli/`,
+`custom` → requires `--path=<dir>`.
+
 ### Why CLI over MCP for agents?
 
 se-cli supports both modes — CLI for token-critical workflows, MCP for IDE-integrated workflows:

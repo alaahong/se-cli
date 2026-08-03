@@ -1,6 +1,12 @@
 ---
 name: se-cli
 description: Automate browser interactions and test web pages using Selenium.
+license: Apache-2.0
+compatibility:
+  - claude-code
+  - cursor
+  - copilot-cli
+  - generic
 allowed-tools: Bash(se-cli:*) Bash(npx:*)
 ---
 

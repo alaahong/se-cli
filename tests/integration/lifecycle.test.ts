@@ -70,6 +70,58 @@ const RESOLVED_BROWSERS = resolveTestBrowsers();
 const BROWSERS: string[] =
   RESOLVED_BROWSERS.length > 0 ? RESOLVED_BROWSERS : ['chrome', 'edge', 'firefox'];
 
+describe('v0.9: install --skills multi-target', () => {
+  const installCwd = fs.mkdtempSync(path.join(os.tmpdir(), 'se-install-e2e-'));
+  afterAll(() => {
+    fs.rmSync(installCwd, { recursive: true, force: true });
+  });
+
+  (E2E_ENABLED ? it : it.skip)('installs into multiple agent targets and lists agents', async () => {
+    // Simulate a project that already uses Claude Code and Copilot.
+    fs.mkdirSync(path.join(installCwd, '.claude'), { recursive: true });
+    fs.mkdirSync(path.join(installCwd, '.github', 'copilot'), { recursive: true });
+
+    const out = await run(['install', '--agent=claude,cursor,copilot'], {}, installCwd);
+    expect(out).toContain('.claude');
+    expect(out).toContain('.cursor');
+    expect(out).toContain('.github');
+    for (const rel of [
+      path.join('.claude', 'skills', 'se-cli', 'SKILL.md'),
+      path.join('.cursor', 'skills', 'se-cli', 'SKILL.md'),
+      path.join('.github', 'copilot', 'skills', 'se-cli', 'SKILL.md'),
+    ]) {
+      const content = fs.readFileSync(path.join(installCwd, rel), 'utf8');
+      expect(content).toContain('name: se-cli');
+      expect(content).toContain('license: Apache-2.0');
+      expect(content).toContain('compatibility:');
+    }
+
+    // Re-running without --force skips existing files.
+    const skipOut = await run(['install', '--agent=claude'], {}, installCwd);
+    expect(skipOut).toContain('Skipped');
+
+    // --force overwrites.
+    const forceOut = await run(['install', '--agent=claude', '--force'], {}, installCwd);
+    expect(forceOut).toContain('Installed SKILL.md to');
+
+    // Auto-detection installs into detected targets only.
+    // Remove the .cursor dir created by the explicit install above so
+    // auto-detection sees only the pre-existing .claude/.github dirs
+    // (the user never set up Cursor in this simulated project).
+    fs.rmSync(path.join(installCwd, '.cursor'), { recursive: true, force: true });
+    const autoOut = await run(['install'], {}, installCwd);
+    expect(autoOut).toContain('.claude');
+    expect(autoOut).toContain('.github');
+    expect(autoOut).not.toContain('.cursor');
+
+    // --list-agents enumerates supported targets.
+    const listOut = await run(['install', '--list-agents'], {}, installCwd);
+    expect(listOut).toContain('claude');
+    expect(listOut).toContain('copilot');
+    expect(listOut).toContain('generic');
+  });
+});
+
 if (E2E_ENABLED) {
   // eslint-disable-next-line no-console
   console.log(

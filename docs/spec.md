@@ -664,8 +664,9 @@ autonomous workflows). Both share the same underlying tool implementation.
   match counts, stability scoring role > id > css > xpath, `--all` / `--style` / `--raw` / `--json`)
 - [x] **Role-based locator code generation**: enhance codegen with `By.role()` output
   (interaction commands emit `new By('role', { role, name })` by default; `--locator-style=role|css|ref`)
-- [ ] **SKILL.md frontmatter compliance**: add `name`, `description`, `license`, `compatibility` metadata per Agent Skills spec
-- [ ] **install --skills enhancement**: multi-target discovery (Claude Code, Cursor, generic)
+- [x] **SKILL.md frontmatter compliance**: add `name`, `description`, `license`, `compatibility` metadata per Agent Skills spec
+- [x] **install --skills enhancement**: multi-target discovery (Claude Code, Cursor, Copilot, generic)
+  (`src/install.ts`; `--agent=a,b,c` multi-target, auto-detect, `--path`, `--force`, `--list-agents`)
 
 ### v0.10: Remote, Grid & Custom Browsers (Core, Selenium moat)
 
