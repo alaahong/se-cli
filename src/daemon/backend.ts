@@ -226,6 +226,8 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
     'find': () => ({ toolName: 'browser_find', toolParams: { text: positional[0], regex: parsed.regex } }),
     'screenshot': () => ({ toolName: 'browser_screenshot', toolParams: { target: positional[0], filename: parsed.filename } }),
     'eval': () => ({ toolName: 'browser_eval', toolParams: { script: positional[0], target: positional[1] } }),
+    // v0.9: run-code — arbitrary Selenium snippets
+    'run-code': () => ({ toolName: 'browser_run_code', toolParams: { code: positional[0] } }),
     'cookie-list': () => ({ toolName: 'browser_cookie_list', toolParams: {} }),
     'cookie-get': () => ({ toolName: 'browser_cookie_get', toolParams: { name: positional[0] } }),
     'cookie-set': () => ({ toolName: 'browser_cookie_set', toolParams: { name: positional[0], value: positional[1] } }),

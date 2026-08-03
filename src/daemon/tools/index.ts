@@ -12,6 +12,7 @@ import { browser_snapshot } from './snapshot';
 import { browser_find } from './find';
 import { browser_screenshot } from './screenshot';
 import { browser_eval } from './eval';
+import { browser_run_code } from './run-code';
 import {
   browser_cookie_list,
   browser_cookie_get,
@@ -86,6 +87,7 @@ export const tools: Record<string, (driver: any, params: any, response: any) => 
   browser_find,
   browser_screenshot,
   browser_eval,
+  browser_run_code,
   browser_cookie_list,
   browser_cookie_get,
   browser_cookie_set,

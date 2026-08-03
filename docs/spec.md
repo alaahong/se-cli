@@ -657,7 +657,8 @@ autonomous workflows). Both share the same underlying tool implementation.
 **Remaining (future enhancement)**:
 
 - [ ] **Streamable HTTP transport** (optional): remote agent communication
-- [ ] **run-code "async driver => ..."**: execute arbitrary Selenium code snippets
+- [x] **run-code "async driver => ..."**: execute arbitrary Selenium code snippets
+  (`src/daemon/tools/run-code.ts`; returned `WebElement`s become fresh refs `e<N>`)
 - [ ] **generate-locator <ref>**: generate best locator expression (By.role/By.css)
 - [ ] **Role-based locator code generation**: enhance codegen with `By.role()` output
 - [ ] **SKILL.md frontmatter compliance**: add `name`, `description`, `license`, `compatibility` metadata per Agent Skills spec

@@ -36,6 +36,7 @@ se-cli check <ref>
 se-cli uncheck <ref>
 se-cli screenshot [ref] [--filename=f]
 se-cli eval "<js>" [ref]
+se-cli run-code "<snippet>"   # arbitrary Selenium code; receives `driver`
 se-cli title
 se-cli url
 ```
@@ -227,6 +228,19 @@ se-cli click e1 --implicit-wait=1000 # Driver implicit wait
 se-cli click e1 --page-load-timeout=30000
 se-cli eval "js" --script-timeout=30000
 se-cli click e1 --no-wait             # Skip waiting (--wait=none --timeout=0)
+```
+
+### Advanced: arbitrary Selenium code (v0.9)
+```bash
+# run-code executes a Selenium snippet inside the daemon. The snippet is the
+# body of an async function receiving the live `driver` (selenium-webdriver).
+# Prefer dedicated commands (click/fill/snapshot/...) whenever possible —
+# run-code runs with FULL driver privileges (navigation, clicks, JS execution).
+se-cli run-code "async driver => { return await driver.getTitle(); }"
+
+# Returned elements become refs for subsequent commands:
+REF=$(se-cli --raw run-code "async driver => driver.findElement({css: 'h1'})")
+se-cli click "$REF"
 ```
 
 ### Sessions
