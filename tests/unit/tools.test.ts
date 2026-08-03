@@ -44,9 +44,10 @@ function makeMockDriver(opts: any = {}): any {
       const script = args[0];
       // v0.9: locator heuristics dispatch — role extraction and CSS info
       // scripts must return structured data, everything else keeps the
-      // snapshot YAML default.
-      if (script === ROLE_SCRIPT) return opts.roleName ?? { role: 'button', name: 'Save Draft' };
-      if (script === CSS_INFO_SCRIPT) return opts.cssInfo ?? { id: '', classes: ['btn'], tag: 'button', nth: 1 };
+      // snapshot YAML default. Scripts are wrapped as
+      // `return (${ROLE_SCRIPT})(arguments[0]);` at the call site.
+      if (typeof script === 'string' && script.includes(ROLE_SCRIPT)) return opts.roleName ?? { role: 'button', name: 'Save Draft' };
+      if (typeof script === 'string' && script.includes(CSS_INFO_SCRIPT)) return opts.cssInfo ?? { id: '', classes: ['btn'], tag: 'button', nth: 1 };
       return opts.scriptResult ?? '- link:\n  - More information... [ref=e1]';
     }),
     findElements: vi.fn(async () => new Array(opts.matchCount ?? 1).fill({})),

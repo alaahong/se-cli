@@ -20,8 +20,9 @@ function makeDriver(opts: any = {}): any {
   const matchMap: Record<string, number> = opts.matchMap ?? {};
   const driver = {
     executeScript: vi.fn(async (script: string, _el?: any) => {
-      if (script === ROLE_SCRIPT) return opts.roleName !== undefined ? opts.roleName : ROLE_BUTTON;
-      if (script === CSS_INFO_SCRIPT) return opts.cssInfo !== undefined ? opts.cssInfo : CSS_INFO;
+      // Scripts are wrapped at the call site as `return (${ROLE_SCRIPT})(arguments[0]);`
+      if (typeof script === 'string' && script.includes(ROLE_SCRIPT)) return opts.roleName !== undefined ? opts.roleName : ROLE_BUTTON;
+      if (typeof script === 'string' && script.includes(CSS_INFO_SCRIPT)) return opts.cssInfo !== undefined ? opts.cssInfo : CSS_INFO;
       if (typeof script === 'string' && script.includes("getAttribute('data-se-ref')")) {
         return opts.refAttr;
       }

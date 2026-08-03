@@ -14,7 +14,13 @@ const { By } = require('selenium-webdriver') as typeof import('selenium-webdrive
 //
 // which works in Chrome, Edge, and Firefox.
 
-export const ROLE_SCRIPT = `function(el) {
+// NOTE: these scripts are sent to driver.executeScript() as strings, where
+// selenium-webdriver executes the string verbatim as a script BODY (only
+// Function objects get wrapped in `return (...).apply(null, arguments)`).
+// The body must therefore be an expression — a bare `function(el) {...}`
+// statement throws "Function statements require a function name". We keep the
+// body as an IIFE expression and invoke it at the call site with arguments[0].
+export const ROLE_SCRIPT = `(function(el) {
   var tag = el.tagName.toLowerCase();
   var role = el.getAttribute('role');
   if (!role) {
@@ -65,9 +71,9 @@ export const ROLE_SCRIPT = `function(el) {
     name = (el.textContent || '').trim();
   }
   return { role: role, name: name.slice(0, 200) };
-}`;
+})`;
 
-export const CSS_INFO_SCRIPT = `function(el) {
+export const CSS_INFO_SCRIPT = `(function(el) {
   var out = { id: el.id || '', classes: [], tag: el.tagName.toLowerCase(), nth: 0 };
   var cls = el.className;
   if (typeof cls === 'string') out.classes = cls.split(/\\s+/).filter(Boolean);
@@ -80,7 +86,7 @@ export const CSS_INFO_SCRIPT = `function(el) {
     }
   }
   return out;
-}`;
+})`;
 
 export interface LocatorCandidate {
   type: 'role' | 'id' | 'css' | 'xpath';
@@ -115,7 +121,7 @@ function jsString(value: string): string {
 export async function buildCandidates(driver: any, el: any): Promise<LocatorCandidate[]> {
   const candidates: LocatorCandidate[] = [];
 
-  const roleName = (await driver.executeScript(ROLE_SCRIPT, el)) || null;
+  const roleName = (await driver.executeScript(`return (${ROLE_SCRIPT})(arguments[0]);`, el)) || null;
   if (roleName && roleName.role) {
     const hasName = !!roleName.name;
     const by =
@@ -137,7 +143,7 @@ export async function buildCandidates(driver: any, el: any): Promise<LocatorCand
     });
   }
 
-  const info = (await driver.executeScript(CSS_INFO_SCRIPT, el)) || {};
+  const info = (await driver.executeScript(`return (${CSS_INFO_SCRIPT})(arguments[0]);`, el)) || {};
   const tag = typeof info.tag === 'string' ? info.tag : 'div';
   const id = typeof info.id === 'string' && /^[a-zA-Z_][a-zA-Z0-9_-]*$/.test(info.id) ? info.id : '';
   const classes: string[] = Array.isArray(info.classes)

@@ -104,10 +104,11 @@ function makeMockDriver(opts: any = {}): any {
     })),
     wait: vi.fn(async () => {}),
     executeScript: vi.fn(async (...args: any[]) => {
-      // v0.9: locator heuristics dispatch
+      // v0.9: locator heuristics dispatch. Scripts are wrapped as
+      // `return (${ROLE_SCRIPT})(arguments[0]);` at the call site.
       const script = args[0];
-      if (script === ROLE_SCRIPT) return opts.roleName ?? { role: 'combobox', name: 'Country' };
-      if (script === CSS_INFO_SCRIPT) return opts.cssInfo ?? { id: 'country', classes: [], tag: 'select', nth: 1 };
+      if (typeof script === 'string' && script.includes(ROLE_SCRIPT)) return opts.roleName ?? { role: 'combobox', name: 'Country' };
+      if (typeof script === 'string' && script.includes(CSS_INFO_SCRIPT)) return opts.cssInfo ?? { id: 'country', classes: [], tag: 'select', nth: 1 };
       return null;
     }),
     findElements: vi.fn(async () => [mockEl]),
