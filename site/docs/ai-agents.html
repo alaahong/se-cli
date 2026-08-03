@@ -86,13 +86,12 @@
           <div class="agent-step-num">2</div>
           <div class="agent-step-body">
             <h3 data-i18n="ai.step2Title">Install the skill (recommended)</h3>
-            <p data-i18n="ai.step2Desc" data-i18n-html><code>install --skills</code> copies <code>SKILL.md</code> into your agent's skills directory so it learns the command syntax instantly. Targets Claude Code, Cursor, and a generic <code>.agents/skills/</code> path.</p>
+            <p data-i18n="ai.step2Desc" data-i18n-html><code>install --skills</code> copies <code>SKILL.md</code> into your agent's skills directory so it learns the command syntax instantly. Targets Claude Code (<code>.claude/skills/se-cli/</code>), Cursor (<code>.cursor/skills/se-cli/</code>), GitHub Copilot (<code>.github/copilot/skills/se-cli/</code>), and a generic <code>.agents/skills/</code> path (v0.9).</p>
             <div class="code-block"><div class="code-header"><span class="code-lang">bash</span></div>
-<pre><code>se-cli install --skills
-
-# equivalent manual placement
-mkdir -p .claude/skills/se-cli
-cp skill/SKILL.md .claude/skills/se-cli/</code></pre></div>
+<pre><code>se-cli install --skills                  # auto-detect installed agent dirs
+se-cli install --agent=claude,cursor     # explicit multi-target
+se-cli install --list-agents             # show supported targets
+se-cli install --force                   # overwrite existing files</code></pre></div>
           </div>
         </div>
         <div class="agent-step">
