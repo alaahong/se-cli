@@ -105,6 +105,10 @@ describe('v0.9: install --skills multi-target', () => {
     expect(forceOut).toContain('Installed SKILL.md to');
 
     // Auto-detection installs into detected targets only.
+    // Remove the .cursor dir created by the explicit install above so
+    // auto-detection sees only the pre-existing .claude/.github dirs
+    // (the user never set up Cursor in this simulated project).
+    fs.rmSync(path.join(installCwd, '.cursor'), { recursive: true, force: true });
     const autoOut = await run(['install'], {}, installCwd);
     expect(autoOut).toContain('.claude');
     expect(autoOut).toContain('.github');
