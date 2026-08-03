@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import * as path from 'path';
 import { Response } from '../../src/response';
-import { ROLE_SCRIPT, CSS_INFO_SCRIPT } from '../../src/daemon/tools/locator';
+import { ROLE_SCRIPT, CSS_INFO_SCRIPT, COUNT_ROLE_SCRIPT } from '../../src/daemon/tools/locator';
 import { browser_dialog_accept, browser_dialog_dismiss } from '../../src/daemon/tools/dialog';
 import { browser_resize } from '../../src/daemon/tools/resize';
 import { browser_select } from '../../src/daemon/tools/select';
@@ -109,6 +109,7 @@ function makeMockDriver(opts: any = {}): any {
       const script = args[0];
       if (typeof script === 'string' && script.includes(ROLE_SCRIPT)) return opts.roleName ?? { role: 'combobox', name: 'Country' };
       if (typeof script === 'string' && script.includes(CSS_INFO_SCRIPT)) return opts.cssInfo ?? { id: 'country', classes: [], tag: 'select', nth: 1 };
+      if (typeof script === 'string' && script.includes(COUNT_ROLE_SCRIPT)) return opts.roleMatchCount ?? 1;
       return null;
     }),
     findElements: vi.fn(async () => [mockEl]),

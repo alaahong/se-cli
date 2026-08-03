@@ -88,6 +88,71 @@ export const CSS_INFO_SCRIPT = `(function(el) {
   return out;
 })`;
 
+// WebDriver's standard locator strategies (css selector / xpath / link text /
+// tag name) have NO 'role' strategy, so `new By('role', ...)` fails on real
+// drivers (ChromeDriver/geckodriver throw "invalid locator"). Match counting
+// for role candidates therefore runs in-page via JS, using the SAME
+// role/name derivation as ROLE_SCRIPT. Keep both scripts in sync.
+export const COUNT_ROLE_SCRIPT = `(function(role, name) {
+  var matches = 0;
+  var els = document.querySelectorAll('*');
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    var tag = el.tagName.toLowerCase();
+    var r = el.getAttribute('role');
+    if (!r) {
+      if (tag === 'button') r = 'button';
+      else if (tag === 'a' && el.hasAttribute('href')) r = 'link';
+      else if (tag === 'input') {
+        var type = (el.getAttribute('type') || 'text').toLowerCase();
+        if (type === 'checkbox') r = 'checkbox';
+        else if (type === 'radio') r = 'radio';
+        else if (type === 'button' || type === 'submit' || type === 'reset') r = 'button';
+        else r = 'textbox';
+      }
+      else if (tag === 'textarea') r = 'textbox';
+      else if (tag === 'select') r = 'combobox';
+      else if (tag === 'img' && el.hasAttribute('alt')) r = 'img';
+      else if (tag === 'nav') r = 'navigation';
+      else if (tag === 'form') r = 'form';
+      else if (tag === 'table') r = 'table';
+      else if (tag === 'ul' || tag === 'ol') r = 'list';
+      else if (tag === 'li') r = 'listitem';
+      else if (/^h[1-6]$/.test(tag)) r = 'heading';
+    }
+    if (r !== role) continue;
+    if (!name) { matches++; continue; }
+    var n = '';
+    var ariaLabel = el.getAttribute('aria-label');
+    if (ariaLabel) n = ariaLabel.trim();
+    else {
+      var labelledby = el.getAttribute('aria-labelledby');
+      if (labelledby) {
+        var ids = labelledby.split(/\\s+/);
+        var parts = [];
+        for (var j = 0; j < ids.length; j++) {
+          var lbl = document.getElementById(ids[j]);
+          if (lbl) parts.push(lbl.textContent);
+        }
+        n = parts.join(' ').trim();
+      }
+    }
+    if (!n && el.id) {
+      var label = document.querySelector('label[for="' + el.id.replace(/"/g, '\\\\"') + '"]');
+      if (label) n = label.textContent.trim();
+    }
+    if (!n) {
+      var closestLabel = el.closest('label');
+      if (closestLabel) n = closestLabel.textContent.trim();
+    }
+    if (!n && (tag === 'a' || tag === 'button' || /^h[1-6]$/.test(tag))) {
+      n = (el.textContent || '').trim();
+    }
+    if (n.slice(0, 200) === name) matches++;
+  }
+  return matches;
+})`;
+
 export interface LocatorCandidate {
   type: 'role' | 'id' | 'css' | 'xpath';
   expression: string;
@@ -132,7 +197,10 @@ export async function buildCandidates(driver: any, el: any): Promise<LocatorCand
       hasName
         ? `new By('role', { role: ${jsString(roleName.role)}, name: ${jsString(roleName.name)} })`
         : `new By('role', { role: ${jsString(roleName.role)} })`;
-    const matchCount = await countMatches(driver, by);
+    // 'role' is not a standard WebDriver locator strategy, so match counting
+    // runs in-page via JS instead of driver.findElements() (which would throw
+    // "invalid locator" on real drivers and return 0 matches).
+    const matchCount = await countRoleMatches(driver, roleName.role, roleName.name || '');
     candidates.push({
       type: 'role',
       expression: expr,
@@ -215,6 +283,20 @@ async function countMatches(driver: any, by: any): Promise<number> {
   try {
     const els = await driver.findElements(by);
     return Array.isArray(els) ? els.length : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/** Count in-page elements matching a role+name (WebDriver has no role strategy). */
+async function countRoleMatches(driver: any, role: string, name: string): Promise<number> {
+  try {
+    const n = await driver.executeScript(
+      `return (${COUNT_ROLE_SCRIPT})(arguments[0], arguments[1]);`,
+      role,
+      name
+    );
+    return typeof n === 'number' && isFinite(n) ? n : 0;
   } catch {
     return 0;
   }

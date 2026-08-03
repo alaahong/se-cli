@@ -4,6 +4,7 @@ import { By } from 'selenium-webdriver';
 import {
   ROLE_SCRIPT,
   CSS_INFO_SCRIPT,
+  COUNT_ROLE_SCRIPT,
   buildCandidates,
   recommendCandidate,
   codegenBy,
@@ -23,6 +24,7 @@ function makeDriver(opts: any = {}): any {
       // Scripts are wrapped at the call site as `return (${ROLE_SCRIPT})(arguments[0]);`
       if (typeof script === 'string' && script.includes(ROLE_SCRIPT)) return opts.roleName !== undefined ? opts.roleName : ROLE_BUTTON;
       if (typeof script === 'string' && script.includes(CSS_INFO_SCRIPT)) return opts.cssInfo !== undefined ? opts.cssInfo : CSS_INFO;
+      if (typeof script === 'string' && script.includes(COUNT_ROLE_SCRIPT)) return opts.roleMatchCount !== undefined ? opts.roleMatchCount : 1;
       if (typeof script === 'string' && script.includes("getAttribute('data-se-ref')")) {
         return opts.refAttr;
       }
@@ -118,6 +120,7 @@ describe('buildCandidates', () => {
     const driver = makeDriver({
       matchMap: {},
       roleName: { role: 'button', name: 'Save Draft' },
+      roleMatchCount: 0,
     });
     driver.findElements = vi.fn(async () => {
       throw new Error('no such element');
@@ -166,7 +169,7 @@ describe('codegenBy', () => {
   });
 
   it('role style: falls back to CSS with a note when ambiguous', async () => {
-    const driver = makeDriver({ matchCount: 2 });
+    const driver = makeDriver({ matchCount: 2, roleMatchCount: 2 });
     const out = await codegenBy(driver, {}, 'role', 'e1');
     expect(out.expression).toBe(`By.css('#save-btn')`);
     expect(out.note).toContain('role locator was ambiguous (2 matches); fell back to CSS');
@@ -240,7 +243,7 @@ describe('browser_generate_locator', () => {
   });
 
   it('--raw: reports when no unique locator exists', async () => {
-    const driver = makeDriver({ matchCount: 3 });
+    const driver = makeDriver({ matchCount: 3, roleMatchCount: 3 });
     const response = new Response({ raw: true, json: false });
     await browser_generate_locator(driver, { target: 'e7' }, response);
     expect(response.serialize()).toContain('no unique locator found');

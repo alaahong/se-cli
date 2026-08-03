@@ -23,7 +23,7 @@ import { browser_type } from '../../src/daemon/tools/type';
 import { browser_press } from '../../src/daemon/tools/press';
 import { browser_go_back, browser_go_forward, browser_reload } from '../../src/daemon/tools/navigation';
 import { browser_url } from '../../src/daemon/tools/url';
-import { ROLE_SCRIPT, CSS_INFO_SCRIPT } from '../../src/daemon/tools/locator';
+import { ROLE_SCRIPT, CSS_INFO_SCRIPT, COUNT_ROLE_SCRIPT } from '../../src/daemon/tools/locator';
 import { AssertionError } from '../../src/daemon/tools/expect';
 import { parseCommand } from '../../src/daemon/backend';
 
@@ -48,6 +48,7 @@ function makeMockDriver(opts: any = {}): any {
       // `return (${ROLE_SCRIPT})(arguments[0]);` at the call site.
       if (typeof script === 'string' && script.includes(ROLE_SCRIPT)) return opts.roleName ?? { role: 'button', name: 'Save Draft' };
       if (typeof script === 'string' && script.includes(CSS_INFO_SCRIPT)) return opts.cssInfo ?? { id: '', classes: ['btn'], tag: 'button', nth: 1 };
+      if (typeof script === 'string' && script.includes(COUNT_ROLE_SCRIPT)) return opts.roleMatchCount ?? 1;
       return opts.scriptResult ?? '- link:\n  - More information... [ref=e1]';
     }),
     findElements: vi.fn(async () => new Array(opts.matchCount ?? 1).fill({})),
@@ -435,7 +436,7 @@ describe('tool handlers', () => {
     });
 
     it('falls back to CSS when the role locator is ambiguous', async () => {
-      const driver = makeMockDriver({ title: 'Page', url: 'https://example.com', matchCount: 2 });
+      const driver = makeMockDriver({ title: 'Page', url: 'https://example.com', matchCount: 2, roleMatchCount: 2 });
       const response = new Response({ raw: false, json: false });
       await browser_click(driver, { target: 'e1' }, response);
       const out = response.serialize();
