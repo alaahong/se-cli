@@ -144,6 +144,32 @@ describe('browser_run_code', () => {
     expect(response.serialize()).toBe('done');
   });
 
+  it('accepts a full async arrow function and actually invokes it', async () => {
+    const driver = makeMockDriver();
+    driver.getTitle = vi.fn(async () => 'Example Domain');
+    const response = new Response({ raw: true, json: false });
+    await browser_run_code(
+      driver,
+      { code: 'async driver => { return await driver.getTitle(); }' },
+      response
+    );
+    expect(response.serialize()).toBe('Example Domain');
+    expect(driver.getTitle).toHaveBeenCalledTimes(1);
+  });
+
+  it('accepts a full function declaration and actually invokes it', async () => {
+    const driver = makeMockDriver();
+    driver.getCurrentUrl = vi.fn(async () => 'https://example.com/');
+    const response = new Response({ raw: true, json: false });
+    await browser_run_code(
+      driver,
+      { code: 'async function(driver) { return await driver.getCurrentUrl(); }' },
+      response
+    );
+    expect(response.serialize()).toBe('https://example.com/');
+    expect(driver.getCurrentUrl).toHaveBeenCalledTimes(1);
+  });
+
   it('receives the driver instance and serializes element results as refs', async () => {
     const driver = makeMockDriver({ maxRef: 0 });
     const fakeEl = fakeElement('body-el');

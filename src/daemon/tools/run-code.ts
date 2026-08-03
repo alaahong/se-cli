@@ -109,7 +109,17 @@ export async function browser_run_code(
     return;
   }
   try {
-    const fn = new Function('driver', `return (async () => {\n${code}\n})();`);
+    // Accept BOTH writing styles:
+    //   1. A full function: `async driver => { ... }` or `function(driver) { ... }`
+    //   2. A bare function BODY: `return await driver.getTitle();`
+    // The full-function form is wrapped directly so it is actually invoked
+    // (wrapping `async driver => {...}` inside another async function body
+    // would define it but never call it).
+    const trimmed = code.trim();
+    const isFunctionDef = /^(async\s+)?(\(?\s*[\w$]*\s*\)?\s*=>|function\b)/.test(trimmed);
+    const fn = isFunctionDef
+      ? new Function('driver', `return (${code})(driver);`)
+      : new Function('driver', `return (async () => {\n${code}\n})();`);
     const result = await fn(driver);
     const counter = { n: await nextRefNumber(driver) };
     const serialized = await serializeValue(driver, result, counter);
