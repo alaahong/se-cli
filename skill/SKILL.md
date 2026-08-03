@@ -491,11 +491,17 @@ commands as MCP tools for VS Code Copilot and other MCP-aware AI agents.
 > A VS Code extension ([`se-extension-vscode`](https://github.com/se-cli/se-extension-vscode)) is also available
 > for marketplace discovery, commands, and webview preview.
 
-**Or start manually for debugging:**
+**Or start manually for debugging (v0.9: stdio or Streamable HTTP):**
 
 ```bash
-se-cli mcp-server
+se-cli mcp-server                    # stdio (VS Code / desktop agents)
+se-cli mcp-server --http             # Streamable HTTP on http://127.0.0.1:8931/mcp
+se-cli mcp-server --http --port=9000 --host=0.0.0.0
 ```
+
+HTTP endpoints: `POST /mcp` (JSON-RPC; JSON or SSE response), `GET /mcp`
+(SSE keep-alive stream), `DELETE /mcp` (close sessions). Session tracking
+via the `Mcp-Session-Id` header.
 
 ### Available MCP Tools
 

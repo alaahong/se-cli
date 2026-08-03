@@ -608,7 +608,17 @@ Once enabled, all 40+ browser automation commands are available as MCP tools:
 ```bash
 # Start MCP server manually (for debugging)
 se-cli mcp-server
+
+# Start MCP server with the Streamable HTTP transport (v0.9)
+se-cli mcp-server --http                    # http://127.0.0.1:8931/mcp
+se-cli mcp-server --http --port=9000 --host=0.0.0.0
 ```
+
+The HTTP transport follows the MCP Streamable HTTP spec (`2025-06-18`):
+`POST /mcp` for JSON-RPC (JSON or `text/event-stream` responses),
+`GET /mcp` for the server-initiated SSE stream, `DELETE /mcp` to terminate
+the session and close managed browsers. Sessions are tracked via the
+`Mcp-Session-Id` header.
 
 ### Skills for AI agents (v0.9)
 

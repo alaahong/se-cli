@@ -19,11 +19,11 @@ import { installSkills, parseAgentList, detectInstalledAgents, listAgentTargets,
 
 export async function main(argv: string[]): Promise<void> {
   const opts = {
-    boolean: ['headed', 'raw', 'json', 'persistent', 'help', 'no-wait', 'skills', 'force', 'list-agents'],
+    boolean: ['headed', 'raw', 'json', 'persistent', 'help', 'no-wait', 'skills', 'force', 'list-agents', 'http'],
     string: [
       'browser', 'filename', 'depth', 's', 'session', 'cdp', 'profile', 'tail',
-      // v0.9: skill installation
-      'agent', 'path',
+      // v0.9: skill installation / MCP HTTP transport
+      'agent', 'path', 'port', 'host',
       // v0.4 wait/retry flags
       'timeout', 'wait', 'retry', 'retry-interval',
       'implicit-wait', 'page-load-timeout', 'script-timeout',
@@ -114,10 +114,19 @@ export async function main(argv: string[]): Promise<void> {
     return;
   }
 
-  // MCP Server mode — start a long-lived MCP server over stdio
+  // MCP Server mode — start a long-lived MCP server over stdio or HTTP
   if (cmd === 'mcp-server') {
     const { startMcpServer } = require('./mcp-server');
-    startMcpServer(workspaceDir);
+    const port = args.port === undefined ? 8931 : Number(args.port);
+    if (!Number.isInteger(port) || port < 0 || port > 65535) {
+      console.error(`Error: Invalid --port: "${args.port}". Use an integer between 0 and 65535.`);
+      process.exit(1);
+    }
+    startMcpServer(workspaceDir, {
+      http: !!args.http,
+      port,
+      host: args.host || '127.0.0.1',
+    });
     return;
   }
 
@@ -405,7 +414,8 @@ function printHelp(): void {
 Usage:
   se-cli open [url] [--browser=chrome|edge|firefox] [--headed] [--cdp=url] [--profile=path] [--persistent] [--viewport=WxH] [--user-agent=ua] [--locale=tag] [--color-scheme=light|dark] [--timezone=tz] [--geolocation=lat,lon] [--permissions=geolocation]
   se-cli install [--skills] [--agent=claude,cursor,copilot] [--path=dir] [--force] [--list-agents]
-  se-cli mcp-server               start MCP server (stdio mode for VS Code / AI agents)
+  se-cli mcp-server [--http] [--port=8931] [--host=127.0.0.1]
+                    start MCP server (stdio for VS Code / AI agents; --http for Streamable HTTP)
   se-cli close [--all]            stop current session; --all stops every session (all projects)
   se-cli sessions                 list all sessions across all projects (live/dead)
   se-cli logs [--tail=N]          show recent daemon log lines for this session
@@ -444,6 +454,9 @@ Commands:
 MCP Server:
   mcp-server              start MCP server in stdio mode (for VS Code / AI agents)
                           exposes all browser commands as MCP tools
+  mcp-server --http       start MCP server with Streamable HTTP transport
+                          (default port 8931; --port / --host to override)
+                          endpoints: POST|GET|DELETE /mcp, Mcp-Session-Id
 
 Interaction (v0.5):
   hover <ref>             mouse hover over element

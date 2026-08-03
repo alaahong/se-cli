@@ -656,7 +656,9 @@ autonomous workflows). Both share the same underlying tool implementation.
 
 **Remaining (future enhancement)**:
 
-- [ ] **Streamable HTTP transport** (optional): remote agent communication
+- [x] **Streamable HTTP transport** (optional): remote agent communication
+  (`se-cli mcp-server --http [--port=8931] [--host=127.0.0.1]`; `POST|GET|DELETE /mcp`,
+  `Mcp-Session-Id`, JSON or SSE responses per the 2025-06-18 spec)
 - [x] **run-code "async driver => ..."**: execute arbitrary Selenium code snippets
   (`src/daemon/tools/run-code.ts`; returned `WebElement`s become fresh refs `e<N>`)
 - [x] **generate-locator <ref>**: generate best locator expression (By.role/By.css)
