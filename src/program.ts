@@ -371,6 +371,7 @@ Commands:
   screenshot [ref] [--filename=f]
   eval "<js>" [ref]
   run-code "<snippet>"    execute arbitrary Selenium snippet (receives driver; returned elements become refs)
+  generate-locator <ref>   show recommended locator [--all] [--style=role|id|css|xpath]
   title / url
   cookie-list / cookie-get <name> / cookie-set <name> <val> / cookie-delete [name]
   localstorage-get <key> / localstorage-set <key> <val> / localstorage-delete [key] / localstorage-list
@@ -451,6 +452,7 @@ Emulation (v0.8):
 Flags:
   --raw                   output only the result value
   --json                  structured JSON output
+  --locator-style=role    codegen style for interaction commands: role (default) | css | ref
   -s=<name>               session name
   --browser=chrome        browser (default: auto-detect Edge → Chrome → Firefox)
   --headed                show browser window (default headless)

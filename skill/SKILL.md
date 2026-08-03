@@ -37,6 +37,7 @@ se-cli uncheck <ref>
 se-cli screenshot [ref] [--filename=f]
 se-cli eval "<js>" [ref]
 se-cli run-code "<snippet>"   # arbitrary Selenium code; receives `driver`
+se-cli generate-locator <ref>  # recommended locator for a ref (role-based by default)
 se-cli title
 se-cli url
 ```
@@ -241,6 +242,22 @@ se-cli run-code "async driver => { return await driver.getTitle(); }"
 # Returned elements become refs for subsequent commands:
 REF=$(se-cli --raw run-code "async driver => driver.findElement({css: 'h1'})")
 se-cli click "$REF"
+
+### Advanced: locator inspection & role-based codegen (v0.9)
+```bash
+# generate-locator reports the recommended locator for a ref (match count 1,
+# stability role > id > css > xpath). Role locators use the W3C accessibility
+# strategy: new By('role', { role, name }) — works in Chrome/Edge/Firefox.
+se-cli generate-locator e7
+se-cli generate-locator e7 --all          # all candidates with match counts
+se-cli generate-locator e7 --style=id     # force a locator type
+se-cli --raw generate-locator e7          # only the recommended expression
+
+# Interaction commands emit role-based code by default (works on production
+# pages); --locator-style=ref keeps the in-session data-se-ref style.
+se-cli click e2                            # await driver.findElement(new By('role', ...))
+se-cli click e2 --locator-style=ref        # By.css('[data-se-ref="e2"]')
+se-cli click e2 --locator-style=css        # stable CSS selector
 ```
 
 ### Sessions

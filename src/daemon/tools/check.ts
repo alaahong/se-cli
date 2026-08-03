@@ -1,8 +1,25 @@
 import { Response } from '../../response';
-import { findElement, byToString } from './shared';
+import { findElement } from './shared';
+import { codegenBy } from './locator';
 import { waitForElementState, type WaitConfig } from '../../wait-config';
 
-export async function browser_check(driver: any, params: { target: string; _wait?: WaitConfig }, response: Response): Promise<void> {
+async function emitCheckCode(
+  driver: any,
+  el: any,
+  params: { target: string; locatorStyle?: string },
+  response: Response,
+  action: 'check' | 'uncheck'
+): Promise<void> {
+  const code = await codegenBy(driver, el, params.locatorStyle || 'role', params.target);
+  if (code.note) response.addCode(`// ${code.note}`);
+  response.addCode(
+    action === 'check'
+      ? `const el = driver.findElement(${code.expression}); if (!(await el.isSelected())) await el.click();`
+      : `const el = driver.findElement(${code.expression}); if (await el.isSelected()) await el.click();`
+  );
+}
+
+export async function browser_check(driver: any, params: { target: string; locatorStyle?: string; _wait?: WaitConfig }, response: Response): Promise<void> {
   const el = await findElement(driver, params.target);
 
   // v0.4: wait for element to reach desired state before checking
@@ -12,11 +29,11 @@ export async function browser_check(driver: any, params: { target: string; _wait
   }
 
   if (!(await el.isSelected())) await el.click();
-  response.addCode(`const el = driver.findElement(${byToString(params.target)}); if (!(await el.isSelected())) await el.click();`);
+  await emitCheckCode(driver, el, params, response, 'check');
   response.addResult('checked');
 }
 
-export async function browser_uncheck(driver: any, params: { target: string; _wait?: WaitConfig }, response: Response): Promise<void> {
+export async function browser_uncheck(driver: any, params: { target: string; locatorStyle?: string; _wait?: WaitConfig }, response: Response): Promise<void> {
   const el = await findElement(driver, params.target);
 
   // v0.4: wait for element to reach desired state before unchecking
@@ -26,6 +43,6 @@ export async function browser_uncheck(driver: any, params: { target: string; _wa
   }
 
   if (await el.isSelected()) await el.click();
-  response.addCode(`const el = driver.findElement(${byToString(params.target)}); if (await el.isSelected()) await el.click();`);
+  await emitCheckCode(driver, el, params, response, 'uncheck');
   response.addResult('unchecked');
 }
