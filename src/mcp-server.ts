@@ -359,6 +359,19 @@ export const toolDefinitions: ToolDef[] = [
       required: ['script'],
     },
   },
+  {
+    name: 'browser_run_code',
+    description:
+      'Execute an arbitrary Selenium snippet inside the daemon process (v0.9). The snippet is the body of an async function that receives the live selenium-webdriver `driver`, e.g. `async driver => { return await driver.getTitle(); }`. The result is awaited and serialized; returned WebElements are assigned fresh refs (e100, e101, ...) so subsequent commands can act on them. SECURITY: runs with full driver privileges — prefer dedicated commands (browser_click, browser_fill, ...) whenever possible.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        code: { type: 'string', description: 'JavaScript function body: `async driver => { ... return value; }`' },
+        session: { type: 'string', description: 'Session name' },
+      },
+      required: ['code'],
+    },
+  },
 
   // ── Tab Management ──
   {
@@ -836,6 +849,11 @@ export function mapToolToCliArgs(toolName: string, args: any): string[] | null {
     case 'browser_eval': {
       const cliArgs: string[] = ['eval', args.script];
       if (args.target) cliArgs.push(args.target);
+      cliArgs.push(...sessionFlag);
+      return cliArgs;
+    }
+    case 'browser_run_code': {
+      const cliArgs: string[] = ['run-code', args.code];
       cliArgs.push(...sessionFlag);
       return cliArgs;
     }

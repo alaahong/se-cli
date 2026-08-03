@@ -370,6 +370,7 @@ Commands:
   find <text> / find --regex <pattern>
   screenshot [ref] [--filename=f]
   eval "<js>" [ref]
+  run-code "<snippet>"    execute arbitrary Selenium snippet (receives driver; returned elements become refs)
   title / url
   cookie-list / cookie-get <name> / cookie-set <name> <val> / cookie-delete [name]
   localstorage-get <key> / localstorage-set <key> <val> / localstorage-delete [key] / localstorage-list

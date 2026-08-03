@@ -257,6 +257,7 @@ Network interception, console capture, and visual debugging tools powered by Sel
 | `screenshot --filename=f.png` | Save screenshot to file |
 | `eval "<js>"` | Execute JavaScript, return result |
 | `eval "<js>" <ref>` | Execute JavaScript on element |
+| `run-code "<snippet>"` | Execute arbitrary Selenium snippet (receives `driver`, v0.9) |
 | `title` | Get page title |
 | `url` | Get current URL |
 
@@ -396,6 +397,32 @@ TITLE=$(se-cli --raw title)
 COUNT=$(se-cli --raw eval "document.querySelectorAll('.item').length")
 echo "Found $COUNT items"
 ```
+
+### Selenium snippets with run-code (v0.9)
+
+`run-code` executes arbitrary Selenium code inside the daemon process. The snippet
+is the body of an async function that receives the live `driver`
+(selenium-webdriver), and its return value is serialized: primitives as-is,
+returned `WebElement`s as fresh refs (`e100`, `e101`, ...) usable by later commands.
+
+```bash
+# Aggregate attributes from multiple elements
+se-cli run-code "async driver => {
+  const items = await driver.findElements({css: '.item'});
+  const names = [];
+  for (const item of items) names.push(await item.getAttribute('data-name'));
+  return names;
+}"
+# ["Item A", "Item B", "Item C", ...]
+
+# Returned elements become refs for subsequent commands
+REF=$(se-cli --raw run-code "async driver => driver.findElement({css: 'h1'})")
+se-cli click "$REF"
+```
+
+> **Security**: `run-code` runs with full driver privileges — it can navigate,
+> click, read page data, and execute JavaScript. Agents should prefer dedicated
+> commands (`click`, `fill`, `snapshot`, ...) whenever possible.
 
 ### Storage Management
 

@@ -351,6 +351,39 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
     expect(result).toBe('Example Domain');
   });
 
+  (skip ? it.skip : it)('run-code executes arbitrary Selenium snippets (v0.9)', async () => {
+    await run(['open', EXAMPLE_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    // Title from a run-code snippet must match the title command output.
+    const title = (await run(['--raw', 'title'], { SE_CLI_SESSION: S() })).trim();
+    const runCode = (await run(
+      ['--raw', 'run-code', 'async driver => { return await driver.getTitle(); }'],
+      { SE_CLI_SESSION: S() }
+    )).trim();
+    expect(runCode).toBe(title);
+    // Returned WebElements are serialized as refs usable by later commands.
+    const snapshot = await run(['snapshot'], { SE_CLI_SESSION: S() });
+    const runCodeRef = (await run(
+      ['--raw', 'run-code', 'async driver => { return await driver.findElement({ css: "h1" }); }'],
+      { SE_CLI_SESSION: S() }
+    )).trim();
+    expect(runCodeRef).toMatch(/^e\d+$/);
+    // The assigned ref must not collide with snapshot refs, and the element
+    // must be clickable via the new ref.
+    const snapshotRefs = (snapshot.match(/ref=e(\d+)/g) || []).map((s) => parseInt(s.replace('ref=e', ''), 10));
+    const maxSnapshotRef = snapshotRefs.length ? Math.max(...snapshotRefs) : 0;
+    expect(parseInt(runCodeRef.replace('e', ''), 10)).toBeGreaterThan(maxSnapshotRef);
+    const clickResult = await run(['--raw', 'click', runCodeRef], { SE_CLI_SESSION: S() });
+    expect(clickResult).not.toContain('Error');
+    // Snippet errors are reported cleanly without killing the session.
+    const errResult = await run(
+      ['run-code', 'async driver => { throw new Error("boom"); }'],
+      { SE_CLI_SESSION: S() }
+    );
+    expect(errResult).toContain('RUN_CODE_ERROR');
+    const stillAlive = (await run(['--raw', 'title'], { SE_CLI_SESSION: S() })).trim();
+    expect(stillAlive).toBe('Example Domain');
+  });
+
   // --- Output modes ---
 
   (skip ? it.skip : it)('json output mode', async () => {
