@@ -707,4 +707,4 @@ se-cli config get wait.timeout
 
 ## License
 
-[Apache License 2.0](LICENSE) - Copyright 2024 se-cli
+[Apache License 2.0](LICENSE) - Copyright 2026 se-cli
