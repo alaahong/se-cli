@@ -195,14 +195,14 @@
         <div class="roadmap-item roadmap-item-long">
           <div class="roadmap-version roadmap-version-long">v0.9</div>
           <div class="roadmap-body">
-            <h3 data-i18n="cl.v09Title" data-i18n-html>MCP Server &amp; AI Ecosystem <span class="badge badge-must">Must-Have</span> <span class="matrix-status-planned">planned</span></h3>
-            <span class="roadmap-meta" data-i18n="cl.v09Meta">planned · dual-track AI strategy</span>
+            <h3 data-i18n="cl.v09Title" data-i18n-html>MCP Server &amp; AI Ecosystem <span class="badge badge-must">Must-Have</span> <span class="matrix-status-released">✓ shipped</span></h3>
+            <span class="roadmap-meta" data-i18n="cl.v09Meta">2026-08 · MCP Server &amp; AI ecosystem</span>
             <p data-i18n="cl.v09Lead">Exposes se-cli as an MCP Server. Dual-track: CLI+SKILLS (token-efficient for coding agents) and MCP Server (persistent state for autonomous workflows) — both share the same underlying tool implementation. MCP server wrapper published as <a href="https://github.com/se-cli/se-mcp"><code>se-mcp</code></a>.</p>
             <ul>
-              <li data-i18n="cl.v09L1" data-i18n-html><code>se-cli mcp</code>: start MCP Server using <code>@modelcontextprotocol/sdk</code>; stdio (default) and Streamable HTTP transports.</li>
-              <li data-i18n="cl.v09L2" data-i18n-html><code>run-code "async driver =&gt; ..."</code>: execute arbitrary Selenium snippets.</li>
-              <li data-i18n="cl.v09L3" data-i18n-html><code>generate-locator &lt;ref&gt;</code>: best locator expression (<code>By.role</code>/<code>By.css</code>); role-based codegen.</li>
-              <li data-i18n="cl.v09L4" data-i18n-html><code>SKILL.md</code> frontmatter compliance (<code>name</code>, <code>description</code>, <code>license</code>, <code>compatibility</code>) and multi-target <code>install --skills</code>.</li>
+              <li data-i18n="cl.v09L1" data-i18n-html><code>se-cli mcp-server</code>: 40+ tools over custom JSON-RPC (no SDK dependency); stdio (default) and Streamable HTTP (<code>--http</code>, <code>POST|GET|DELETE /mcp</code>, <code>Mcp-Session-Id</code>).</li>
+              <li data-i18n="cl.v09L2" data-i18n-html><code>run-code "async driver =&gt; ..."</code>: execute arbitrary Selenium snippets; returned elements become refs.</li>
+              <li data-i18n="cl.v09L3" data-i18n-html><code>generate-locator &lt;ref&gt;</code>: best locator (<code>new By('role', …)</code>/<code>By.css</code>) with match counts; role-based codegen via <code>--locator-style=role|css|ref</code>.</li>
+              <li data-i18n="cl.v09L4" data-i18n-html><code>SKILL.md</code> frontmatter compliance (<code>name</code>, <code>description</code>, <code>license</code>, <code>compatibility</code>) and multi-target <code>install --skills</code> (auto-detect, <code>--agent</code>, <code>--path</code>, <code>--force</code>, <code>--list-agents</code>).</li>
             </ul>
           </div>
         </div>

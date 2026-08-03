@@ -626,7 +626,7 @@ Selenium has no native equivalent, but CDP makes this trivial to port.
 - [x] `emulate --reset` — restore all emulation
 - [x] Emulation state integrated into `state-save` (persist emulate configuration)
 
-### v0.9: MCP Server & AI Ecosystem (Must-Have) ✅ (partially implemented)
+### v0.9: MCP Server & AI Ecosystem (Must-Have) ✅ (implemented, v0.9)
 
 Expose se-cli as an MCP Server for AI agent integration. Playwright already provides
 `@playwright/mcp`; se-cli must follow to stay competitive. Dual-track strategy:
