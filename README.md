@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="site/assets/img/logo.svg" alt="se-cli" width="280" />
+  <img src="https://se-cli.github.io/se-site/img/logo.svg" alt="se-cli" width="280" />
 </div>
 
 <p align="center">
@@ -14,9 +14,19 @@
   <a href="https://github.com/se-cli/se-cli/blob/main/LICENSE"><img src="https://img.shields.io/github/license/se-cli/se-cli?color=22C55E" alt="License" /></a>
   <a href="https://github.com/se-cli/se-cli"><img src="https://img.shields.io/github/stars/se-cli/se-cli?style=social" alt="Stars" /></a>
   <a href="https://www.npmjs.com/package/@browsers-cli/se-cli"><img src="https://img.shields.io/npm/dm/@browsers-cli/se-cli?color=22C55E&label=downloads" alt="npm downloads" /></a>
+  <a href="https://se-cli.github.io/se-site/"><img src="https://img.shields.io/badge/docs-site-22C55E" alt="Docs" /></a>
 </p>
 
 ---
+
+## Documentation
+
+Full documentation is available on the **se-cli website**: [https://se-cli.github.io/se-site/](https://se-cli.github.io/se-site/)
+
+- [Getting Started](https://se-cli.github.io/se-site/docs/getting-started)
+- [Command Reference](https://se-cli.github.io/se-site/docs/commands)
+- [Configuration](https://se-cli.github.io/se-site/docs/configuration)
+- [Test Pages](https://se-cli.github.io/se-site/test-pages/)
 
 ## Why se-cli?
 
@@ -718,6 +728,13 @@ npm run test:unit
 
 # Run integration tests (auto-detects installed browsers: Edge → Chrome → Firefox)
 npm run test:integration
+
+# Serve the integration-test fixture pages locally for manual testing
+npm run test-pages:serve          # http://127.0.0.1:8930/forms.html
+se-cli open http://127.0.0.1:8930/forms.html
+
+# Mirror fixture pages to the unified site (se-cli/se-site) static/test-pages/
+npm run test-pages:sync
 
 # Or explicitly select browsers (same syntax CI uses)
 SE_CLI_E2E=1 SE_CLI_TEST_CHROME=1 SE_CLI_TEST_EDGE=1 npx vitest run tests/integration/

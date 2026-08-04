@@ -7,19 +7,20 @@ Guidelines for AI agents and human contributors working on the se-cli codebase.
 - **Organization**: `se-cli`
 - **Repository**: `se-cli/se-cli`
 - **GitHub URL**: `https://github.com/se-cli/se-cli`
-- **GitHub Pages**: `https://se-cli.github.io/se-cli/`
+- **GitHub Pages**: `https://se-cli.github.io/se-site/`
 - **npm package**: `@browsers-cli/se-cli`
 - **npm URL**: `https://www.npmjs.com/package/@browsers-cli/se-cli`
 
 ### Ecosystem Repositories
 
-The se-cli ecosystem consists of three independent repositories (following the Playwright pattern):
+The se-cli ecosystem consists of three independent repositories (following the Playwright pattern), plus the unified documentation site:
 
 | Repo | npm Package | Purpose |
 |------|------------|---------|
 | [`se-cli/se-cli`](https://github.com/se-cli/se-cli) | `@browsers-cli/se-cli` | Core CLI + daemon + MCP server implementation |
 | [`se-cli/se-mcp`](https://github.com/se-cli/se-mcp) | `@browsers-cli/se-mcp` | Thin MCP server wrapper package for MCP clients |
 | [`se-cli/se-extension-vscode`](https://github.com/se-cli/se-extension-vscode) | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=se-cli.se-extension-vscode) | VS Code extension — MCP registration, commands, webview |
+| [`se-cli/se-site`](https://github.com/se-cli/se-site) | - | Unified Markdown-based documentation site (Docusaurus) |
 
 ### URL Reference Rules (CRITICAL)
 
@@ -31,7 +32,7 @@ All GitHub URLs in documentation, source code, configuration, and website conten
 https://github.com/se-cli/se-cli
 https://github.com/se-cli/se-cli/issues
 https://github.com/se-cli/se-cli/blob/main/docs/spec.md
-https://se-cli.github.io/se-cli/
+https://se-cli.github.io/se-site/
 https://www.npmjs.com/package/@browsers-cli/se-cli
 ```
 
@@ -91,7 +92,9 @@ src/
 - **Coverage**: Enforced at 95% statements/lines/functions and 90% branches via `vitest.config.ts` thresholds
 - **Test timeout**: 120000ms (integration tests start browser daemons)
 - **Integration tests**: Must use HTTP server (`tests/integration/test-server.ts`), not `file://` protocol
-- **Test pages**: Located in `tests/integration/fixtures/`, copied to `site/test-pages/` for GitHub Pages access
+- **Test pages (dual mirror)**: Integration-test pages exist in **two** places and MUST stay in sync:
+  - **Local (source of truth)**: `tests/integration/fixtures/` — served by `tests/integration/test-server.ts` during integration tests. Run `npm run test-pages:serve` to serve them locally (default `http://127.0.0.1:8930/`) for manual testing with `se-cli open`.
+  - **Site mirror**: mirrored to the unified site's `static/test-pages/` (see `se-cli/se-site`) for GitHub Pages access. After adding/changing a fixture, run `npm run test-pages:sync` (resolves `../se-site` or `SE_SITE_DIR`). The site's `test-pages/index.html` is site-managed and never overwritten by the sync.
 - **Upload coverage**: Include `if-no-files-found: ignore` to suppress warnings
 - **Flaky test mitigation**: CI retries failed integration tests automatically. Chrome jobs may fail with `0xC0000142` (STATUS_DLL_INIT_FAILED) — re-running typically resolves it.
 
@@ -157,14 +160,15 @@ src/
 - **Tool modules**: One file per functionality in `src/daemon/tools/` (e.g., `storage.ts`, `tab.ts`, `state.ts`)
 - **Command routing**: Add new commands via the routing pattern in `program.ts`
 - **Test files**: Unit tests in `tests/unit/`, integration tests in `tests/integration/`
-- **Test fixtures**: HTML pages in `tests/integration/fixtures/`, mirrored to `site/test-pages/`
+- **Test fixtures (dual mirror)**: HTML pages live in `tests/integration/fixtures/` (local source, served by `test-server.ts`); mirror them to the unified site's `static/test-pages/` (see `se-cli/se-site`) with `npm run test-pages:sync`. For manual/local runs use `npm run test-pages:serve`.
+- **Documentation**: Markdown-based docs live in the unified site repo `se-cli/se-site` (Docusaurus). This repo keeps only `README.md`, `docs/spec.md`, and `docs/plan.md`.
 
 ### Testing
 
 - **Unit tests**: Use Vitest. Mock external dependencies (WebDriver, filesystem).
 - **Integration tests**: Require `SE_CLI_E2E=1` environment variable. Start a daemon, send commands, verify behavior.
 - **Test cleanup**: Integration tests must clean up daemon processes. Use 15s timeout with `kill-all` fallback.
-- **When adding a new feature**: Add unit tests, integration tests, test pages, and update documentation (`README.md`, `skill/SKILL.md`, `docs/spec.md`, `site/index.html`).
+- **When adding a new feature**: Add unit tests, integration tests, test pages (fixture + site mirror via `npm run test-pages:sync`), and update documentation (`README.md`, `skill/SKILL.md`, `docs/spec.md`, and the unified site `se-cli/se-site`).
 
 ### Test Coverage
 
