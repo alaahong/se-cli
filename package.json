@@ -1,6 +1,6 @@
 {
   "name": "@browsers-cli/se-cli",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Selenium CLI with token-efficient browser automation for AI agents",
   "license": "Apache-2.0",
   "homepage": "https://se-cli.github.io/se-site/",
