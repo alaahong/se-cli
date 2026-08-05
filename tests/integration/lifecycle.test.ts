@@ -684,6 +684,22 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
     expect(title).toBe('Tabs Test Page');
   });
 
+  (skip ? it.skip : it)('opens a new tab by clicking a target=_blank link', async () => {
+    // The tabs.html fixture exists precisely for this: its links open new
+    // tabs via target="_blank". Prior coverage only used tab-new, leaving
+    // the "click link → new window → tab-list detects it" chain untested.
+    await run(['open', TABS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    const snapshot = await run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
+    const refMatch = snapshot.match(/Open Example Page[^\n]*ref=(e\d+)/);
+    expect(refMatch).not.toBeNull();
+    const ref = refMatch![1];
+    await run(['click', ref], { SE_CLI_SESSION: S() });
+    // The new tab's document must be detectable via tab-list
+    const tabs = await run(['--raw', 'tab-list'], { SE_CLI_SESSION: S() });
+    expect(tabs).toContain('Example Domain');
+    expect(tabs).toContain('Tabs Test Page');
+  });
+
   // --- State save/load ---
 
   (skip ? it.skip : it)('saves and loads browser state', async () => {
@@ -827,6 +843,23 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
     expect(result).not.toContain('No matches found');
   });
 
+  (skip ? it.skip : it)('clicks a button in nested shadow DOM by ref', async () => {
+    // #nested-host contains a shadow root whose child (#inner-shadow-host)
+    // hosts another shadow root with #inner-button. This is the hardest
+    // piercing scenario and was previously untested.
+    await run(['open', SHADOW_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    const snapshot = await run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
+    const refMatch = snapshot.match(/Inner Shadow Button[^\n]*ref=(e\d+)/);
+    expect(refMatch).not.toBeNull();
+    const ref = refMatch![1];
+    await run(['click', ref], { SE_CLI_SESSION: S() });
+    // Verify the click landed: inner-count must be 1
+    const count = (await run(['--raw', 'eval',
+      `document.getElementById('nested-host').shadowRoot.getElementById('inner-shadow-host').shadowRoot.getElementById('inner-count').textContent`
+    ], { SE_CLI_SESSION: S() })).trim();
+    expect(count).toBe('1');
+  });
+
   // --- v0.4: Wait & Retry Configuration ---
 
   (skip ? it.skip : it)('waits for delayed visible element with --wait=visible', async () => {
@@ -873,6 +906,36 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
       'click', '#dynamic-btn', '--retry=5', '--retry-interval=500', '--timeout=5000',
     ], { SE_CLI_SESSION: S() });
     expect(result).toContain('clicked');
+  });
+
+  (skip ? it.skip : it)('keeps working after a flaky handler throws', async () => {
+    // #flaky-btn throws a JS error on its first click but succeeds on the
+    // second. WebDriver click does not surface page-side JS exceptions, so
+    // this verifies the browser remains usable after the handler blows up.
+    await run(['open', WAIT_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    const snapshot = await run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
+    const refMatch = snapshot.match(/Flaky Button[^\n]*ref=(e\d+)/);
+    expect(refMatch).not.toBeNull();
+    const ref = refMatch![1];
+    await run(['click', ref], { SE_CLI_SESSION: S() });
+    await run(['click', ref], { SE_CLI_SESSION: S() });
+    const status = (await run(['--raw', 'eval',
+      `document.getElementById('flaky-status').textContent`
+    ], { SE_CLI_SESSION: S() })).trim();
+    expect(status).toBe('Click count: 2');
+  });
+
+  (skip ? it.skip : it)('waits for the disappearing element to become hidden', async () => {
+    // #disappearing is visible on load and gains .hidden after 3s. The
+    // hidden assertion polls, so this both activates the dead element and
+    // exercises the hidden wait path with a real disappearance.
+    await run(['open', WAIT_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+    // Freshly loaded: it must be visible.
+    const visible = await run(['--raw', 'expect', '#disappearing', 'visible'], { SE_CLI_SESSION: S() });
+    expect(visible).toContain('visible');
+    // Then wait (up to 5s) for it to disappear — hidden polls until gone.
+    const hidden = await run(['--raw', 'expect', '#disappearing', 'hidden', '--timeout=5000'], { SE_CLI_SESSION: S() });
+    expect(hidden).toContain('hidden');
   });
 
   (skip ? it.skip : it)('generates config file with config init', async () => {
@@ -1514,6 +1577,48 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
       ], { SE_CLI_SESSION: S() });
       expect(mockResult).toContain('401');
       expect(mockResult).toContain('mocked');
+    });
+
+    (skip ? it.skip : it)('lets non-matching requests reach the real endpoint', async () => {
+      // Mixed-scenario: the intercept must only swallow matching patterns.
+      // /api/json is mocked, so /api/data must still return the real body.
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      await run(['route', '*/api/json*', '--status=500', '--body={"mocked":"json"}'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      await run(['click', '#btn-fetch-api'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 1000));
+      const status = (await run(['--raw', 'eval',
+        `document.getElementById('status').textContent`
+      ], { SE_CLI_SESSION: S() })).trim();
+      expect(status).toContain('API OK');
+      expect(status).toContain('items');
+    });
+
+    (skip ? it.skip : it)('restores the real response after unroute', async () => {
+      // unroute must not just disappear from route-list — the live response
+      // must go back to the real endpoint.
+      await run(['open', NETWORK_DEBUG_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      await run(['route', '*/api/mock-endpoint*', '--status=500', '--body={"mocked":true}'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      // First fetch is intercepted by the mock
+      await run(['click', '#btn-mock-fetch'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 1000));
+      const mocked = (await run(['--raw', 'eval',
+        `document.getElementById('mock-result').textContent`
+      ], { SE_CLI_SESSION: S() })).trim();
+      expect(mocked).toContain('500');
+      // Remove the route, then fetch again — the real response must come back
+      await run(['unroute', '0'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 500));
+      await run(['click', '#btn-mock-fetch'], { SE_CLI_SESSION: S() });
+      await new Promise(r => setTimeout(r, 1000));
+      const restored = (await run(['--raw', 'eval',
+        `document.getElementById('mock-result').textContent`
+      ], { SE_CLI_SESSION: S() })).trim();
+      expect(restored).toContain('200');
+      expect(restored).toContain('original');
     });
 
     (skip ? it.skip : it)('highlights element by ref using data-se-ref', async () => {
