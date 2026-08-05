@@ -81,7 +81,6 @@ vi.mock('selenium-webdriver/bidi/continueRequestParameters', () => ({
 // Import after mocks are set up
 import {
   resetAll,
-  resetBidiState,
   matchesGlob,
   getConsoleEntries,
   clearConsole,
@@ -697,21 +696,6 @@ describe('v0.7 Network & Debugging', () => {
       expect(getRoutes()).toEqual([]);
       expect(getConsoleEntries()).toEqual([]);
       expect(getNetworkRequests()).toEqual([]);
-    });
-  });
-
-  describe('resetBidiState', () => {
-    it('is exported and callable', () => {
-      // Should not throw
-      expect(() => resetBidiState()).not.toThrow();
-    });
-
-    it('clears routes and highlights after resetAll calls resetBidiState', () => {
-      addHighlight('e1');
-      addRoute('id-1', '**/api/**', 404, null, null);
-      resetAll();
-      expect(getHighlights()).toEqual([]);
-      expect(getRoutes()).toEqual([]);
     });
   });
 
