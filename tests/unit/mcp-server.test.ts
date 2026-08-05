@@ -126,6 +126,15 @@ describe('MCP Server — Tool Definitions', () => {
     expect(names).toContain('browser_cookie_get');
     expect(names).toContain('browser_cookie_set');
     expect(names).toContain('browser_cookie_delete');
+    // v0.9: localStorage/sessionStorage tools must be exposed (spec claims all CLI tools)
+    expect(names).toContain('browser_localstorage_list');
+    expect(names).toContain('browser_localstorage_get');
+    expect(names).toContain('browser_localstorage_set');
+    expect(names).toContain('browser_localstorage_delete');
+    expect(names).toContain('browser_sessionstorage_list');
+    expect(names).toContain('browser_sessionstorage_get');
+    expect(names).toContain('browser_sessionstorage_set');
+    expect(names).toContain('browser_sessionstorage_delete');
     expect(names).toContain('browser_state_save');
     expect(names).toContain('browser_state_load');
     expect(names).toContain('browser_tab_list');
@@ -366,6 +375,52 @@ describe('MCP Server — mapToolToCliArgs', () => {
   it('maps browser_state_load', () => {
     expect(mapToolToCliArgs('browser_state_load', { filename: 'state.json' }))
       .toEqual(['state-load', '--filename=state.json']);
+  });
+
+  // ── localStorage / sessionStorage (v0.9) ──
+  it('maps browser_localstorage_list', () => {
+    expect(mapToolToCliArgs('browser_localstorage_list', {}))
+      .toEqual(['localstorage-list']);
+  });
+
+  it('maps browser_localstorage_get', () => {
+    expect(mapToolToCliArgs('browser_localstorage_get', { key: 'foo' }))
+      .toEqual(['localstorage-get', 'foo']);
+  });
+
+  it('maps browser_localstorage_set', () => {
+    expect(mapToolToCliArgs('browser_localstorage_set', { key: 'foo', value: 'bar' }))
+      .toEqual(['localstorage-set', 'foo', 'bar']);
+  });
+
+  it('maps browser_localstorage_delete with key', () => {
+    expect(mapToolToCliArgs('browser_localstorage_delete', { key: 'foo' }))
+      .toEqual(['localstorage-delete', 'foo']);
+  });
+
+  it('maps browser_localstorage_delete without key (clear all)', () => {
+    expect(mapToolToCliArgs('browser_localstorage_delete', {}))
+      .toEqual(['localstorage-delete']);
+  });
+
+  it('maps browser_sessionstorage_list', () => {
+    expect(mapToolToCliArgs('browser_sessionstorage_list', {}))
+      .toEqual(['sessionstorage-list']);
+  });
+
+  it('maps browser_sessionstorage_get', () => {
+    expect(mapToolToCliArgs('browser_sessionstorage_get', { key: 'foo' }))
+      .toEqual(['sessionstorage-get', 'foo']);
+  });
+
+  it('maps browser_sessionstorage_set', () => {
+    expect(mapToolToCliArgs('browser_sessionstorage_set', { key: 'foo', value: 'bar' }))
+      .toEqual(['sessionstorage-set', 'foo', 'bar']);
+  });
+
+  it('maps browser_sessionstorage_delete', () => {
+    expect(mapToolToCliArgs('browser_sessionstorage_delete', { key: 'foo' }))
+      .toEqual(['sessionstorage-delete', 'foo']);
   });
 
   // ── Advanced Input ──

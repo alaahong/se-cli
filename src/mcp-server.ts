@@ -489,6 +489,98 @@ export const toolDefinitions: ToolDef[] = [
     },
   },
   {
+    name: 'browser_localstorage_list',
+    description: 'List all keys in localStorage for the current origin.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        session: { type: 'string', description: 'Session name' },
+      },
+    },
+  },
+  {
+    name: 'browser_localstorage_get',
+    description: 'Get a value from localStorage by key.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        key: { type: 'string', description: 'localStorage key' },
+        session: { type: 'string', description: 'Session name' },
+      },
+      required: ['key'],
+    },
+  },
+  {
+    name: 'browser_localstorage_set',
+    description: 'Set a value in localStorage.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        key: { type: 'string', description: 'localStorage key' },
+        value: { type: 'string', description: 'Value to store' },
+        session: { type: 'string', description: 'Session name' },
+      },
+      required: ['key', 'value'],
+    },
+  },
+  {
+    name: 'browser_localstorage_delete',
+    description: 'Delete a localStorage key, or clear all if no key given.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        key: { type: 'string', description: 'localStorage key to delete (optional — omit for clear)' },
+        session: { type: 'string', description: 'Session name' },
+      },
+    },
+  },
+  {
+    name: 'browser_sessionstorage_list',
+    description: 'List all keys in sessionStorage for the current origin.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        session: { type: 'string', description: 'Session name' },
+      },
+    },
+  },
+  {
+    name: 'browser_sessionstorage_get',
+    description: 'Get a value from sessionStorage by key.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        key: { type: 'string', description: 'sessionStorage key' },
+        session: { type: 'string', description: 'Session name' },
+      },
+      required: ['key'],
+    },
+  },
+  {
+    name: 'browser_sessionstorage_set',
+    description: 'Set a value in sessionStorage.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        key: { type: 'string', description: 'sessionStorage key' },
+        value: { type: 'string', description: 'Value to store' },
+        session: { type: 'string', description: 'Session name' },
+      },
+      required: ['key', 'value'],
+    },
+  },
+  {
+    name: 'browser_sessionstorage_delete',
+    description: 'Delete a sessionStorage key, or clear all if no key given.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        key: { type: 'string', description: 'sessionStorage key to delete (optional — omit for clear)' },
+        session: { type: 'string', description: 'Session name' },
+      },
+    },
+  },
+  {
     name: 'browser_state_save',
     description: 'Save browser state (cookies + storage) to a JSON file.',
     inputSchema: {
@@ -907,6 +999,22 @@ export function mapToolToCliArgs(toolName: string, args: any): string[] | null {
       return ['cookie-set', args.name, args.value, ...sessionFlag];
     case 'browser_cookie_delete':
       return ['cookie-delete', ...(args.name ? [args.name] : []), ...sessionFlag];
+    case 'browser_localstorage_list':
+      return ['localstorage-list', ...sessionFlag];
+    case 'browser_localstorage_get':
+      return ['localstorage-get', args.key, ...sessionFlag];
+    case 'browser_localstorage_set':
+      return ['localstorage-set', args.key, args.value, ...sessionFlag];
+    case 'browser_localstorage_delete':
+      return ['localstorage-delete', ...(args.key ? [args.key] : []), ...sessionFlag];
+    case 'browser_sessionstorage_list':
+      return ['sessionstorage-list', ...sessionFlag];
+    case 'browser_sessionstorage_get':
+      return ['sessionstorage-get', args.key, ...sessionFlag];
+    case 'browser_sessionstorage_set':
+      return ['sessionstorage-set', args.key, args.value, ...sessionFlag];
+    case 'browser_sessionstorage_delete':
+      return ['sessionstorage-delete', ...(args.key ? [args.key] : []), ...sessionFlag];
     case 'browser_state_save':
       return ['state-save', ...(args.filename ? [`--filename=${args.filename}`] : []), ...sessionFlag];
     case 'browser_state_load':
