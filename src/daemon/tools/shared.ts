@@ -16,6 +16,21 @@ export function safeFilename(filename: string): string {
   return filename;
 }
 
+/**
+ * Render a value as a single-quoted JavaScript string literal for code
+ * generation. Escapes backslashes, single quotes, and control characters so
+ * the emitted "Ran Selenium code" is valid JS even when the value contains
+ * quotes or newlines (e.g. `fill e1 "it's"` or multiline values).
+ */
+export function jsString(value: string): string {
+  return `'${value
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t')}'`;
+}
+
 export async function resolveTarget(target: string) {
   // Cross-frame refs (f<index>e<ref>) are handled directly by findElement
   // because they require driver.switchTo().frame(). resolveTarget only

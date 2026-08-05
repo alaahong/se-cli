@@ -1,4 +1,5 @@
 import { Response } from '../../response';
+import { jsString } from './shared';
 
 export async function browser_goto(driver: any, params: { url: string }, response: Response): Promise<void> {
   await driver.get(params.url);
@@ -25,6 +26,6 @@ export async function browser_goto(driver: any, params: { url: string }, respons
   const title = await driver.getTitle();
   const url = await driver.getCurrentUrl();
   response.addPage({ url, title });
-  response.addCode(`await driver.get('${params.url}');`);
+  response.addCode(`await driver.get(${jsString(params.url)});`);
   response.addResult(`navigated to ${params.url}`);
 }

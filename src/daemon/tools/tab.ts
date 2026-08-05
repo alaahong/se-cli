@@ -1,4 +1,5 @@
 import { Response } from '../../response';
+import { jsString } from './shared';
 
 export async function browser_tab_list(driver: any, _params: any, response: Response): Promise<void> {
   const originalHandle = await driver.getWindowHandle();
@@ -32,7 +33,7 @@ export async function browser_tab_new(
   await driver.switchTo().newWindow('tab');
   if (params.url) {
     await driver.get(params.url);
-    response.addCode(`await driver.switchTo().newWindow('tab');\nawait driver.get('${params.url}');`);
+    response.addCode(`await driver.switchTo().newWindow('tab');\nawait driver.get(${jsString(params.url)});`);
     response.addResult(`opened new tab: ${params.url}`);
   } else {
     response.addCode(`await driver.switchTo().newWindow('tab');`);

@@ -13,7 +13,7 @@
  */
 
 import { Response } from '../../response';
-import { findElement } from './shared';
+import { findElement, jsString } from './shared';
 import {
   addHighlight,
   removeHighlight,
@@ -94,6 +94,6 @@ export async function browser_highlight(
 
   response.addResult(`Highlighted ${target} with outline: ${cssStyle}`);
   response.addCode(
-    `const el = await driver.findElement(By.css('[data-se-ref="${target}"]'));\nawait driver.executeScript("arguments[0].style.outline = arguments[1];", el, '${cssStyle}');`
+    `const el = await driver.findElement(By.css('[data-se-ref="${target}"]'));\nawait driver.executeScript("arguments[0].style.outline = arguments[1];", el, ${jsString(cssStyle)});`
   );
 }

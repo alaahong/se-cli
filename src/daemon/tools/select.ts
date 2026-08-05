@@ -1,5 +1,5 @@
 import { Response } from '../../response';
-import { findElementWithWait } from './shared';
+import { findElementWithWait, jsString } from './shared';
 import { codegenBy } from './locator';
 import { waitForElementState, type WaitConfig } from '../../wait-config';
 
@@ -22,6 +22,6 @@ export async function browser_select(
   await select.selectByVisibleText(params.value);
   const code = await codegenBy(driver, el, params.locatorStyle || 'role', params.target);
   if (code.note) response.addCode(`// ${code.note}`);
-  response.addCode(`const select = new Select(driver.findElement(${code.expression})); await select.selectByVisibleText('${params.value}');`);
+  response.addCode(`const select = new Select(driver.findElement(${code.expression})); await select.selectByVisibleText(${jsString(params.value)});`);
   response.addResult(`selected ${params.value}`);
 }

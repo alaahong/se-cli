@@ -1,5 +1,5 @@
 import { Response } from '../../response';
-import { findElementWithWait } from './shared';
+import { findElementWithWait, jsString } from './shared';
 import { codegenBy } from './locator';
 import { Key } from 'selenium-webdriver';
 import { waitForElementState, type WaitConfig } from '../../wait-config';
@@ -36,6 +36,6 @@ export async function browser_fill(
     await el.sendKeys(Key.ENTER);
   }
   if (code.note) response.addCode(`// ${code.note}`);
-  response.addCode(`await driver.findElement(${code.expression}).sendKeys('${params.value}');`);
+  response.addCode(`await driver.findElement(${code.expression}).sendKeys(${jsString(params.value)});`);
   response.addResult('filled');
 }

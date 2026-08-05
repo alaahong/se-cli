@@ -1,4 +1,5 @@
 import { Response } from '../../response';
+import { jsString } from './shared';
 
 // ---------------------------------------------------------------------------
 // Cookie management
@@ -19,7 +20,7 @@ export async function browser_cookie_get(
   response: Response
 ): Promise<void> {
   const cookie = await driver.manage().getCookie(params.name);
-  response.addCode(`const cookie = await driver.manage().getCookie('${params.name}');`);
+  response.addCode(`const cookie = await driver.manage().getCookie(${jsString(params.name)});`);
   response.addResult(JSON.stringify(cookie, null, 2));
 }
 
@@ -36,9 +37,9 @@ export async function browser_cookie_set(
 
   await driver.manage().addCookie(cookie);
 
-  const parts: string[] = [`name: '${params.name}'`, `value: '${params.value}'`];
-  if (params.domain !== undefined) parts.push(`domain: '${params.domain}'`);
-  if (params.path !== undefined) parts.push(`path: '${params.path}'`);
+  const parts: string[] = [`name: ${jsString(params.name)}`, `value: ${jsString(params.value)}`];
+  if (params.domain !== undefined) parts.push(`domain: ${jsString(params.domain)}`);
+  if (params.path !== undefined) parts.push(`path: ${jsString(params.path)}`);
   if (params.httpOnly !== undefined) parts.push(`httpOnly: ${params.httpOnly}`);
   if (params.secure !== undefined) parts.push(`secure: ${params.secure}`);
   response.addCode(`await driver.manage().addCookie({ ${parts.join(', ')} });`);
@@ -52,7 +53,7 @@ export async function browser_cookie_delete(
 ): Promise<void> {
   if (params.name) {
     await driver.manage().deleteCookie(params.name);
-    response.addCode(`await driver.manage().deleteCookie('${params.name}');`);
+    response.addCode(`await driver.manage().deleteCookie(${jsString(params.name)});`);
     response.addResult(`deleted cookie: ${params.name}`);
   } else {
     await driver.manage().deleteAllCookies();
@@ -71,7 +72,7 @@ export async function browser_localstorage_get(
   response: Response
 ): Promise<void> {
   const value = await driver.executeScript('return localStorage.getItem(arguments[0]);', params.key);
-  response.addCode(`const value = await driver.executeScript('return localStorage.getItem(arguments[0]);', '${params.key}');`);
+  response.addCode(`const value = await driver.executeScript('return localStorage.getItem(arguments[0]);', ${jsString(params.key)});`);
   response.addResult(value === null ? 'null' : String(value));
 }
 
@@ -81,7 +82,7 @@ export async function browser_localstorage_set(
   response: Response
 ): Promise<void> {
   await driver.executeScript('localStorage.setItem(arguments[0], arguments[1]);', params.key, params.value);
-  response.addCode(`await driver.executeScript('localStorage.setItem(arguments[0], arguments[1]);', '${params.key}', '${params.value}');`);
+  response.addCode(`await driver.executeScript('localStorage.setItem(arguments[0], arguments[1]);', ${jsString(params.key)}, ${jsString(params.value)});`);
   response.addResult(`localStorage set: ${params.key}=${params.value}`);
 }
 
@@ -92,7 +93,7 @@ export async function browser_localstorage_delete(
 ): Promise<void> {
   if (params.key) {
     await driver.executeScript('localStorage.removeItem(arguments[0]);', params.key);
-    response.addCode(`await driver.executeScript('localStorage.removeItem(arguments[0]);', '${params.key}');`);
+    response.addCode(`await driver.executeScript('localStorage.removeItem(arguments[0]);', ${jsString(params.key)});`);
     response.addResult(`deleted localStorage key: ${params.key}`);
   } else {
     await driver.executeScript('localStorage.clear();');
@@ -118,7 +119,7 @@ export async function browser_sessionstorage_get(
   response: Response
 ): Promise<void> {
   const value = await driver.executeScript('return sessionStorage.getItem(arguments[0]);', params.key);
-  response.addCode(`const value = await driver.executeScript('return sessionStorage.getItem(arguments[0]);', '${params.key}');`);
+  response.addCode(`const value = await driver.executeScript('return sessionStorage.getItem(arguments[0]);', ${jsString(params.key)});`);
   response.addResult(value === null ? 'null' : String(value));
 }
 
@@ -128,7 +129,7 @@ export async function browser_sessionstorage_set(
   response: Response
 ): Promise<void> {
   await driver.executeScript('sessionStorage.setItem(arguments[0], arguments[1]);', params.key, params.value);
-  response.addCode(`await driver.executeScript('sessionStorage.setItem(arguments[0], arguments[1]);', '${params.key}', '${params.value}');`);
+  response.addCode(`await driver.executeScript('sessionStorage.setItem(arguments[0], arguments[1]);', ${jsString(params.key)}, ${jsString(params.value)});`);
   response.addResult(`sessionStorage set: ${params.key}=${params.value}`);
 }
 
@@ -139,7 +140,7 @@ export async function browser_sessionstorage_delete(
 ): Promise<void> {
   if (params.key) {
     await driver.executeScript('sessionStorage.removeItem(arguments[0]);', params.key);
-    response.addCode(`await driver.executeScript('sessionStorage.removeItem(arguments[0]);', '${params.key}');`);
+    response.addCode(`await driver.executeScript('sessionStorage.removeItem(arguments[0]);', ${jsString(params.key)});`);
     response.addResult(`deleted sessionStorage key: ${params.key}`);
   } else {
     await driver.executeScript('sessionStorage.clear();');

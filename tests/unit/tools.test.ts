@@ -479,6 +479,18 @@ describe('tool handlers', () => {
       expect(out).toContain('filled');
     });
 
+    it('escapes quotes and newlines in emitted code', async () => {
+      // Regression: values containing single quotes or newlines produced
+      // invalid "Ran Selenium code" (unterminated string literal).
+      const driver = makeMockDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_fill(driver, { target: 'e1', value: "it's a test\nline2" }, response);
+      const out = response.serialize();
+      expect(out).toContain(`sendKeys('it\\'s a test\\nline2')`);
+      // The emitted code must be a valid JS string literal
+      expect(out).not.toMatch(/sendKeys\('it's/);
+    });
+
     it('does not send ENTER when submit is not set', async () => {
       const driver = makeMockDriver();
       const response = new Response({ raw: false, json: false });
