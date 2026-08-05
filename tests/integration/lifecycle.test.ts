@@ -220,37 +220,13 @@ describe('v0.9: MCP server (stdio) integration', () => {
 // Supports static fixture files and extensible dynamic routes.
 let server: TestServer;
 
-// Register API routes for network debugging tests (v0.7).
-// These must be set before startTestServer() since the server checks
-// DynamicRoutes on every request.
-DynamicRoutes.set('/api/json', (_req, res) => {
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ message: 'Hello from JSON API', status: 'ok' }));
-});
-
-DynamicRoutes.set('/api/data', (_req, res) => {
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ items: [1, 2, 3], count: 3 }));
-});
-
-DynamicRoutes.set('/api/submit', (req, res) => {
-  let body = '';
-  req.on('data', (chunk) => { body += chunk; });
-  req.on('end', () => {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ received: true, data: body }));
-  });
-});
-
-DynamicRoutes.set('/api/mock-endpoint', (_req, res) => {
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ original: true }));
-});
-
-DynamicRoutes.set('/api/notfound', (_req, res) => {
-  res.writeHead(404, { 'Content-Type': 'text/plain' });
-  res.end('Not Found');
-});
+// Register API routes for network debugging tests (v0.7). Shared with
+// scripts/serve-test-pages.js via api-routes.js (single source of truth).
+// Must run before startTestServer() since the server checks DynamicRoutes
+// on every request.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { registerApiRoutes } = require('./api-routes');
+registerApiRoutes(DynamicRoutes);
 
 beforeAll(async () => {
   server = await startTestServer();

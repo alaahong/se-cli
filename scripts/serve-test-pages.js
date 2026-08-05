@@ -32,35 +32,12 @@ const MIME = {
   '.svg': 'image/svg+xml',
 };
 
-// Dynamic API routes — mirrors the DynamicRoutes registered in
-// tests/integration/test-server.ts so v0.7 network-debug.html buttons
-// (fetch / route mocks) work when serving fixtures manually.
-const DYNAMIC_ROUTES = {
-  '/api/json': (_req, res) => {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ message: 'Hello from JSON API', status: 'ok' }));
-  },
-  '/api/data': (_req, res) => {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ items: [1, 2, 3], count: 3 }));
-  },
-  '/api/submit': (req, res) => {
-    let body = '';
-    req.on('data', (chunk) => { body += chunk; });
-    req.on('end', () => {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ received: true, data: body }));
-    });
-  },
-  '/api/mock-endpoint': (_req, res) => {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ original: true }));
-  },
-  '/api/notfound': (_req, res) => {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('Not Found');
-  },
-};
+// Dynamic API routes — shared with the Vitest test server
+// (tests/integration/api-routes.js is the single source of truth) so the
+// v0.7 network-debug.html buttons behave identically when served manually.
+const { registerApiRoutes } = require(path.join(__dirname, '..', 'tests', 'integration', 'api-routes.js'));
+const DYNAMIC_ROUTES = new Map();
+registerApiRoutes(DYNAMIC_ROUTES);
 
 if (!fs.existsSync(FIXTURES_DIR)) {
   console.error(`Fixtures directory not found: ${FIXTURES_DIR}`);
@@ -71,7 +48,7 @@ const server = http.createServer((req, res) => {
   const pathname = decodeURIComponent((req.url || '/').split('?')[0]);
 
   // Dynamic API routes take precedence (matching test-server.ts)
-  const handler = DYNAMIC_ROUTES[pathname];
+  const handler = DYNAMIC_ROUTES.get(pathname);
   if (handler) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     handler(req, res);
