@@ -153,6 +153,22 @@ export function loadConfigFile(cwd: string): SeCliConfig | null {
 
 function parseConfigFile(content: string): SeCliConfig {
   const raw = JSON.parse(content);
+  const perCommand: Record<string, PerCommandConfig> = {};
+  for (const [name, rawPc] of Object.entries(raw.perCommand ?? {})) {
+    const entry: PerCommandConfig = {};
+    const pc = rawPc as any;
+    // Accept both the full object form `{ wait: { state: "visible" } }`
+    // and the spec-documented string shorthand `{ wait: "visible" }`.
+    if (typeof pc?.wait === 'string') {
+      entry.wait = { state: pc.wait as WaitState };
+    } else if (pc?.wait && typeof pc.wait === 'object') {
+      entry.wait = { ...pc.wait };
+    }
+    if (pc?.scriptTimeout !== undefined) {
+      entry.scriptTimeout = pc.scriptTimeout;
+    }
+    perCommand[name] = entry;
+  }
   return {
     wait: {
       timeout: raw.wait?.timeout,
@@ -165,7 +181,7 @@ function parseConfigFile(content: string): SeCliConfig {
       pageLoad: raw.timeouts?.pageLoad,
       script: raw.timeouts?.script,
     },
-    perCommand: raw.perCommand ?? {},
+    perCommand,
   };
 }
 
@@ -266,33 +282,37 @@ export function resolveConfig(
     }
   }
 
-  // Apply file-level defaults (if per-command didn't already set them)
+  // Apply file-level defaults. These override built-in defaults (including
+  // built-in per-command defaults, which are marked with source 'default')
+  // per the declared priority: --flag > ENV > .se-cli.json > built-in default.
+  // They do NOT override file-level per-command overrides ('file') or higher
+  // layers ('env'/'flag').
   if (fileConfig) {
-    if (sources.timeout === undefined && fileConfig.wait.timeout !== undefined) {
+    if ((sources.timeout === undefined || sources.timeout === 'default') && fileConfig.wait.timeout !== undefined) {
       result.wait.timeout = fileConfig.wait.timeout;
       sources.timeout = 'file';
     }
-    if (sources.state === undefined && fileConfig.wait.state !== undefined) {
+    if ((sources.state === undefined || sources.state === 'default') && fileConfig.wait.state !== undefined) {
       result.wait.state = fileConfig.wait.state;
       sources.state = 'file';
     }
-    if (sources.retry === undefined && fileConfig.wait.retry !== undefined) {
+    if ((sources.retry === undefined || sources.retry === 'default') && fileConfig.wait.retry !== undefined) {
       result.wait.retry = fileConfig.wait.retry;
       sources.retry = 'file';
     }
-    if (sources.retryInterval === undefined && fileConfig.wait.retryInterval !== undefined) {
+    if ((sources.retryInterval === undefined || sources.retryInterval === 'default') && fileConfig.wait.retryInterval !== undefined) {
       result.wait.retryInterval = fileConfig.wait.retryInterval;
       sources.retryInterval = 'file';
     }
-    if (sources.implicit === undefined && fileConfig.timeouts.implicit !== undefined) {
+    if ((sources.implicit === undefined || sources.implicit === 'default') && fileConfig.timeouts.implicit !== undefined) {
       result.timeouts.implicit = fileConfig.timeouts.implicit;
       sources.implicit = 'file';
     }
-    if (sources.pageLoad === undefined && fileConfig.timeouts.pageLoad !== undefined) {
+    if ((sources.pageLoad === undefined || sources.pageLoad === 'default') && fileConfig.timeouts.pageLoad !== undefined) {
       result.timeouts.pageLoad = fileConfig.timeouts.pageLoad;
       sources.pageLoad = 'file';
     }
-    if (sources.script === undefined && fileConfig.timeouts.script !== undefined) {
+    if ((sources.script === undefined || sources.script === 'default') && fileConfig.timeouts.script !== undefined) {
       result.timeouts.script = fileConfig.timeouts.script;
       sources.script = 'file';
     }

@@ -377,6 +377,41 @@ describe('wait-config.ts', () => {
       expect(result.wait.timeout).toBe(5000);
       expect(result.sources.timeout).toBeUndefined();
     });
+
+    it('accepts string-shorthand wait in perCommand (spec format)', () => {
+      // docs/spec.md documents perCommand as `"click": { "wait": "visible+enabled" }`.
+      // The resolver must accept this shorthand in addition to the object form.
+      tmpCwd = makeTempDir({
+        perCommand: {
+          click: { wait: 'visible+enabled' },
+        }
+      });
+      const result = resolveConfig({}, tmpCwd, {}, 'click');
+      expect(result.wait.state).toBe('visible+enabled');
+      expect(result.sources.state).toBe('file');
+    });
+
+    it('file-level global config overrides built-in per-command defaults', () => {
+      // Regression: built-in perCommand for click sets state 'visible+enabled'
+      // with source 'default'. A file-level global "wait": {"state":"none"}
+      // MUST override it (priority: flag > ENV > file > built-in default).
+      tmpCwd = makeTempDir({ wait: { state: 'none', timeout: 1000 } });
+      const result = resolveConfig({}, tmpCwd, {}, 'click');
+      expect(result.wait.state).toBe('none');
+      expect(result.sources.state).toBe('file');
+      expect(result.wait.timeout).toBe(1000);
+      expect(result.sources.timeout).toBe('file');
+    });
+
+    it('file-level global config overrides built-in per-command default for snapshot', () => {
+      tmpCwd = makeTempDir({ wait: { state: 'visible', timeout: 9000 } });
+      const result = resolveConfig({}, tmpCwd, {}, 'snapshot');
+      // snapshot has built-in perCommand state 'none' — file global must win
+      expect(result.wait.state).toBe('visible');
+      expect(result.sources.state).toBe('file');
+      expect(result.wait.timeout).toBe(9000);
+      expect(result.sources.timeout).toBe('file');
+    });
   });
 
   // ── loadConfigFile ──────────────────────────────────────────
