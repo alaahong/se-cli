@@ -482,8 +482,26 @@ async function waitForSingleState(
       codeGen = `await driver.wait(until.elementIsDisabled(el), ${timeout});`;
       break;
     case 'stable':
-      condition = until.stalenessOf(el);
-      codeGen = `await driver.wait(until.stalenessOf(el), ${timeout});`;
+      // Wait until the element's geometry (position + size) stops changing
+      // between consecutive checks. Playwright's "stable" semantics: the
+      // element is not animating / mid-layout. (until.stalenessOf — "wait for
+      // the element to detach" — is the opposite and was wrong here.)
+      condition = async () => {
+        try {
+          const r1 = await el.getRect();
+          await new Promise(r => setTimeout(r, 100));
+          const r2 = await el.getRect();
+          return (
+            r1.x === r2.x &&
+            r1.y === r2.y &&
+            r1.width === r2.width &&
+            r1.height === r2.height
+          );
+        } catch {
+          return false; // stale or not attached yet — keep polling
+        }
+      };
+      codeGen = `// wait for element to be stable (geometry unchanged)\nawait driver.wait(async () => { const r1 = await el.getRect(); await new Promise(r => setTimeout(r, 100)); const r2 = await el.getRect(); return r1.x === r2.x && r1.y === r2.y && r1.width === r2.width && r1.height === r2.height; }, ${timeout});`;
       break;
     case 'attached':
       // Wait until element is attached to the DOM (not stale).

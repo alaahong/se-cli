@@ -312,7 +312,7 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
     // Session-fatal: the WebDriver session itself is gone (browser crashed,
     // connection dropped). Only these errors warrant destroying the session.
     const isSessionFatal =
-      name === 'InvalidSessionIdError' || name === 'NoSuchSessionError' ||
+      name === 'NoSuchSessionError' ||
       name === 'SessionNotCreatedError' ||
       /(ECONNRESET|ECONNREFUSED|EPIPE|socket hang up|invalid session id|session not created)/i.test(errMsg);
 

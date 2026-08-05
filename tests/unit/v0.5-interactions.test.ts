@@ -543,7 +543,7 @@ describe('v0.5 Interaction Completion', () => {
       const out = response.serialize();
       // Code should contain "const el = await driver.findElement(...)"
       expect(out).toContain('const el = await driver.findElement');
-      expect(out).toContain('actions({ bridge: true }).move({ origin: el })');
+      expect(out).toContain('actions().move({ origin: el })');
       // Should NOT contain the old broken format
       expect(out).not.toMatch(/\[data-se-ref=e\d+\]/);
     });
@@ -554,7 +554,7 @@ describe('v0.5 Interaction Completion', () => {
       await browser_dblclick(driver, { target: 'e1' }, response);
       const out = response.serialize();
       expect(out).toContain('const el = await driver.findElement');
-      expect(out).toContain('actions({ bridge: true }).doubleClick(el)');
+      expect(out).toContain('actions().doubleClick(el)');
     });
 
     it('drag generates valid JS with src and dst element variables', async () => {
@@ -564,7 +564,7 @@ describe('v0.5 Interaction Completion', () => {
       const out = response.serialize();
       expect(out).toContain('const src = await driver.findElement');
       expect(out).toContain('const dst = await driver.findElement');
-      expect(out).toContain('actions({ bridge: true }).dragAndDrop(src, dst)');
+      expect(out).toContain('actions().dragAndDrop(src, dst)');
     });
   });
 

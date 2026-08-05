@@ -10,7 +10,7 @@ export async function browser_keydown(
   params: { key: string; _wait?: WaitConfig },
   response: Response,
 ): Promise<void> {
-  const actions = driver.actions({ bridge: true });
+  const actions = driver.actions();
   await actions.keyDown(params.key).perform();
 
   const title = await driver.getTitle();
@@ -28,7 +28,7 @@ export async function browser_keyup(
   params: { key: string; _wait?: WaitConfig },
   response: Response,
 ): Promise<void> {
-  const actions = driver.actions({ bridge: true });
+  const actions = driver.actions();
   await actions.keyUp(params.key).perform();
 
   const title = await driver.getTitle();
@@ -46,7 +46,7 @@ export async function browser_mousemove(
   params: { x: number; y: number },
   response: Response,
 ): Promise<void> {
-  const actions = driver.actions({ bridge: true });
+  const actions = driver.actions();
   await actions.move({
     x: params.x,
     y: params.y,
@@ -69,7 +69,7 @@ export async function browser_mousedown(
   response: Response,
 ): Promise<void> {
   const button = params.button || 'left';
-  const actions = driver.actions({ bridge: true });
+  const actions = driver.actions();
   const buttonValue = getButtonValue(button);
   await actions.press(buttonValue).perform();
 
@@ -89,7 +89,7 @@ export async function browser_mouseup(
   response: Response,
 ): Promise<void> {
   const button = params.button || 'left';
-  const actions = driver.actions({ bridge: true });
+  const actions = driver.actions();
   const buttonValue = getButtonValue(button);
   await actions.release(buttonValue).perform();
 
@@ -110,7 +110,7 @@ export async function browser_mousewheel(
 ): Promise<void> {
   // The Actions API scroll() takes positional args: (x, y, deltaX, deltaY, origin?, duration?)
   // where x,y is the starting viewport coordinate and deltaX/deltaY is the scroll amount.
-  const actions = driver.actions({ bridge: true });
+  const actions = driver.actions();
   await actions.scroll(0, 0, params.dx, params.dy).perform();
 
   const title = await driver.getTitle();
@@ -131,7 +131,7 @@ export async function browser_actions_chain(
   response: Response,
 ): Promise<void> {
   const steps = JSON.parse(params.actions);
-  const actions = driver.actions({ bridge: true });
+  const actions = driver.actions();
 
   for (const step of steps) {
     switch (step.type) {

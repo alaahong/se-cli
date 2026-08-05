@@ -18,7 +18,7 @@ export async function browser_hover(
     if (waitCode) response.addCode(waitCode);
   }
 
-  const actions = driver.actions({ bridge: true });
+  const actions = driver.actions();
   await actions.move({ origin: el }).perform();
 
   const title = await driver.getTitle();
@@ -26,7 +26,7 @@ export async function browser_hover(
   response.addPage({ url, title });
   const code = await codegenBy(driver, el, params.locatorStyle || 'role', params.target);
   if (code.note) response.addCode(`// ${code.note}`);
-  response.addCode(`const el = await driver.findElement(${code.expression});\nawait driver.actions({ bridge: true }).move({ origin: el }).perform();`);
+  response.addCode(`const el = await driver.findElement(${code.expression});\nawait driver.actions().move({ origin: el }).perform();`);
   response.addResult('hovered');
 }
 
@@ -45,7 +45,7 @@ export async function browser_dblclick(
     if (waitCode) response.addCode(waitCode);
   }
 
-  const actions = driver.actions({ bridge: true });
+  const actions = driver.actions();
   await actions.doubleClick(el).perform();
 
   const title = await driver.getTitle();
@@ -53,7 +53,7 @@ export async function browser_dblclick(
   response.addPage({ url, title });
   const code = await codegenBy(driver, el, params.locatorStyle || 'role', params.target);
   if (code.note) response.addCode(`// ${code.note}`);
-  response.addCode(`const el = await driver.findElement(${code.expression});\nawait driver.actions({ bridge: true }).doubleClick(el).perform();`);
+  response.addCode(`const el = await driver.findElement(${code.expression});\nawait driver.actions().doubleClick(el).perform();`);
   response.addResult('double-clicked');
 }
 
@@ -75,12 +75,12 @@ export async function browser_drag(
     if (waitCode2) response.addCode(waitCode2);
   }
 
-  const actions = driver.actions({ bridge: true });
+  const actions = driver.actions();
   await actions.dragAndDrop(startEl, endEl).perform();
 
   const title = await driver.getTitle();
   const url = await driver.getCurrentUrl();
   response.addPage({ url, title });
-  response.addCode(`const src = await driver.findElement(${byToString(params.start)});\nconst dst = await driver.findElement(${byToString(params.end)});\nawait driver.actions({ bridge: true }).dragAndDrop(src, dst).perform();`);
+  response.addCode(`const src = await driver.findElement(${byToString(params.start)});\nconst dst = await driver.findElement(${byToString(params.end)});\nawait driver.actions().dragAndDrop(src, dst).perform();`);
   response.addResult('dragged');
 }

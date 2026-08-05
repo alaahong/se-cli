@@ -520,11 +520,32 @@ describe('wait-config.ts', () => {
       expect(result).toContain('elementIsDisabled');
     });
 
-    it('waits for stable state (staleness)', async () => {
+    it('waits for stable state (geometry unchanged)', async () => {
       const { driver } = makeMockDriver();
-      const el = {};
+      const el = {
+        getRect: vi.fn(async () => ({ x: 0, y: 0, width: 100, height: 20 })),
+      };
       const result = await waitForElementState(driver, el, 'stable', 5000);
-      expect(result).toContain('stalenessOf');
+      // Condition must be invoked by driver.wait and report true for an
+      // element whose geometry does not change between two reads.
+      const condition = driver.wait.mock.calls[0][0];
+      expect(await condition()).toBe(true);
+      expect(el.getRect).toHaveBeenCalledTimes(2);
+      expect(result).toContain('getRect');
+    });
+
+    it('treats a moving element as not stable', async () => {
+      const { driver } = makeMockDriver();
+      let calls = 0;
+      const el = {
+        getRect: vi.fn(async () => {
+          calls++;
+          return { x: calls === 1 ? 0 : 50, y: 0, width: 100, height: 20 };
+        }),
+      };
+      await waitForElementState(driver, el, 'stable', 5000);
+      const condition = driver.wait.mock.calls[0][0];
+      expect(await condition()).toBe(false);
     });
 
     it('waits for attached state', async () => {
