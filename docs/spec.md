@@ -81,6 +81,8 @@ se-cli list                    # List all sessions
 se-cli close-all               # Close all sessions
 se-cli kill-all                # Force-kill all processes
 se-cli logs [--tail=N]         # Tail this session's daemon + CLI logs (default 50)
+se-cli mcp-server [--http]     # Start MCP server (stdio default; Streamable HTTP with --http) (v0.9)
+se-cli install --skills        # Install SKILL.md into agent skill directories (v0.2/v0.9 multi-target)
 se-cli -s=<name> <cmd>         # Named session
 ```
 
@@ -104,11 +106,25 @@ values (e.g. `fill` passwords).
 
 **Interaction**: `click <ref|selector>` / `fill <ref|selector> <text>` / `type <text>` / `press <key>` / `select <ref> <value>` / `check <ref>` / `uncheck <ref>`
 
-**Snapshot & Search**: `snapshot` / `snapshot <ref>` / `snapshot --depth=N` / `find <text>` / `find --regex <pattern>`
+**Advanced interaction (v0.5)**: `hover <ref>` / `dblclick <ref>` / `drag <start> <end>` / `dialog-accept [text]` / `dialog-dismiss` / `upload <ref> <file>` / `resize <w> <h>` / `keydown <key>` / `keyup <key>` / `mousemove <x> <y>` / `mousedown [button]` / `mouseup [button]` / `mousewheel <dx> <dy>` / `actions-chain <json>`
 
-**Save & Execute**: `screenshot [ref]` / `screenshot --filename=f` / `eval "<js>"` / `eval "<js>" <ref>` / `title` / `url`
+**Snapshot & Search**: `snapshot` / `snapshot <ref>` / `snapshot --depth=N` / `snapshot --filename=f` / `find <text>` / `find --regex <pattern>`
 
-22 commands in total.
+**Save & Execute**: `screenshot [ref]` / `screenshot --filename=f` / `eval "<js>"` / `eval "<js>" <ref>` / `run-code "<snippet>"` (v0.9) / `generate-locator <ref>` (v0.9) / `title` / `url`
+
+**Assertions (v0.6)**: `expect <ref|sel> visible|hidden|enabled|disabled|checked|unchecked` / `expect <ref> text|value|count|attribute ...` / `expect title|url "..."` / `--not` / `--exact`
+
+**Network & Debug (v0.7)**: `route <pattern> --status=...` / `route-list` / `unroute <index>|--all` / `console [level] [--since=] [--clear]` / `requests [--filter=] [--status=] [--method=] [--clear]` / `request <index>` / `highlight [ref] [--style=] [--hide] [--all]`
+
+**Emulation (v0.8)**: `device <name>` / `device-list` / `emulate [--offline] [--throttle-network=...] [--throttle-cpu=...] [--reset]` / `open --viewport= --user-agent= --locale= --color-scheme= --timezone= --geolocation= --permissions=`
+
+**Storage (v0.2)**: `cookie-list|get|set <name> <value>|delete [name]` / `localstorage-get|set|delete|list` / `sessionstorage-get|set|delete|list` / `state-save [--filename=f]` / `state-load [--filename=f]`
+
+**Tabs (v0.2)**: `tab-list` / `tab-new [url]` / `tab-close` / `tab-select <index>`
+
+**Config (v0.4)**: `config get <key>` / `config set <key> <value>` / `config list` / `config init`
+
+40+ commands in total (v0.1 through v0.9).
 
 ### 3.3 Global Flags
 
@@ -612,7 +628,7 @@ await driver.executeScript(
 - [x] Unit tests (`tests/unit/v0.7-network-debug.test.ts`)
 - [x] Integration tests (`tests/integration/fixtures/network-debug.html`)
 
-### v0.8: Device & Environment Emulation (Core, Playwright port: low complexity × medium importance)
+### v0.8: Device & Environment Emulation (Core, Playwright port: low complexity × medium importance) ✅
 
 All capabilities via CDP `Emulation.*` / `Network.*` domains, BiDi as fallback.
 Selenium has no native equivalent, but CDP makes this trivial to port.
