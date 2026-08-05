@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Response } from '../../src/response';
 import { By } from 'selenium-webdriver';
 import {
@@ -8,6 +8,8 @@ import {
   buildCandidates,
   recommendCandidate,
   codegenBy,
+  probeRoleLocatorSupport,
+  resetRoleLocatorProbe,
   type LocatorCandidate,
 } from '../../src/daemon/tools/locator';
 import { browser_generate_locator } from '../../src/daemon/tools/generate-locator';
@@ -161,11 +163,41 @@ describe('recommendCandidate', () => {
 });
 
 describe('codegenBy', () => {
+  beforeEach(() => {
+    resetRoleLocatorProbe(); // module-level probe cache must not leak between tests
+  });
+
   it('role style: uses role locator when unique', async () => {
     const driver = makeDriver({ matchCount: 1 });
     const out = await codegenBy(driver, {}, 'role', 'e1');
     expect(out.expression).toBe(`new By('role', { role: 'button', name: 'Save Draft' })`);
     expect(out.note).toBeUndefined();
+  });
+
+  it('role style: falls back to CSS when the driver rejects role locators', async () => {
+    // Regression: real ChromeDriver/geckodriver without the Accessibility
+    // extension throw "invalid locator" for new By('role', ...), so the
+    // emitted replay code must fall back to CSS instead of emitting code
+    // that fails on replay.
+    resetRoleLocatorProbe();
+    const driver = makeDriver({ matchCount: 1 });
+    driver.findElements = vi.fn(async () => {
+      throw new Error('invalid locator: role');
+    });
+    const out = await codegenBy(driver, {}, 'role', 'e1');
+    expect(out.expression).toBe(`By.css('#save-btn')`);
+    expect(out.note).toContain('driver does not support the role locator strategy; used CSS');
+  });
+
+  it('role style: caches the support probe per session', async () => {
+    resetRoleLocatorProbe();
+    const driver = makeDriver({ matchCount: 1 });
+    await codegenBy(driver, {}, 'role', 'e1'); // first call probes
+    await codegenBy(driver, {}, 'role', 'e1'); // second call uses cache
+    const probeCalls = driver.findElements.mock.calls.filter(
+      (c: any[]) => c[0]?.using === 'role',
+    ).length;
+    expect(probeCalls).toBe(1);
   });
 
   it('role style: falls back to CSS with a note when ambiguous', async () => {

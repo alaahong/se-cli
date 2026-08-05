@@ -164,6 +164,30 @@ export interface LocatorCandidate {
 
 const BASE_STABILITY: Record<string, number> = { role: 100, id: 90, css: 70, xpath: 50 };
 
+/**
+ * Whether the current driver accepts `new By('role', ...)`. 'role' is NOT a
+ * W3C standard locator strategy — ChromeDriver/geckodriver without the
+ * "Accessibility Attributes" extension throw "invalid locator" when given
+ * one. Probed once per session (cached); on unsupported drivers the codegen
+ * falls back to CSS so the emitted "Ran Selenium code" actually replays.
+ */
+let roleLocatorSupported: boolean | null = null;
+
+export async function probeRoleLocatorSupport(driver: any): Promise<boolean> {
+  if (roleLocatorSupported !== null) return roleLocatorSupported;
+  try {
+    await driver.findElements(new By('role', { role: 'button', name: '__se_probe__' }));
+    roleLocatorSupported = true;
+  } catch {
+    roleLocatorSupported = false;
+  }
+  return roleLocatorSupported;
+}
+
+export function resetRoleLocatorProbe(): void {
+  roleLocatorSupported = null;
+}
+
 function stabilityOf(type: string, expression: string): number {
   let score = BASE_STABILITY[type] ?? 0;
   // Penalize locators built from runtime-injected attributes (the snapshot
@@ -362,7 +386,8 @@ export async function codegenBy(
 
   if (style === 'role') {
     const roleCand = candidates.find((c) => c.type === 'role');
-    if (roleCand && roleCand.hasName && roleCand.matchCount === 1) {
+    const roleSupported = await probeRoleLocatorSupport(driver);
+    if (roleSupported && roleCand && roleCand.hasName && roleCand.matchCount === 1) {
       return { expression: roleCand.expression };
     }
     const css = uniqueCss(candidates);
@@ -371,15 +396,27 @@ export async function codegenBy(
       if (fallback) {
         return {
           expression: fallback.expression,
-          note: `role locator was ambiguous (${roleCand.matchCount} matches); fell back to CSS`,
+          note: roleSupported
+            ? `role locator was ambiguous (${roleCand.matchCount} matches); fell back to CSS`
+            : `driver does not support the role locator strategy; used CSS (role had ${roleCand.matchCount} matches)`,
         };
       }
     }
     if (css) {
-      return { expression: css.expression, note: 'element has no discernible role+name; used CSS' };
+      return {
+        expression: css.expression,
+        note: roleSupported
+          ? 'element has no discernible role+name; used CSS'
+          : 'driver does not support the role locator strategy; used CSS',
+      };
     }
     const fallback = candidates.find((c) => c.type === 'css');
-    if (fallback) return { expression: fallback.expression };
+    if (fallback) {
+      return {
+        expression: fallback.expression,
+        note: roleSupported ? undefined : 'driver does not support the role locator strategy; used CSS',
+      };
+    }
     return { expression: "By.css('*')", note: 'element has no stable locator' };
   }
 
