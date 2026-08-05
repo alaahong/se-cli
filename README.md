@@ -443,7 +443,9 @@ se-cli click "$REF"
 an action. The recommended locator has match count 1 and the highest stability
 (role > id > css > xpath); role locators use the W3C accessibility-attributes
 strategy, which the selenium-webdriver JS binding exposes as
-`new By('role', { role, name })`.
+`new By('role', { role, name })`. On drivers that reject the role strategy (no
+accessibility extension), codegen automatically falls back to a stable CSS
+selector with an explanatory note.
 
 ```bash
 se-cli snapshot
@@ -531,10 +533,21 @@ se-cli cookie-get auth_token  # → secret123
 
 ### Code Generation
 
-Every interaction command outputs the equivalent Selenium code:
+Every interaction command outputs the equivalent Selenium code. Since v0.9 the
+default is a role-based locator that also works on production pages:
 
 ```
 $ se-cli click e1
+
+### Ran Selenium code
+```js
+await driver.findElement(new By('role', { role: 'button', name: 'Save Draft' })).click();
+```
+
+To replay the in-session `data-se-ref` style instead, pass `--locator-style=ref`:
+
+```
+$ se-cli click e1 --locator-style=ref
 
 ### Ran Selenium code
 ```js
@@ -610,7 +623,7 @@ Install the [se-cli VS Code extension](https://github.com/se-cli/se-extension-vs
 in VS Code Extensions view (`Ctrl+Shift+X`). The extension auto-registers the MCP server, provides
 commands, a webview panel for snapshot/screenshot preview, and a status bar indicator.
 
-Once enabled, all 40+ browser automation commands are available as MCP tools:
+Once enabled, all 62 browser automation commands are available as MCP tools:
 - `browser_open`, `browser_close`, `browser_navigate`
 - `browser_click`, `browser_fill`, `browser_type`, `browser_press`
 - `browser_snapshot`, `browser_find`, `browser_screenshot`, `browser_eval`
@@ -760,7 +773,7 @@ src/
 └── daemon/
     ├── server.ts           # Daemon socket server
     ├── backend.ts          # Tool dispatcher
-    └── tools/              # Tool handlers (51 tools)
+    └── tools/              # Tool handlers (62 tools)
 ```
 
 ## Browser Support
@@ -804,14 +817,14 @@ Features are classified as **Must-Have** (基础底座), **Core** (差异化), o
 - **v0.6** ✅: Web-First Assertions — `expect <ref> visible|hidden|enabled|disabled|checked|unchecked|text|value|count|attribute`, `expect title|url`, `--not` inversion, `--exact` strict match, `--timeout` polling, CI-friendly exit codes
 - **v0.7** ✅: Network & debugging — BiDi `route`/`unroute`/`route-list`, `console`, `requests`/`request`, `highlight` with `--style`/`--hide`/`--all`
 - **v0.8** ✅: Device & environment emulation — `open --viewport/--user-agent/--locale/--color-scheme/--timezone/--geolocation/--permissions`, `device`/`device-list` presets (Playwright DeviceDescriptors), `emulate --throttle-network/--throttle-cpu/--offline/--reset`, emulation state in `state-save`
-- **v0.9** ✅: MCP Server & AI ecosystem — `se-cli mcp-server` with 40+ tools (stdio + Streamable HTTP `--http`), `run-code` for arbitrary Selenium snippets, `generate-locator` + role-based codegen (`--locator-style=role|css|ref`), SKILL.md frontmatter compliance, multi-target `install --skills`, VS Code `.vscode/mcp.json` config, separate [`se-mcp`](https://github.com/se-cli/se-mcp) wrapper package
+- **v0.9** ✅: MCP Server & AI ecosystem — `se-cli mcp-server` with 62 tools (stdio + Streamable HTTP `--http`), `run-code` for arbitrary Selenium snippets, `generate-locator` + role-based codegen (`--locator-style=role|css|ref`), SKILL.md frontmatter compliance, multi-target `install --skills`, VS Code `.vscode/mcp.json` config, separate [`se-mcp`](https://github.com/se-cli/se-mcp) wrapper package
 - **v0.10** (Core, Selenium moat): Remote, Grid & custom browsers — `--browser=safari`, `--endpoint`, `--browser-binary`, `--driver-binary`, `--capabilities`, cloud browser integration, `pdf`, `--browser=edge-ie` for legacy IE scenarios
 - **v0.11** (Marginal): Recording & visualization — `record`, `tracing-start/stop`, `video-start/stop`, `show` dashboard, `--annotate`
 - **v0.12** (Marginal, initial impl ✅): VSCode extension — [`se-extension-vscode`](https://github.com/se-cli/se-extension-vscode) with MCP registration, commands, webview, status bar. Remaining: Task Provider, `attach --extension`
 
 **Will never implement**: native aria ref engine (staying on `data-se-ref`), Playwright-level full tracing parity, real IE 11 (replaced by Edge IE mode in v0.10).
 
-See [docs/spec.md](docs/spec.md) for the full roadmap with configuration details and capability matrices.
+See [docs/spec.md](docs/spec.md) for the original MVP design specification. The live roadmap and configuration reference live on the [se-cli website](https://se-cli.github.io/se-site/).
 
 ## Wait & Retry Configuration (v0.4)
 

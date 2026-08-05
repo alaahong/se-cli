@@ -253,7 +253,8 @@ se-cli click "$REF"
 ```bash
 # generate-locator reports the recommended locator for a ref (match count 1,
 # stability role > id > css > xpath). Role locators use the W3C accessibility
-# strategy: new By('role', { role, name }) — works in Chrome/Edge/Firefox.
+# strategy: new By('role', { role, name }) — works in Chrome/Edge/Firefox; on
+# drivers that reject the role strategy, codegen falls back to CSS.
 se-cli generate-locator e7
 se-cli generate-locator e7 --all          # all candidates with match counts
 se-cli generate-locator e7 --style=id     # force a locator type
@@ -505,7 +506,7 @@ via the `Mcp-Session-Id` header.
 
 ### Available MCP Tools
 
-All 40+ CLI commands are exposed as MCP tools with `browser_` prefix:
+All 62 CLI commands are exposed as MCP tools with `browser_` prefix:
 
 - `browser_open` / `browser_close` / `browser_list_sessions`
 - `browser_navigate` / `browser_go_back` / `browser_go_forward` / `browser_reload`
