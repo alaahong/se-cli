@@ -1,5 +1,5 @@
 import { Response } from '../../response';
-import { findElement } from './shared';
+import { findElementWithWait } from './shared';
 import { codegenBy } from './locator';
 import { waitForElementState, type WaitConfig } from '../../wait-config';
 
@@ -20,7 +20,8 @@ async function emitCheckCode(
 }
 
 export async function browser_check(driver: any, params: { target: string; locatorStyle?: string; _wait?: WaitConfig }, response: Response): Promise<void> {
-  const el = await findElement(driver, params.target);
+  // v0.4: locate the element with wait (polls until it appears in the DOM)
+  const el = await findElementWithWait(driver, params.target, params._wait);
 
   // v0.4: wait for element to reach desired state before checking
   if (params._wait) {
@@ -34,7 +35,8 @@ export async function browser_check(driver: any, params: { target: string; locat
 }
 
 export async function browser_uncheck(driver: any, params: { target: string; locatorStyle?: string; _wait?: WaitConfig }, response: Response): Promise<void> {
-  const el = await findElement(driver, params.target);
+  // v0.4: locate the element with wait (polls until it appears in the DOM)
+  const el = await findElementWithWait(driver, params.target, params._wait);
 
   // v0.4: wait for element to reach desired state before unchecking
   if (params._wait) {

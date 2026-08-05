@@ -1,10 +1,12 @@
 import { Response } from '../../response';
-import { findElement } from './shared';
+import { findElementWithWait } from './shared';
 import { codegenBy } from './locator';
 import { waitForElementState, type WaitConfig } from '../../wait-config';
 
 export async function browser_click(driver: any, params: { target: string; locatorStyle?: string; _wait?: WaitConfig }, response: Response): Promise<void> {
-  const el = await findElement(driver, params.target);
+  // v0.4: locate the element with wait (polls until it appears in the DOM),
+  // then wait for the desired state before clicking.
+  const el = await findElementWithWait(driver, params.target, params._wait);
 
   // v0.4: wait for element to reach desired state before clicking
   if (params._wait) {

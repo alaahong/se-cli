@@ -1,5 +1,5 @@
 import { Response } from '../../response';
-import { findElement, byToString } from './shared';
+import { findElementWithWait, byToString } from './shared';
 import { waitForElementState, type WaitConfig } from '../../wait-config';
 import * as path from 'path';
 
@@ -11,7 +11,8 @@ export async function browser_upload(
   params: { target: string; file: string; _wait?: WaitConfig },
   response: Response,
 ): Promise<void> {
-  const el = await findElement(driver, params.target);
+  // v0.4: locate the element with wait (polls until it appears in the DOM)
+  const el = await findElementWithWait(driver, params.target, params._wait);
 
   if (params._wait) {
     const waitCode = await waitForElementState(driver, el, params._wait.state, params._wait.timeout);

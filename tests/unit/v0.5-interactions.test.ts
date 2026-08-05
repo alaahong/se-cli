@@ -11,6 +11,11 @@ import {
 import { parseCommand } from '../../src/daemon/backend';
 import { Response } from '../../src/response';
 import { browser_hover, browser_dblclick, browser_drag } from '../../src/daemon/tools/interactions';
+import { browser_click } from '../../src/daemon/tools/click';
+import { browser_fill } from '../../src/daemon/tools/fill';
+import { browser_select } from '../../src/daemon/tools/select';
+import { browser_check, browser_uncheck } from '../../src/daemon/tools/check';
+import { browser_upload } from '../../src/daemon/tools/upload';
 
 // Helper: create a temp directory with optional config file
 function makeTempDir(configContent?: object): string {
@@ -562,6 +567,105 @@ describe('v0.5 Interaction Completion', () => {
       expect(out).toContain('const src = await driver.findElement');
       expect(out).toContain('const dst = await driver.findElement');
       expect(out).toContain('actions({ bridge: true }).dragAndDrop(src, dst)');
+    });
+  });
+
+  // ── Element-location waiting (v0.4 regression) ──────────────
+
+  describe('Element location waits (v0.4 regression)', () => {
+    // The v0.4 wait layer promises that interactive commands poll for the
+    // element until it appears in the DOM (default 5000ms). click/fill/
+    // select/check/uncheck/upload previously located elements without any
+    // wait, throwing NoSuchElementError for elements that appear late.
+    function makeLateAppearingDriver(): any {
+      const mockOption = {
+        click: vi.fn(async () => {}),
+        isSelected: vi.fn(async () => false),
+        isEnabled: vi.fn(async () => true),
+        getText: vi.fn(async () => 'Option A'),
+        getAttribute: vi.fn(async () => null),
+      };
+      const mockEl = {
+        click: vi.fn(async () => {}),
+        sendKeys: vi.fn(async () => {}),
+        clear: vi.fn(async () => {}),
+        isSelected: vi.fn(async () => false),
+        getTagName: vi.fn(async () => 'select'),
+        getAttribute: vi.fn(async (name: string) => (name === 'tagName' ? 'SELECT' : null)),
+        findElements: vi.fn(async () => [mockOption]), // needed by selenium Select
+      };
+      const driver = {
+        findElement: vi.fn()
+          .mockRejectedValueOnce(new Error('no such element'))  // fast path
+          .mockRejectedValueOnce(new Error('no such element'))  // slow path poll 1
+          .mockResolvedValueOnce(mockEl),                        // slow path poll 2
+        findElements: vi.fn(async () => []),
+        executeScript: vi.fn(async (script: string) => {
+          if (String(script).includes('findInShadowRoots')) return null; // shadow-root miss
+          if (String(script).includes('CSS_INFO_SCRIPT') || String(script).includes('tagName.toLowerCase')) {
+            return { role: 'button', name: 'Save', id: '', classes: [], tag: 'button', nth: 1 };
+          }
+          return { role: 'button', name: 'Save' };
+        }),
+        getTitle: vi.fn(async () => 'Test Page'),
+        getCurrentUrl: vi.fn(async () => 'https://test.example.com'),
+        wait: vi.fn(async () => {}),
+        switchTo: vi.fn(() => ({ activeElement: vi.fn(async () => mockEl), defaultContent: vi.fn(async () => {}) })),
+        actions: vi.fn(() => ({ perform: vi.fn(async () => {}) })),
+      };
+      return { driver, mockEl };
+    }
+
+    const waitConfig = { state: 'visible', timeout: 1000, retry: 0, retryInterval: 100 };
+
+    it('click waits for a late-appearing element instead of failing fast', async () => {
+      const { driver, mockEl } = makeLateAppearingDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_click(driver, { target: 'e1', _wait: waitConfig }, response);
+      expect(mockEl.click).toHaveBeenCalled();
+      // 1 fast-path attempt + 2 slow-path polls
+      expect(driver.findElement.mock.calls.length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('fill waits for a late-appearing element', async () => {
+      const { driver, mockEl } = makeLateAppearingDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_fill(driver, { target: 'e1', value: 'hello', _wait: waitConfig }, response);
+      expect(mockEl.sendKeys).toHaveBeenCalled();
+      expect(driver.findElement.mock.calls.length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('select waits for a late-appearing element', async () => {
+      const { driver, mockEl } = makeLateAppearingDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_select(driver, { target: 'e1', value: 'Option A', _wait: waitConfig }, response);
+      // Select.selectByVisibleText found and clicked the matching option
+      expect(driver.findElements).toHaveBeenCalled();
+      expect(driver.findElement.mock.calls.length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('check waits for a late-appearing element', async () => {
+      const { driver, mockEl } = makeLateAppearingDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_check(driver, { target: 'e1', _wait: waitConfig }, response);
+      expect(mockEl.isSelected).toHaveBeenCalled();
+      expect(driver.findElement.mock.calls.length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('uncheck waits for a late-appearing element', async () => {
+      const { driver, mockEl } = makeLateAppearingDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_uncheck(driver, { target: 'e1', _wait: waitConfig }, response);
+      expect(mockEl.isSelected).toHaveBeenCalled();
+      expect(driver.findElement.mock.calls.length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('upload waits for a late-appearing element', async () => {
+      const { driver, mockEl } = makeLateAppearingDriver();
+      const response = new Response({ raw: false, json: false });
+      await browser_upload(driver, { target: 'e1', file: 'tmp.txt', _wait: waitConfig }, response);
+      expect(mockEl.sendKeys).toHaveBeenCalled();
+      expect(driver.findElement.mock.calls.length).toBeGreaterThanOrEqual(3);
     });
   });
 });

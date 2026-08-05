@@ -1,5 +1,5 @@
 import { Response } from '../../response';
-import { findElement } from './shared';
+import { findElementWithWait } from './shared';
 import { codegenBy } from './locator';
 import { Key } from 'selenium-webdriver';
 import { waitForElementState, type WaitConfig } from '../../wait-config';
@@ -9,7 +9,8 @@ export async function browser_fill(
   params: { target: string; value: string; submit?: boolean; locatorStyle?: string; _wait?: WaitConfig },
   response: Response
 ): Promise<void> {
-  const el = await findElement(driver, params.target);
+  // v0.4: locate the element with wait (polls until it appears in the DOM)
+  const el = await findElementWithWait(driver, params.target, params._wait);
 
   // v0.4: wait for element to reach desired state before filling
   if (params._wait) {
