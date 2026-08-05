@@ -118,11 +118,7 @@ function makeMockDriver(opts: any = {}): any {
     executeScript: vi.fn(async () => opts.scriptResult ?? ''),
     wait: vi.fn(async () => {}),
     manage: vi.fn(() => ({
-      timeouts: vi.fn(() => ({
-        implicitWait: vi.fn(async () => {}),
-        pageLoadTimeout: vi.fn(async () => {}),
-        setScriptTimeout: vi.fn(async () => {}),
-      })),
+      setTimeouts: vi.fn(async () => {}),
       window: vi.fn(() => ({ setRect: vi.fn(async () => {}) })),
       getCookies: vi.fn(async () => opts.cookies ?? []),
       getCookie: vi.fn(async () => null),
@@ -1627,11 +1623,7 @@ describe('backend.ts', () => {
         frame: vi.fn(async () => {}),
       })),
       manage: vi.fn(() => ({
-        timeouts: vi.fn(() => ({
-          implicitWait: vi.fn(async () => {}),
-          pageLoadTimeout: vi.fn(async () => {}),
-          setScriptTimeout: vi.fn(async () => {}),
-        })),
+        setTimeouts: vi.fn(async () => {}),
       })),
     };
 
@@ -1669,11 +1661,7 @@ describe('backend.ts', () => {
         frame: vi.fn(async () => {}),
       })),
       manage: vi.fn(() => ({
-        timeouts: vi.fn(() => ({
-          implicitWait: vi.fn(async () => {}),
-          pageLoadTimeout: vi.fn(async () => {}),
-          setScriptTimeout: vi.fn(async () => {}),
-        })),
+        setTimeouts: vi.fn(async () => {}),
       })),
     };
 
@@ -1709,11 +1697,7 @@ describe('backend.ts', () => {
         frame: vi.fn(async () => {}),
       })),
       manage: vi.fn(() => ({
-        timeouts: vi.fn(() => ({
-          implicitWait: vi.fn(async () => {}),
-          pageLoadTimeout: vi.fn(async () => {}),
-          setScriptTimeout: vi.fn(async () => {}),
-        })),
+        setTimeouts: vi.fn(async () => {}),
       })),
     };
 
@@ -2018,16 +2002,12 @@ describe('advanced-input.ts default button', () => {
 // ===========================================================================
 
 describe('backend.ts catch blocks', () => {
-  it('handles applyTimeouts throwing (line 42)', async () => {
+  it('continues when applyTimeouts fails (setTimeouts unsupported)', async () => {
     const driver = {
       getTitle: vi.fn(async () => 'Test'),
       getCurrentUrl: vi.fn(async () => 'https://example.com'),
       manage: vi.fn(() => ({
-        timeouts: vi.fn(() => ({
-          implicitWait: vi.fn(async () => {}),
-          pageLoadTimeout: vi.fn(async () => { throw new Error('not supported'); }),
-          setScriptTimeout: vi.fn(async () => {}),
-        })),
+        setTimeouts: vi.fn(async () => { throw new Error('not supported'); }),
       })),
       switchTo: vi.fn(() => ({
         defaultContent: vi.fn(async () => {}),
@@ -2038,16 +2018,12 @@ describe('backend.ts catch blocks', () => {
     expect(resp.serialize()).toContain('Test');
   });
 
-  it('handles switchTo().defaultContent() throwing after success in retry path (line 75)', async () => {
+  it('continues when switchTo().defaultContent() throws in the retry path', async () => {
     const driver = {
       getTitle: vi.fn(async () => 'Test'),
       getCurrentUrl: vi.fn(async () => 'https://example.com'),
       manage: vi.fn(() => ({
-        timeouts: vi.fn(() => ({
-          implicitWait: vi.fn(async () => {}),
-          pageLoadTimeout: vi.fn(async () => {}),
-          setScriptTimeout: vi.fn(async () => {}),
-        })),
+        setTimeouts: vi.fn(async () => {}),
       })),
       switchTo: vi.fn(() => ({
         defaultContent: vi.fn(async () => { throw new Error('no frame'); }),
@@ -2076,11 +2052,7 @@ describe('backend.ts catch blocks', () => {
       }),
       getCurrentUrl: vi.fn(async () => 'https://example.com'),
       manage: vi.fn(() => ({
-        timeouts: vi.fn(() => ({
-          implicitWait: vi.fn(async () => {}),
-          pageLoadTimeout: vi.fn(async () => {}),
-          setScriptTimeout: vi.fn(async () => {}),
-        })),
+        setTimeouts: vi.fn(async () => {}),
       })),
       switchTo: vi.fn(() => ({
         defaultContent: vi.fn(async () => { throw new Error('no frame'); }),

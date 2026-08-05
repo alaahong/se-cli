@@ -52,11 +52,9 @@ function makeMockDriver(overrides: Record<string, any> = {}) {
     findElements: vi.fn(async () => [mockEl, mockEl, mockEl]),
     getTitle: vi.fn(async () => 'Assertion Test Page'),
     getCurrentUrl: vi.fn(async () => 'http://localhost:3000/assertions.html'),
-    manage: vi.fn(() => ({ timeouts: vi.fn(() => ({
-      implicitWait: vi.fn(async () => {}),
-      pageLoadTimeout: vi.fn(async () => {}),
-      setScriptTimeout: vi.fn(async () => {}),
-    })) })),
+    manage: vi.fn(() => ({
+      setTimeouts: vi.fn(async () => {}),
+    })),
     ...overrides,
   };
   return { driver, mockEl };

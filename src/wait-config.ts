@@ -409,14 +409,19 @@ function resolveAutoState(commandName?: string): WaitState {
 /**
  * Apply timeout settings to the driver.
  * Called at the start of callTool.
+ *
+ * Uses the W3C `manage().setTimeouts({implicit, pageLoad, script})` API.
+ * The legacy chained API (`timeouts().implicitWait()` etc.) was removed
+ * from selenium-webdriver 4.x — calling it threw a TypeError that
+ * backend.ts silently swallowed, making all timeout flags ineffective.
  */
 export async function applyTimeouts(driver: any, config: TimeoutConfig): Promise<void> {
-  const timeouts = driver.manage().timeouts();
-  if (config.implicit > 0) {
-    await timeouts.implicitWait(config.implicit);
-  }
-  await timeouts.pageLoadTimeout(config.pageLoad);
-  await timeouts.setScriptTimeout(config.script);
+  const timeouts: Record<string, number> = {};
+  if (config.implicit > 0) timeouts.implicit = config.implicit;
+  if (config.pageLoad > 0) timeouts.pageLoad = config.pageLoad;
+  if (config.script > 0) timeouts.script = config.script;
+  if (Object.keys(timeouts).length === 0) return;
+  await driver.manage().setTimeouts(timeouts);
 }
 
 /**

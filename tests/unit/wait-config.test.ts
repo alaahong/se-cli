@@ -36,12 +36,10 @@ function cleanupDir(dir: string): void {
 // Helper: mock driver with timeouts
 function makeMockDriver() {
   const timeouts = {
-    implicitWait: vi.fn(async (ms: number) => {}),
-    pageLoadTimeout: vi.fn(async (ms: number) => {}),
-    setScriptTimeout: vi.fn(async (ms: number) => {}),
+    setTimeouts: vi.fn(async (conf: Record<string, number>) => {}),
   };
   const driver = {
-    manage: vi.fn(() => ({ timeouts: vi.fn(() => timeouts) })),
+    manage: vi.fn(() => ({ setTimeouts: timeouts.setTimeouts })),
     wait: vi.fn(async (condition: any, timeout: number, message?: string) => {}),
   };
   return { driver, timeouts };
@@ -446,20 +444,29 @@ describe('wait-config.ts', () => {
   // ── applyTimeouts ───────────────────────────────────────────
 
   describe('applyTimeouts', () => {
-    it('calls implicitWait when implicit > 0', async () => {
+    it('merges all timeouts into a single W3C setTimeouts call', async () => {
       const { driver, timeouts } = makeMockDriver();
       await applyTimeouts(driver, { implicit: 1000, pageLoad: 30000, script: 30000 });
-      expect(timeouts.implicitWait).toHaveBeenCalledWith(1000);
-      expect(timeouts.pageLoadTimeout).toHaveBeenCalledWith(30000);
-      expect(timeouts.setScriptTimeout).toHaveBeenCalledWith(30000);
+      expect(timeouts.setTimeouts).toHaveBeenCalledWith({
+        implicit: 1000,
+        pageLoad: 30000,
+        script: 30000,
+      });
     });
 
-    it('skips implicitWait when implicit is 0', async () => {
+    it('omits implicit when it is 0 (driver default)', async () => {
       const { driver, timeouts } = makeMockDriver();
       await applyTimeouts(driver, { implicit: 0, pageLoad: 30000, script: 30000 });
-      expect(timeouts.implicitWait).not.toHaveBeenCalled();
-      expect(timeouts.pageLoadTimeout).toHaveBeenCalledWith(30000);
-      expect(timeouts.setScriptTimeout).toHaveBeenCalledWith(30000);
+      expect(timeouts.setTimeouts).toHaveBeenCalledWith({
+        pageLoad: 30000,
+        script: 30000,
+      });
+    });
+
+    it('does not call manage() when all timeouts are 0', async () => {
+      const { driver, timeouts } = makeMockDriver();
+      await applyTimeouts(driver, { implicit: 0, pageLoad: 0, script: 0 });
+      expect(timeouts.setTimeouts).not.toHaveBeenCalled();
     });
   });
 

@@ -179,11 +179,9 @@ function makeMockDriver() {
   const defaultContent = vi.fn(async () => {});
   const switchTo = vi.fn(() => ({ defaultContent }));
   const timeouts = {
-    implicitWait: vi.fn(async (_ms: number) => {}),
-    pageLoadTimeout: vi.fn(async (_ms: number) => {}),
-    setScriptTimeout: vi.fn(async (_ms: number) => {}),
+    setTimeouts: vi.fn(async (_conf: Record<string, number>) => {}),
   };
-  const manage = vi.fn(() => ({ timeouts: vi.fn(() => timeouts) }));
+  const manage = vi.fn(() => ({ setTimeouts: timeouts.setTimeouts }));
   return {
     getTitle: vi.fn(async () => 'Test Title'),
     getCurrentUrl: vi.fn(async () => 'https://example.com'),
@@ -1259,7 +1257,7 @@ describe('callTool', () => {
   // ── Timeout application ──────────────────────────────────────────
 
   describe('timeout application', () => {
-    it('applies pageLoadTimeout and setScriptTimeout with defaults', async () => {
+    it('applies pageLoad and script timeouts via W3C setTimeouts', async () => {
       const cwd = trackTempDir();
       const driver = makeMockDriver();
       await callTool(
@@ -1270,15 +1268,15 @@ describe('callTool', () => {
         {},
         cwd,
       );
-      // Default timeouts: implicit=0 (not applied since >0 check),
-      // pageLoad=30000, script=30000
-      expect(driver._timeouts.pageLoadTimeout).toHaveBeenCalledWith(30000);
-      expect(driver._timeouts.setScriptTimeout).toHaveBeenCalledWith(30000);
-      // implicitWait is NOT called when implicit=0
-      expect(driver._timeouts.implicitWait).not.toHaveBeenCalled();
+      // Default timeouts: implicit=0 (skipped by >0 check),
+      // pageLoad=30000, script=30000 — merged into a single setTimeouts call
+      expect(driver._timeouts.setTimeouts).toHaveBeenCalledWith({
+        pageLoad: 30000,
+        script: 30000,
+      });
     });
 
-    it('applies implicitWait when --implicit-wait flag is set', async () => {
+    it('includes implicit when --implicit-wait flag is set', async () => {
       const cwd = trackTempDir();
       const driver = makeMockDriver();
       await callTool(
@@ -1289,9 +1287,11 @@ describe('callTool', () => {
         { 'implicit-wait': '2000' },
         cwd,
       );
-      expect(driver._timeouts.implicitWait).toHaveBeenCalledWith(2000);
-      expect(driver._timeouts.pageLoadTimeout).toHaveBeenCalledWith(30000);
-      expect(driver._timeouts.setScriptTimeout).toHaveBeenCalledWith(30000);
+      expect(driver._timeouts.setTimeouts).toHaveBeenCalledWith({
+        implicit: 2000,
+        pageLoad: 30000,
+        script: 30000,
+      });
     });
   });
 });

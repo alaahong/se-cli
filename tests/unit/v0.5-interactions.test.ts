@@ -38,12 +38,10 @@ function cleanupDir(dir: string): void {
 // Helper: mock driver with timeouts (mirrors wait-config.test.ts pattern)
 function makeMockDriver() {
   const timeouts = {
-    implicitWait: vi.fn(async (ms: number) => {}),
-    pageLoadTimeout: vi.fn(async (ms: number) => {}),
-    setScriptTimeout: vi.fn(async (ms: number) => {}),
+    setTimeouts: vi.fn(async (conf: Record<string, number>) => {}),
   };
   const driver = {
-    manage: vi.fn(() => ({ timeouts: vi.fn(() => timeouts) })),
+    manage: vi.fn(() => ({ setTimeouts: timeouts.setTimeouts })),
     wait: vi.fn(async (condition: any, timeout: number, message?: string) => {}),
   };
   return { driver, timeouts };

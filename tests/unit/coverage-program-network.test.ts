@@ -221,11 +221,7 @@ function makeExpectDriver(overrides: Record<string, any> = {}) {
     getTitle: vi.fn(async () => 'Test Page'),
     getCurrentUrl: vi.fn(async () => 'http://localhost:3000/test.html'),
     manage: vi.fn(() => ({
-      timeouts: vi.fn(() => ({
-        implicitWait: vi.fn(async () => {}),
-        pageLoadTimeout: vi.fn(async () => {}),
-        setScriptTimeout: vi.fn(async () => {}),
-      })),
+      setTimeouts: vi.fn(async () => {}),
     })),
     ...overrides.driver,
   };
