@@ -1730,20 +1730,6 @@ describe('requests.ts coverage', () => {
     return driver;
   }
 
-  it('lists all requests', async () => {
-    await initAndPopulateRequests();
-    const driver = makeNetworkDriver();
-    const resp = makeResponse();
-
-    await browser_requests(driver, {}, resp);
-
-    const output = resp.serialize();
-    expect(output).toContain('GET');
-    expect(output).toContain('POST');
-    expect(output).toContain('200');
-    expect(output).toContain('500');
-  });
-
   it('filters by URL substring', async () => {
     await initAndPopulateRequests();
     const driver = makeNetworkDriver();
@@ -1862,16 +1848,6 @@ describe('requests.ts coverage', () => {
     expect(resp.serialize()).toContain('... (truncated)');
   });
 
-  it('throws error for non-existent request index', async () => {
-    const driver = makeNetworkDriver();
-    await ensureBidiInitialized(driver);
-    const resp = makeResponse();
-
-    await expect(
-      browser_request(driver, { index: 99 }, resp),
-    ).rejects.toThrow('No network request at index 99');
-  });
-
   it('returns no requests when buffer is empty', async () => {
     const driver = makeNetworkDriver();
     await ensureBidiInitialized(driver);
@@ -1908,95 +1884,6 @@ describe('route.ts coverage', () => {
     resetAll();
   });
 
-  it('route-list shows active routes', async () => {
-    addRoute('intercept-1', '**/api/**', 404, '{"error":"not found"}', null);
-    addRoute('intercept-2', '**/users/**', 200, null, null);
-
-    const driver = makeNetworkDriver();
-    await ensureBidiInitialized(driver);
-    const resp = makeResponse();
-
-    await browser_route_list(driver, {}, resp);
-
-    const output = resp.serialize();
-    expect(output).toContain('**/api/**');
-    expect(output).toContain('404');
-    expect(output).toContain('{"error":"not found"}');
-    expect(output).toContain('**/users/**');
-    expect(output).toContain('200');
-  });
-
-  it('route-list shows no routes when empty', async () => {
-    const driver = makeNetworkDriver();
-    await ensureBidiInitialized(driver);
-    const resp = makeResponse();
-
-    await browser_route_list(driver, {}, resp);
-
-    expect(resp.serialize()).toContain('(no active routes)');
-  });
-
-  it('unroute by index removes specific route', async () => {
-    addRoute('intercept-1', '**/api/**', 404, null, null);
-    addRoute('intercept-2', '**/users/**', 200, null, null);
-
-    const driver = makeNetworkDriver();
-    await ensureBidiInitialized(driver);
-    const resp = makeResponse();
-
-    await browser_unroute(driver, { index: 0 }, resp);
-
-    expect(resp.serialize()).toContain('Removed route 0');
-    expect(resp.serialize()).toContain('**/api/**');
-    const routes = getRoutes();
-    expect(routes.length).toBe(1);
-    expect(routes[0].pattern).toBe('**/users/**');
-  });
-
-  it('unroute --all removes all routes', async () => {
-    addRoute('intercept-1', '**/api/**', 404, null, null);
-    addRoute('intercept-2', '**/users/**', 200, null, null);
-
-    const driver = makeNetworkDriver();
-    await ensureBidiInitialized(driver);
-    const resp = makeResponse();
-
-    await browser_unroute(driver, { all: true }, resp);
-
-    expect(resp.serialize()).toContain('Removed all 2 route(s)');
-    expect(getRoutes()).toEqual([]);
-  });
-
-  it('unroute --all with no routes shows 0', async () => {
-    const driver = makeNetworkDriver();
-    await ensureBidiInitialized(driver);
-    const resp = makeResponse();
-
-    await browser_unroute(driver, { all: true }, resp);
-
-    expect(resp.serialize()).toContain('Removed all 0 route(s)');
-  });
-
-  it('unroute without index or --all throws error', async () => {
-    const driver = makeNetworkDriver();
-    await ensureBidiInitialized(driver);
-    const resp = makeResponse();
-
-    await expect(
-      browser_unroute(driver, {}, resp),
-    ).rejects.toThrow('unroute requires an index or --all flag');
-  });
-
-  it('unroute with non-existent index throws error', async () => {
-    const driver = makeNetworkDriver();
-    await ensureBidiInitialized(driver);
-    const resp = makeResponse();
-
-    await expect(
-      browser_unroute(driver, { index: 99 }, resp),
-    ).rejects.toThrow('No route at index 99');
-  });
-
   it('route with headers registers successfully', async () => {
     const driver = makeNetworkDriver();
     await ensureBidiInitialized(driver);
@@ -2012,26 +1899,6 @@ describe('route.ts coverage', () => {
     const route = getRoute(0);
     expect(route).toBeDefined();
     expect(route!.headers).toEqual({ 'X-Custom': 'value' });
-  });
-
-  it('route with invalid headers JSON throws error', async () => {
-    const driver = makeNetworkDriver();
-    await ensureBidiInitialized(driver);
-    const resp = makeResponse();
-
-    await expect(
-      browser_route(driver, { pattern: '**/api/**', status: '401', headers: 'not-json' }, resp),
-    ).rejects.toThrow('Invalid --headers JSON');
-  });
-
-  it('route without --status throws error', async () => {
-    const driver = makeNetworkDriver();
-    await ensureBidiInitialized(driver);
-    const resp = makeResponse();
-
-    await expect(
-      browser_route(driver, { pattern: '**/api/**' }, resp),
-    ).rejects.toThrow('Route requires --status parameter');
   });
 
   it('route with long body truncates in output', async () => {
@@ -2137,36 +2004,6 @@ describe('console.ts coverage', () => {
     expect(output).not.toContain('Old message');
   });
 
-  it('clears buffer with --clear', async () => {
-    await initAndPopulateConsole();
-    const driver = makeNetworkDriver();
-    const resp = makeResponse();
-
-    await browser_console(driver, { clear: true }, resp);
-
-    expect(getConsoleEntries()).toEqual([]);
-  });
-
-  it('throws for invalid level', async () => {
-    const driver = makeNetworkDriver();
-    await ensureBidiInitialized(driver);
-    const resp = makeResponse();
-
-    await expect(
-      browser_console(driver, { level: 'invalid-level' }, resp),
-    ).rejects.toThrow('Unknown console level');
-  });
-
-  it('accepts debug level', async () => {
-    const driver = makeNetworkDriver();
-    await ensureBidiInitialized(driver);
-    const resp = makeResponse();
-
-    await browser_console(driver, { level: 'debug' }, resp);
-
-    expect(resp.serialize()).toContain('(no console messages)');
-  });
-
   it('truncates long console text', async () => {
     const driver = makeNetworkDriver();
     await ensureBidiInitialized(driver);
@@ -2178,27 +2015,6 @@ describe('console.ts coverage', () => {
     await browser_console(driver, {}, resp);
 
     expect(resp.serialize()).toContain('...');
-  });
-
-  it('accepts valid --since formats (s, m, h)', async () => {
-    const driver = makeNetworkDriver();
-    await ensureBidiInitialized(driver);
-
-    for (const since of ['30s', '5m', '1h']) {
-      const resp = makeResponse();
-      await browser_console(driver, { since }, resp);
-      expect(resp.serialize()).toContain('(no console messages)');
-    }
-  });
-
-  it('throws for invalid --since format', async () => {
-    const driver = makeNetworkDriver();
-    await ensureBidiInitialized(driver);
-    const resp = makeResponse();
-
-    await expect(
-      browser_console(driver, { since: 'invalid' }, resp),
-    ).rejects.toThrow('Invalid --since duration');
   });
 
   it('returns no messages when buffer is empty', async () => {

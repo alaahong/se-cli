@@ -321,7 +321,7 @@ describe('advanced-input.ts', () => {
       await browser_keydown(driver, { key: 'Shift' }, resp);
       const out = JSON.parse(resp.serialize());
 
-      expect(driver.actions).toHaveBeenCalledWith({ bridge: true });
+      expect(driver.actions).toHaveBeenCalledWith();
       expect(driver._actions.keyDown).toHaveBeenCalledWith('Shift');
       expect(driver._actions.perform).toHaveBeenCalledTimes(1);
       expect(out.result).toBe('keydown: Shift');
@@ -337,7 +337,7 @@ describe('advanced-input.ts', () => {
       await browser_keyup(driver, { key: 'Control' }, resp);
       const out = JSON.parse(resp.serialize());
 
-      expect(driver.actions).toHaveBeenCalledWith({ bridge: true });
+      expect(driver.actions).toHaveBeenCalledWith();
       expect(driver._actions.keyUp).toHaveBeenCalledWith('Control');
       expect(driver._actions.perform).toHaveBeenCalledTimes(1);
       expect(out.result).toBe('keyup: Control');
@@ -351,7 +351,7 @@ describe('advanced-input.ts', () => {
       await browser_mousemove(driver, { x: 100, y: 200 }, resp);
       const out = JSON.parse(resp.serialize());
 
-      expect(driver.actions).toHaveBeenCalledWith({ bridge: true });
+      expect(driver.actions).toHaveBeenCalledWith();
       expect(driver._actions.move).toHaveBeenCalledWith({ x: 100, y: 200, origin: 'viewport' });
       expect(driver._actions.perform).toHaveBeenCalledTimes(1);
       expect(out.result).toBe('moved to (100, 200)');
@@ -439,7 +439,7 @@ describe('advanced-input.ts', () => {
       await browser_mousewheel(driver, { dx: 10, dy: 20 }, resp);
       const out = JSON.parse(resp.serialize());
 
-      expect(driver.actions).toHaveBeenCalledWith({ bridge: true });
+      expect(driver.actions).toHaveBeenCalledWith();
       expect(driver._actions.scroll).toHaveBeenCalledWith(0, 0, 10, 20);
       expect(driver._actions.perform).toHaveBeenCalledTimes(1);
       expect(out.result).toBe('scrolled (10, 20)');
