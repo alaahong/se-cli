@@ -122,6 +122,20 @@ describe('v0.9: install --skills multi-target', () => {
   });
 });
 
+describe('v0.1: install-browser (Selenium Manager)', () => {
+  (E2E_ENABLED ? it : it.skip)('installs/verifies the driver for the detected browser', async () => {
+    const out = await run(['install-browser']);
+    expect(out).toContain('Driver installed');
+    // Auto-detection resolved a real browser; driver path must exist.
+    const driverLine = out.split('\n').find(l => l.includes('Driver installed')) || '';
+    expect(driverLine.length).toBeGreaterThan(0);
+  });
+
+  (E2E_ENABLED ? it : it.skip)('rejects an unsupported browser name', async () => {
+    await expect(run(['install-browser', 'safari'])).rejects.toThrow(/Unsupported browser/);
+  });
+});
+
 if (E2E_ENABLED) {
   // eslint-disable-next-line no-console
   console.log(

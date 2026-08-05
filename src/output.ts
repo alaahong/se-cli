@@ -14,6 +14,8 @@ export function render(msg: ServerMessage): void {
       text += 'Hint: run `se-cli open` to start a session.\n';
     } else if (msg.code === 'ELEMENT_NOT_FOUND') {
       text += 'Hint: run `se-cli snapshot` to refresh refs.\n';
+    } else if (msg.code === 'VERSION_MISMATCH') {
+      text += 'Hint: run `se-cli close` then `se-cli open` to restart the session with matching versions.\n';
     }
     throw new CliError(text.trim(), msg.code);
   }

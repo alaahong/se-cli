@@ -297,7 +297,7 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
       try {
         await ensureDriver();
       } catch (e: any) {
-        driverInitError = `Failed to build ${browserName} driver: ${e.message}`;
+        driverInitError = `Failed to build ${browserName} driver: ${e.message}. Hint: run \`se-cli install-browser ${browserName}\` to install/verify the driver.`;
         logger.error('driver', driverInitError + '\n' + (e.stack || ''));
         return { ok: false, error: driverInitError, code: 'DRIVER_ERROR' };
       }

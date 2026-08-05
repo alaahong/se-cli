@@ -16,6 +16,7 @@ import {
 import * as path from 'path';
 import * as fs from 'fs';
 import { installSkills, parseAgentList, detectInstalledAgents, listAgentTargets, AGENTS } from './install';
+import { resolveBrowserName, installBrowser } from './install-browser';
 
 export async function main(argv: string[]): Promise<void> {
   const opts = {
@@ -110,6 +111,30 @@ export async function main(argv: string[]): Promise<void> {
     if (url) {
       const resp = await session.run(['goto', url], cwd, { raw: args.raw, json: args.json });
       render(resp);
+    }
+    return;
+  }
+
+  // install-browser — install/verify the WebDriver for a browser via
+  // Selenium Manager (spec §6.1/§9: suggested on driver startup failure).
+  if (cmd === 'install-browser') {
+    let browserName: string;
+    try {
+      browserName = resolveBrowserName(args._[1]);
+    } catch (e: any) {
+      console.error(`Error: ${e.message}`);
+      process.exit(1);
+    }
+    console.log(`Installing ${browserName} driver via Selenium Manager...`);
+    try {
+      const result = await installBrowser(browserName as any);
+      console.log(`✓ Driver installed: ${result.driverPath}`);
+      if (result.browserPath) console.log(`  Browser: ${result.browserPath}`);
+      else console.log('  (browser not found — install it or pass --browser-binary)');
+    } catch (e: any) {
+      console.error(`Error: driver installation failed: ${e.message}`);
+      console.error('Hint: install the browser manually, or check the Selenium Manager documentation.');
+      process.exit(1);
     }
     return;
   }
@@ -422,6 +447,8 @@ function printHelp(): void {
 Usage:
   se-cli open [url] [--browser=chrome|edge|firefox] [--headed] [--cdp=url] [--profile=path] [--persistent] [--viewport=WxH] [--user-agent=ua] [--locale=tag] [--color-scheme=light|dark] [--timezone=tz] [--geolocation=lat,lon] [--permissions=geolocation]
   se-cli install [--skills] [--agent=claude,cursor,copilot] [--path=dir] [--force] [--list-agents]
+  se-cli install-browser [chrome|edge|firefox]
+                    install/verify the browser driver via Selenium Manager
   se-cli mcp-server [--http] [--port=8931] [--host=127.0.0.1]
                     start MCP server (stdio for VS Code / AI agents; --http for Streamable HTTP)
   se-cli close [--all]            stop current session; --all stops every session (all projects)

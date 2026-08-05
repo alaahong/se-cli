@@ -500,6 +500,66 @@ describe('Session', () => {
       expect(spawn).not.toHaveBeenCalled();
     });
 
+    it('warns with a close/open hint when the daemon version differs from the CLI (VERSION_MISMATCH)', async () => {
+      // spec §4.3/§6.1: the handshake exchanges versions; a stale daemon
+      // from an older install must suggest `close && open`.
+      mockState.registry.loadSession.mockReturnValue({
+        name: 'default',
+        version: '0.0.0-old',
+        timestamp: Date.now(),
+        socketPath: '/tmp/socket',
+        workspaceDir: '/workspace',
+        persistent: false,
+        browserName: 'chrome' as const,
+      });
+      const emitWarningSpy = vi.spyOn(process, 'emitWarning').mockImplementation(() => {});
+
+      const session = new Session('/workspace', 'default');
+      const promise = session.startDaemon({ browserName: 'chrome' });
+
+      const sock0 = mockState.sockets[0];
+      sock0.emit('connect');
+
+      const sock1 = await waitForSocket(1);
+      sock1.emit('connect');
+      sock1.emit('data', Buffer.from(JSON.stringify({ ok: true, text: 'pong' }) + '\n'));
+
+      await expect(promise).resolves.toBe('reused');
+      expect(emitWarningSpy).toHaveBeenCalledWith(expect.stringContaining('0.0.0-old'));
+      expect(emitWarningSpy).toHaveBeenCalledWith(expect.stringContaining('se-cli close'));
+      expect(emitWarningSpy).toHaveBeenCalledWith(expect.stringContaining('se-cli open'));
+      emitWarningSpy.mockRestore();
+      mockState.registry.loadSession.mockReturnValue(null);
+    });
+
+    it('does not warn when the daemon version matches the CLI', async () => {
+      mockState.registry.loadSession.mockReturnValue({
+        name: 'default',
+        version: require('../../package.json').version,
+        timestamp: Date.now(),
+        socketPath: '/tmp/socket',
+        workspaceDir: '/workspace',
+        persistent: false,
+        browserName: 'chrome' as const,
+      });
+      const emitWarningSpy = vi.spyOn(process, 'emitWarning').mockImplementation(() => {});
+
+      const session = new Session('/workspace', 'default');
+      const promise = session.startDaemon({ browserName: 'chrome' });
+
+      const sock0 = mockState.sockets[0];
+      sock0.emit('connect');
+
+      const sock1 = await waitForSocket(1);
+      sock1.emit('connect');
+      sock1.emit('data', Buffer.from(JSON.stringify({ ok: true, text: 'pong' }) + '\n'));
+
+      await expect(promise).resolves.toBe('reused');
+      expect(emitWarningSpy).not.toHaveBeenCalled();
+      emitWarningSpy.mockRestore();
+      mockState.registry.loadSession.mockReturnValue(null);
+    });
+
     it('returns "started" and forwards --idle-timeout to the daemon', async () => {
       mockState.registry.loadSession.mockReturnValue(null);
 

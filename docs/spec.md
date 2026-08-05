@@ -83,6 +83,7 @@ se-cli kill-all                # Force-kill all processes
 se-cli logs [--tail=N]         # Tail this session's daemon + CLI logs (default 50)
 se-cli mcp-server [--http]     # Start MCP server (stdio default; Streamable HTTP with --http) (v0.9)
 se-cli install --skills        # Install SKILL.md into agent skill directories (v0.2/v0.9 multi-target)
+se-cli install-browser [name]  # Install/verify the driver for chrome|edge|firefox via Selenium Manager (spec §6.1)
 se-cli -s=<name> <cmd>         # Named session
 ```
 
@@ -312,11 +313,11 @@ response.addCode(`await driver.findElement(By.css('[data-se-ref="e15"]')).click(
 
 | Error Type | Example | Handling |
 |---------|------|------|
-| Startup failure | driver binary not installed, port in use | daemon exits immediately, CLI suggests `se-cli install-browser` |
+| Startup failure | driver binary not installed, port in use | daemon exits immediately, CLI suggests `se-cli install-browser` (verifies/installs the driver via Selenium Manager) |
 | Communication failure | socket connect timeout, daemon crash | CLI cleans up orphan `.session` files, suggests `open` |
 | WebDriver error | NoSuchElementError, TimeoutError, StaleElementReferenceError | Returns `{ok:false, error, code}`, CLI shows friendly message |
 | Injection script error | CSP blocks, Shadow DOM boundary | Returns partial snapshot + warning |
-| Version mismatch | CLI 0.2 calling daemon 0.1 | Handshake exchanges versions, suggests `close && open` |
+| Version mismatch | CLI 0.2 calling daemon 0.1 | `Session.startDaemon()` compares the daemon's saved version (from the `.session` file) with the CLI's own version on reuse; a mismatch emits a warning suggesting `close && open`. The `VERSION_MISMATCH` response code is defined in the protocol and rendered with the same hint |
 
 ### 6.2 Error Output Format
 

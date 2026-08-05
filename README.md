@@ -129,6 +129,8 @@ se-cli close
 | `kill-all` | Force-kill all sessions |
 | `logs [--tail=N]` | Show recent daemon + CLI log lines for this session (default tail 50) |
 | `mcp-server` | Start MCP server in stdio mode (for VS Code / AI agents) |
+| `install --skills` | Install `SKILL.md` into agent skill directories (Claude Code, Cursor, Copilot, custom) |
+| `install-browser [chrome\|edge\|firefox]` | Install/verify the browser driver via Selenium Manager (auto-detects if omitted) |
 
 ### Navigation
 

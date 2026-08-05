@@ -270,4 +270,42 @@ describe('main command routing', () => {
       stopSpy.mockRestore();
     }
   });
+
+  it('install-browser command installs the driver for an explicit browser', async () => {
+    const installBrowserModule = await import('../../src/install-browser');
+    const installSpy = vi
+      .spyOn(installBrowserModule, 'installBrowser')
+      .mockResolvedValue({
+        browserName: 'chrome',
+        driverPath: '/drivers/chromedriver',
+        browserPath: '/browsers/chrome',
+      });
+
+    await main(['install-browser', 'chrome']);
+
+    expect(installSpy).toHaveBeenCalledWith('chrome');
+    const out = consoleLogSpy.mock.calls.map(c => c[0]).join('\n');
+    expect(out).toContain('Driver installed');
+    expect(out).toContain('/drivers/chromedriver');
+    installSpy.mockRestore();
+  });
+
+  it('install-browser reports a failed install with a hint and exits 1', async () => {
+    const installBrowserModule = await import('../../src/install-browser');
+    const installSpy = vi
+      .spyOn(installBrowserModule, 'installBrowser')
+      .mockRejectedValue(new Error('selenium-manager failed'));
+
+    await expect(main(['install-browser', 'edge'])).rejects.toThrow('process.exit called');
+    const err = consoleErrSpy.mock.calls.map(c => c[0]).join('\n');
+    expect(err).toContain('driver installation failed');
+    expect(err).toContain('selenium-manager failed');
+    installSpy.mockRestore();
+  });
+
+  it('install-browser rejects an unsupported browser name', async () => {
+    await expect(main(['install-browser', 'safari'])).rejects.toThrow('process.exit called');
+    const err = consoleErrSpy.mock.calls.map(c => c[0]).join('\n');
+    expect(err).toContain('Unsupported browser');
+  });
 });

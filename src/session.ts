@@ -7,6 +7,9 @@ import { makeSocketPath, workspaceHash, baseDaemonDir } from './config';
 import type { ClientMessage, ServerMessage } from './protocol';
 import { FileLogger } from './logger';
 
+/** Current CLI version — compared against the daemon's saved version. */
+const CLI_VERSION = require('../package.json').version;
+
 export class Session {
   private socketPath: string;
   private wsHash: string;
@@ -53,6 +56,17 @@ export class Session {
     if (await this.canConnect()) {
       try {
         await this.sendAndClose({ method: 'ping', params: { args: [], cwd: '' } });
+        // spec §4.3/§6.1: handshake exchanges versions — a daemon left over
+        // from an older se-cli install may not understand newer commands,
+        // so surface the mismatch and suggest close && open.
+        const config = this.registry.loadSession(this.wsHash, this.sessionName);
+        if (config && config.version && config.version !== CLI_VERSION) {
+          this.logger.warn('session', `version mismatch: daemon=${config.version} cli=${CLI_VERSION}`);
+          process.emitWarning(
+            `daemon was started by se-cli v${config.version}, current CLI is v${CLI_VERSION}. ` +
+            'Run `se-cli close` then `se-cli open` to restart the session.'
+          );
+        }
         this.logger.info('session', `reused existing daemon ${this.sessionName}@${this.wsHash}`);
         return 'reused'; // Daemon is alive and responsive
       } catch {
