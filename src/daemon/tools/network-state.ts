@@ -17,13 +17,15 @@
  * Simple glob matching compatible with BiDi string patterns.
  * In BiDi, `*` matches ANY characters (including `/`), `?` matches
  * a single character. This differs from shell glob where `*` excludes `/`.
+ * The pattern must match the ENTIRE URL (anchored), so `?` is exactly one
+ * character and a trailing pattern cannot match a longer URL prefix.
  */
 export function matchesGlob(url: string, pattern: string): boolean {
   const regex = pattern
     .replace(/[.+^${}()|[\]\\]/g, '\\$&')  // escape regex special chars
     .replace(/\*/g, '.*')   // * → .* (any characters including /)
     .replace(/\?/g, '.');    // ? → . (single char)
-  return new RegExp(regex, 'i').test(url);
+  return new RegExp('^' + regex + '$', 'i').test(url);
 }
 
 // ── Types ──────────────────────────────────────────────────────────────

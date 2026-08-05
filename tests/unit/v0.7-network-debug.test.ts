@@ -73,10 +73,16 @@ vi.mock('selenium-webdriver/bidi/continueRequestParameters', () => ({
   },
 }));
 
+// Note: logInspector and network are NOT mocked here — they are external CJS
+// deps whose internal require() is not intercepted by vitest. Their event
+// handlers are covered with the real classes in coverage-program-network.test.ts
+// (makeNetworkDriver + emitEvent pattern).
+
 // Import after mocks are set up
 import {
   resetAll,
   resetBidiState,
+  matchesGlob,
   getConsoleEntries,
   clearConsole,
   getNetworkRequests,
@@ -659,6 +665,25 @@ describe('v0.7 Network & Debugging', () => {
       expect(resp.serialize()).toContain('**/api/**');
       expect(getRoutes()).toEqual([]);
     });
+
+    it('ignores removeIntercept failures (intercept may already be gone)', async () => {
+      addRoute('mock-intercept-id', '**/api/**', 404, null, null);
+      const driver = makeBiDiMockDriver();
+      // Keep the full mock Bidi (subscribe/socket for doInit), but make
+      // removeIntercept throw — unroute must still succeed.
+      const baseBidi = await driver.getBidi();
+      driver.getBidi = vi.fn(async () => ({
+        ...baseBidi,
+        send: vi.fn(async (params: any) => {
+          if (params.method === 'network.removeIntercept') throw new Error('no such intercept');
+          return { result: {} };
+        }),
+      }));
+      const resp = makeResponse();
+      await browser_unroute(driver, { index: 0 }, resp);
+      expect(resp.serialize()).toContain('Removed route 0');
+      expect(getRoutes()).toEqual([]);
+    });
   });
 
   // ── resetAll & resetBidiState ─────────────────────────
@@ -771,6 +796,22 @@ describe('v0.7 Network & Debugging', () => {
       const route = getRoute(0);
       expect(route).toBeDefined();
       expect(route!.active).toBe(true);
+    });
+  });
+
+  // ── matchesGlob ────────────────────────────────────────
+
+  describe('matchesGlob', () => {
+    it('matches * across slashes and ? for single chars (case-insensitive)', () => {
+      expect(matchesGlob('https://a.com/api/x', '**/api/**')).toBe(true);
+      expect(matchesGlob('https://a.com/API/X', '**/api/**')).toBe(true);
+      expect(matchesGlob('https://a.com/users/1', '**/users/?')).toBe(true);
+      expect(matchesGlob('https://a.com/users/12', '**/users/?')).toBe(false);
+    });
+
+    it('escapes regex special characters in the pattern', () => {
+      expect(matchesGlob('https://a.com/a+b', '**/a+b')).toBe(true);
+      expect(matchesGlob('https://a.com/axb', '**/a+b')).toBe(false);
     });
   });
 });

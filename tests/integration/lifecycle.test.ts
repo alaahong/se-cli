@@ -1,5 +1,5 @@
 ﻿import { describe, it, expect, afterEach, beforeEach, beforeAll, afterAll } from 'vitest';
-import { execFile } from 'child_process';
+import { execFile, spawn, type ChildProcess } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -128,6 +128,79 @@ if (E2E_ENABLED) {
     `\n[integration] E2E enabled. Testing browsers: ${RESOLVED_BROWSERS.join(', ') || '(none detected)'}\n`
   );
 }
+
+// v0.9: MCP server (stdio) end-to-end — handshake + tools/list. Runs
+// regardless of E2E flag (no browser needed), but requires dist/cli.js.
+describe('v0.9: MCP server (stdio) integration', () => {
+  function spawnMcp(): ChildProcess {
+    return spawn('node', [CLI, 'mcp-server'], { stdio: ['pipe', 'pipe', 'pipe'] });
+  }
+
+  function rpc(proc: ChildProcess, msg: Record<string, unknown>): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        proc.stdout?.off('data', onData);
+        reject(new Error('MCP response timeout'));
+      }, 20000);
+      timer.unref();
+      const onData = (data: Buffer) => {
+        const text = data.toString('utf8').trim();
+        if (!text) return;
+        proc.stdout?.off('data', onData);
+        clearTimeout(timer);
+        try {
+          resolve(JSON.parse(text));
+        } catch (e: any) {
+          reject(new Error(`Invalid JSON-RPC response: ${text} — ${e.message}`));
+        }
+      };
+      proc.stdout?.on('data', onData);
+      proc.stdin?.write(JSON.stringify(msg) + '\n');
+    });
+  }
+
+  it('completes the initialize handshake', async () => {
+    const proc = spawnMcp();
+    try {
+      const init = await rpc(proc, {
+        jsonrpc: '2.0', id: 1, method: 'initialize',
+        params: {
+          protocolVersion: '2025-06-18',
+          capabilities: {},
+          clientInfo: { name: 'se-cli-e2e', version: '1.0' },
+        },
+      });
+      expect(init.result?.protocolVersion).toBe('2025-06-18');
+      expect(init.result?.serverInfo?.name).toBeDefined();
+    } finally {
+      proc.kill();
+    }
+  }, 30000);
+
+  it('tools/list exposes the full storage tool set (incl. localStorage/sessionStorage)', async () => {
+    const proc = spawnMcp();
+    try {
+      await rpc(proc, {
+        jsonrpc: '2.0', id: 1, method: 'initialize',
+        params: {
+          protocolVersion: '2025-06-18',
+          capabilities: {},
+          clientInfo: { name: 'se-cli-e2e', version: '1.0' },
+        },
+      });
+      // notifications/initialized is a notification — no response expected.
+      proc.stdin?.write(JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) + '\n');
+      const list = await rpc(proc, { jsonrpc: '2.0', id: 2, method: 'tools/list' });
+      const names: string[] = (list.result?.tools ?? []).map((t: any) => t.name);
+      expect(names).toContain('browser_localstorage_list');
+      expect(names).toContain('browser_localstorage_set');
+      expect(names).toContain('browser_sessionstorage_delete');
+      expect(names).toContain('browser_cookie_list');
+    } finally {
+      proc.kill();
+    }
+  }, 30000);
+});
 
 // HTTP test server — started once for all browser suites.
 // Supports static fixture files and extensible dynamic routes.
