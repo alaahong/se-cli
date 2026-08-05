@@ -39,7 +39,9 @@ export async function browser_emulate(
       throttleNetwork: null,
       throttleCpu: null,
     });
-    await applyEmulation(driver);
+    // Pass restoreRuntime so the browser is explicitly brought back online /
+    // unthrottled — CDP emulation persists until a restore command is sent.
+    await applyEmulation(driver, { restoreRuntime: true });
     response.addResult(`emulation reset — ${describeEmulation()}`);
     response.addCode('// emulate --reset');
     return;

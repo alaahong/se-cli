@@ -439,7 +439,7 @@ describe('browser_emulate', () => {
 
   it('resets only runtime state, keeping open flags', async () => {
     const { driver, sent } = makeChromiumDriver();
-    setEmulationState({ locale: 'zh-CN', offline: true, throttleNetwork: { download: 400, upload: 400, latency: 400 } });
+    setEmulationState({ locale: 'zh-CN', offline: true, throttleNetwork: { download: 400, upload: 400, latency: 400 }, throttleCpu: 4 });
     const response = new Response({ raw: false, json: false });
     await browser_emulate(driver, { reset: true }, response);
     const state = getEmulationState();
@@ -449,8 +449,23 @@ describe('browser_emulate', () => {
     expect(state.throttleCpu).toBeNull();
     expect(response.serialize()).toContain('emulation reset');
     expect(response.serialize()).toContain('locale=zh-CN');
-    // After reset there is no network throttle state, so no CDP command is sent.
-    expect(sent).not.toContainEqual(expect.arrayContaining(['Network.emulateNetworkConditions']));
+    // Reset MUST restore the browser to the online, unthrottled state —
+    // otherwise the browser stays offline / CPU-throttled forever.
+    expect(sent).toContainEqual(['Network.emulateNetworkConditions', {
+      offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1,
+    }]);
+    expect(sent).toContainEqual(['Emulation.setCPUThrottlingRate', { rate: 1 }]);
+  });
+
+  it('sends restore commands on reset even when only one runtime flag was set', async () => {
+    const { driver, sent } = makeChromiumDriver();
+    setEmulationState({ throttleCpu: 2 });
+    const response = new Response({ raw: false, json: false });
+    await browser_emulate(driver, { reset: true }, response);
+    expect(sent).toContainEqual(['Network.emulateNetworkConditions', {
+      offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1,
+    }]);
+    expect(sent).toContainEqual(['Emulation.setCPUThrottlingRate', { rate: 1 }]);
   });
 
   it('throws on Firefox', async () => {

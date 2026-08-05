@@ -102,10 +102,19 @@ async function cdpSend(driver: any, method: string, params: any): Promise<void> 
  * Apply the current emulation state to a (possibly freshly built) driver.
  * Firefox: only viewport (BiDi). Unsupported capabilities are skipped.
  * Returns a list of warning strings for capabilities that were skipped.
+ *
+ * When `options.restoreRuntime` is set, the runtime network/CPU emulation is
+ * explicitly restored to the default (online, unthrottled) state. This is
+ * needed for `emulate --reset`: clearing the state alone would leave the
+ * browser offline / CPU-throttled because no restore command would be sent.
  */
-export async function applyEmulation(driver: any): Promise<string[]> {
+export async function applyEmulation(
+  driver: any,
+  options?: { restoreRuntime?: boolean },
+): Promise<string[]> {
   const warnings: string[] = [];
   const chromium = await isChromium(driver);
+  const restoreRuntime = options?.restoreRuntime === true;
 
   if (state.viewport) {
     if (chromium) {
@@ -193,7 +202,10 @@ export async function applyEmulation(driver: any): Promise<string[]> {
   // Runtime network/CPU emulation (`emulate` command, v0.8).
   // `offline !== undefined` (not just truthy) so an explicit `--offline=false`
   // sends the restore command instead of silently keeping the browser offline.
-  if (state.offline !== undefined || state.throttleNetwork) {
+  // `restoreRuntime` forces the restore command even when the state has been
+  // cleared (emulate --reset), because CDP emulation persists until told
+  // otherwise.
+  if (state.offline !== undefined || state.throttleNetwork || restoreRuntime) {
     if (chromium) {
       const t = state.throttleNetwork || {};
       await cdpSend(driver, 'Network.emulateNetworkConditions', {
@@ -208,9 +220,9 @@ export async function applyEmulation(driver: any): Promise<string[]> {
     }
   }
 
-  if (state.throttleCpu) {
+  if (state.throttleCpu || restoreRuntime) {
     if (chromium) {
-      await cdpSend(driver, 'Emulation.setCPUThrottlingRate', { rate: state.throttleCpu });
+      await cdpSend(driver, 'Emulation.setCPUThrottlingRate', { rate: state.throttleCpu || 1 });
     } else {
       warnings.push('CPU throttling is not supported on Firefox');
     }
