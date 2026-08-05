@@ -56,26 +56,34 @@ export async function serializeValue(
   driver: any,
   value: any,
   counter: { n: number },
-  seen: Set<any> = new Set()
+  activePath: Set<any> = new Set()
 ): Promise<any> {
   if (value === null || value === undefined) return null;
   const t = typeof value;
   if (t === 'string' || t === 'number' || t === 'boolean') return value;
   if (isWebElement(value)) return registerRef(driver, value, counter);
   if (t === 'bigint') return value.toString();
-  if (Array.isArray(value)) {
-    const out: any[] = [];
-    for (const item of value) out.push(await serializeValue(driver, item, counter, seen));
-    return out;
-  }
+  // Both arrays and plain objects participate in cycle detection. `activePath`
+  // tracks only the current ancestor chain, so a shared (non-circular)
+  // reference serialized twice is not falsely flagged, while a true cycle
+  // (including a self-referencing array) is replaced with '[Circular]'.
   if (t === 'object') {
-    if (seen.has(value)) return '[Circular]';
-    seen.add(value);
-    const out: Record<string, any> = {};
-    for (const key of Object.keys(value)) {
-      out[key] = await serializeValue(driver, value[key], counter, seen);
+    if (activePath.has(value)) return '[Circular]';
+    activePath.add(value);
+    try {
+      if (Array.isArray(value)) {
+        const out: any[] = [];
+        for (const item of value) out.push(await serializeValue(driver, item, counter, activePath));
+        return out;
+      }
+      const out: Record<string, any> = {};
+      for (const key of Object.keys(value)) {
+        out[key] = await serializeValue(driver, value[key], counter, activePath);
+      }
+      return out;
+    } finally {
+      activePath.delete(value);
     }
-    return out;
   }
   return String(value);
 }

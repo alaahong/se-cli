@@ -293,6 +293,19 @@ describe('shared.ts', () => {
       const out = response.serialize();
       expect(out).toContain('Enter');
     });
+
+    it('emits the correct Key constant name for multi-word keys', async () => {
+      // Regression: `press ArrowDown` generated `Key.ARROWDOWN`, which does
+      // not exist — the real Selenium constant is `Key.ARROW_DOWN`.
+      const driver = makeMockDriver({});
+      const mockEl = { sendKeys: vi.fn(async () => {}) };
+      driver.switchTo = vi.fn(() => ({ activeElement: vi.fn(() => mockEl) }));
+      const response = new Response({ raw: false, json: false });
+      await browser_press(driver, { key: 'ArrowDown' }, response);
+      const out = response.serialize();
+      expect(out).toContain('Key.ARROW_DOWN');
+      expect(out).not.toContain('Key.ARROWDOWN');
+    });
   });
 
   describe('browser_go_back', () => {

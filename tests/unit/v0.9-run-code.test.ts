@@ -117,6 +117,28 @@ describe('serializeValue', () => {
     expect(out.self).toBe('[Circular]');
   });
 
+  it('does not mark shared (non-circular) references as circular', async () => {
+    // Regression: the same object referenced from two places is NOT a cycle.
+    // A permanently-growing "seen" set falsely flagged the second reference.
+    const driver = makeMockDriver();
+    const shared = { x: 1 };
+    const out: any = await serializeValue(driver, { a: shared, b: shared }, { n: 0 });
+    expect(out.a).toEqual({ x: 1 });
+    expect(out.b).toEqual({ x: 1 });
+    expect(out.a).not.toBe('[Circular]');
+    expect(out.b).not.toBe('[Circular]');
+  });
+
+  it('guards self-referencing arrays without infinite recursion', async () => {
+    // Regression: arrays had no cycle protection — a self-referencing array
+    // recursed until stack overflow (caught by the outer try/catch).
+    const driver = makeMockDriver();
+    const arr: any[] = [];
+    arr.push(arr);
+    const out: any = await serializeValue(driver, arr, { n: 0 });
+    expect(out[0]).toBe('[Circular]');
+  });
+
   it('stringifies bigint and other non-serializable values', async () => {
     const driver = makeMockDriver();
     const out = await serializeValue(driver, { big: 10n, fn: () => {} }, { n: 0 });
