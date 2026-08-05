@@ -5,15 +5,20 @@ export async function browser_tab_list(driver: any, _params: any, response: Resp
   const handles = await driver.getAllWindowHandles();
 
   const tabs: { handle: string; title: string; url: string }[] = [];
-  for (const handle of handles) {
-    await driver.switchTo().window(handle);
-    const title = await driver.getTitle();
-    const url = await driver.getCurrentUrl();
-    tabs.push({ handle, title, url });
+  try {
+    for (const handle of handles) {
+      await driver.switchTo().window(handle);
+      const title = await driver.getTitle();
+      const url = await driver.getCurrentUrl();
+      tabs.push({ handle, title, url });
+    }
+  } finally {
+    // Always switch back to the original handle so the caller's context is
+    // preserved even when a mid-iteration query fails (e.g. a window that
+    // closed between getAllWindowHandles and switchTo). Without this the
+    // driver is left on a stale handle and subsequent commands break.
+    await driver.switchTo().window(originalHandle);
   }
-
-  // Switch back to the original handle so the caller's context is preserved.
-  await driver.switchTo().window(originalHandle);
 
   response.addCode(`const handles = await driver.getAllWindowHandles();`);
   response.addResult(JSON.stringify(tabs, null, 2));

@@ -587,6 +587,37 @@ describe('tool handlers', () => {
       expect(callArgs[0]).toBe('arguments[0].click()');
       expect(callArgs[1]).toBeTruthy();
     });
+
+    it('falls back to verbatim execution for statement-style scripts', async () => {
+      // `var x = 1; x` is not a valid expression under `return (...);` —
+      // the tool must fall back to executing the script verbatim.
+      const driver = makeMockDriver({ scriptResult: 42 });
+      driver.executeScript = vi.fn()
+        .mockRejectedValueOnce(new SyntaxError('Unexpected token'))
+        .mockResolvedValueOnce(42);
+      const response = new Response({ raw: false, json: false });
+      await browser_eval(driver, { script: 'var x = 42; x' }, response);
+      expect(driver.executeScript).toHaveBeenCalledTimes(2);
+      expect(driver.executeScript.mock.calls[1][0]).toBe('var x = 42; x');
+      expect(response.serialize()).toContain('42');
+    });
+
+    it('registers a returned WebElement as a ref', async () => {
+      const webElement = {
+        getId: vi.fn(async () => 'web-elem-1'),
+        click: vi.fn(async () => {}),
+        getTagName: vi.fn(async () => 'button'),
+      };
+      const driver = makeMockDriver({ scriptResult: webElement });
+      // maxExistingRef query returns the current max ref (0)
+      const response = new Response({ raw: false, json: false });
+      await browser_eval(driver, { script: 'document.querySelector("button")' }, response);
+      expect(response.serialize()).toContain('e1');
+      // setAttribute call assigns the ref
+      const setAttrCalls = driver.executeScript.mock.calls.filter((c: any[]) => String(c[0]).includes('setAttribute'));
+      expect(setAttrCalls.length).toBeGreaterThan(0);
+      expect(setAttrCalls[0][2]).toBe('e1');
+    });
   });
 
   // --- v0.2: Storage management ---
@@ -721,6 +752,28 @@ describe('tool handlers', () => {
       const out = response.serialize();
       expect(out).toContain('w1');
       expect(out).toContain('w2');
+    });
+
+    it('restores the original window context when a tab query fails', async () => {
+      // Regression: if getTitle/getCurrentUrl throws mid-iteration on a
+      // NON-original window, the driver must still be switched back to the
+      // original window — otherwise it is left on a stale/dead handle and
+      // subsequent commands fail.
+      const switchCalls: string[] = [];
+      const driver = makeMockDriver({ windowHandles: ['w1', 'w2'], title: 'Tab1', url: 'https://example.com' });
+      driver.getWindowHandle = vi.fn(async () => 'w1'); // original is w1
+      driver.getAllWindowHandles = vi.fn(async () => ['w1', 'w2']);
+      driver.switchTo = vi.fn(() => ({
+        window: vi.fn(async (h: string) => { switchCalls.push(h); }),
+      }));
+      driver.getTitle = vi.fn(async () => {
+        if (switchCalls.length >= 2) throw new Error('invalid window handle'); // fails on w2
+        return 'Tab1';
+      });
+      const response = new Response({ raw: false, json: false });
+      await expect(browser_tab_list(driver, {}, response)).rejects.toThrow('invalid window handle');
+      // last switch must be back to the original handle, not left on w2
+      expect(switchCalls[switchCalls.length - 1]).toBe('w1');
     });
   });
 
