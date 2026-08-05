@@ -153,6 +153,12 @@ export function generateAriaSnapshotScript(): string {
   function walk(el, level, depth, framePrefix) {
     framePrefix = framePrefix || '';
     if (level > depth) return;
+    // An IFRAME reached directly (e.g. as a body child) must recurse into
+    // its document, otherwise it silently produces no snapshot output.
+    if (el.tagName === 'IFRAME') {
+      walkIframe(el, level, depth);
+      return;
+    }
     if (isHidden(el)) return;
 
     var role = getRole(el);

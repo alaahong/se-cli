@@ -1,128 +1,261 @@
 import { describe, it, expect } from 'vitest';
 import { generateAriaSnapshotScript } from '../../src/snapshot/aria-snapshot';
 
-describe('aria snapshot script', () => {
-  it('returns a string of JavaScript code', () => {
-    const script = generateAriaSnapshotScript();
-    expect(typeof script).toBe('string');
-    expect(script).toContain('data-se-ref');
-    expect(script).toContain('INTERACTIVE_TAGS');
+// ── Lightweight DOM mocks — enough surface for the injected script ──
+
+class MockElement {
+  tagName: string;
+  attrs = new Map<string, string>();
+  children: MockElement[] = [];
+  textContent = '';
+  hidden = false;
+  style: Record<string, string> = {};
+  checked = false;
+  disabled = false;
+  parent: MockElement | null = null;
+  ownerDocument: MockDocument | null = null;
+  shadowChildren: MockElement[] | null = null;
+  iframeDoc: MockDocument | null = null;
+
+  constructor(tagName: string, opts: {
+    attrs?: Record<string, string>;
+    text?: string;
+    children?: MockElement[];
+    style?: Record<string, string>;
+    hidden?: boolean;
+    checked?: boolean;
+    disabled?: boolean;
+  } = {}) {
+    this.tagName = tagName.toUpperCase();
+    if (opts.attrs) for (const [k, v] of Object.entries(opts.attrs)) this.attrs.set(k, v);
+    if (opts.text !== undefined) this.textContent = opts.text;
+    if (opts.children) this.children = opts.children;
+    if (opts.style) this.style = opts.style;
+    if (opts.hidden) this.hidden = true;
+    if (opts.checked) this.checked = true;
+    if (opts.disabled) this.disabled = true;
+  }
+
+  getAttribute(name: string): string | null {
+    return this.attrs.get(name) ?? null;
+  }
+  hasAttribute(name: string): boolean {
+    return this.attrs.has(name);
+  }
+  setAttribute(name: string, value: string): void {
+    this.attrs.set(name, value);
+  }
+  get id(): string { return this.attrs.get('id') ?? ''; }
+  get type(): string { return this.attrs.get('type') ?? 'text'; }
+  get placeholder(): string { return this.attrs.get('placeholder') ?? ''; }
+  get name(): string { return this.attrs.get('name') ?? ''; }
+  get alt(): string { return this.attrs.get('alt') ?? ''; }
+  get title(): string { return this.attrs.get('title') ?? ''; }
+  get src(): string { return this.attrs.get('src') ?? ''; }
+
+  get contentDocument(): MockDocument | null {
+    return this.iframeDoc;
+  }
+  get contentWindow(): { document: MockDocument } | null {
+    return this.iframeDoc ? { document: this.iframeDoc } : null;
+  }
+  get shadowRoot(): { children: MockElement[] } | null {
+    return this.shadowChildren ? { children: this.shadowChildren } : null;
+  }
+  getRootNode(): MockDocument | null {
+    return this.ownerDocument;
+  }
+  matches(sel: string): boolean {
+    return this.tagName.toLowerCase() === sel.replace(/[.#]/g, '');
+  }
+  closest(sel: string): MockElement | null {
+    let p: MockElement | null = this.parent;
+    while (p) {
+      if (p.matches(sel)) return p;
+      p = p.parent;
+    }
+    return null;
+  }
+}
+
+class MockDocument {
+  title = '';
+  body: MockElement;
+  all: MockElement[] = [];
+
+  constructor(body: MockElement) {
+    this.body = body;
+    const visit = (el: MockElement) => {
+      el.ownerDocument = this;
+      this.all.push(el);
+      for (const c of el.children) visit(c);
+      if (el.shadowChildren) for (const c of el.shadowChildren) visit(c);
+    };
+    visit(body);
+  }
+
+  querySelector(sel: string): MockElement | null {
+    // Supports the selectors the script emits: [data-se-ref="X"], #id,
+    // label[for="X"] and plain tag selectors (for closest fallbacks).
+    const ref = sel.match(/^\[data-se-ref="([^"]+)"\]$/);
+    if (ref) return this.all.find(e => e.getAttribute('data-se-ref') === ref[1]) ?? null;
+    const id = sel.match(/^#(.+)$/);
+    if (id) return this.all.find(e => e.id === id[1]) ?? null;
+    const labelFor = sel.match(/^label\[for="(.+)"\]$/);
+    if (labelFor) {
+      return (
+        this.all.find(e => e.tagName === 'LABEL' && e.getAttribute('for') === labelFor[1]) ?? null
+      );
+    }
+    const tag = sel.replace(/[.#]/g, '').toUpperCase();
+    return this.all.find(e => e.tagName === tag) ?? null;
+  }
+}
+
+function mockWindow() {
+  return {
+    getComputedStyle: (el: MockElement) => ({
+      display: el.style.display || 'block',
+      visibility: el.style.visibility || 'visible',
+    }),
+  };
+}
+
+function mockCSS() {
+  return { escape: (s: string) => s.replace(/[^a-zA-Z0-9_-]/g, c => '\\' + c) };
+}
+
+function runSnapshot(
+  doc: MockDocument,
+  options?: { target?: string; depth?: number },
+): string {
+  const script = generateAriaSnapshotScript();
+  const generate = new Function('document', 'window', 'CSS', `return (${script});`)(
+    doc,
+    mockWindow(),
+    mockCSS(),
+  ) as (opts?: { target?: string; depth?: number }) => string;
+  return generate(options);
+}
+
+function build(body: MockElement): MockDocument {
+  return new MockDocument(body);
+}
+
+// ── Behaviour tests: execute the generated script against mock DOM ──
+
+describe('aria snapshot script (behaviour)', () => {
+  it('assigns sequential refs to interactive elements', () => {
+    const doc = build(
+      new MockElement('body', {
+        children: [
+          new MockElement('button', { text: 'Save' }),
+          new MockElement('a', { attrs: { href: '#x' }, text: 'Link' }),
+        ],
+      }),
+    );
+    const out = runSnapshot(doc);
+    expect(out).toContain('[ref=e1]');
+    expect(out).toContain('[ref=e2]');
+    // The DOM is actually tagged, not just printed
+    expect(doc.all[1].getAttribute('data-se-ref')).toBe('e1');
+    expect(doc.all[2].getAttribute('data-se-ref')).toBe('e2');
   });
 
-  it('script contains walk function', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain('function walk');
+  it('reports heading role with level attribute', () => {
+    const doc = build(
+      new MockElement('body', { children: [new MockElement('h1', { text: 'Welcome' })] }),
+    );
+    const out = runSnapshot(doc);
+    expect(out).toContain('heading "Welcome"');
+    expect(out).toContain('[level=1]');
   });
 
-  it('script assigns eN refs starting from e1', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain("'e' + (++refCounter)");
+  it('skips elements hidden via display:none / hidden / aria-hidden', () => {
+    const doc = build(
+      new MockElement('body', {
+        children: [
+          new MockElement('button', { text: 'Visible' }),
+          new MockElement('button', { text: 'Gone', style: { display: 'none' } }),
+          new MockElement('button', { text: 'HiddenAttr', hidden: true }),
+          new MockElement('button', { attrs: { 'aria-hidden': 'true' }, text: 'AriaHidden' }),
+        ],
+      }),
+    );
+    const out = runSnapshot(doc);
+    expect(out).toContain('"Visible"');
+    expect(out).not.toContain('"Gone"');
+    expect(out).not.toContain('"HiddenAttr"');
+    expect(out).not.toContain('"AriaHidden"');
   });
 
-  it('script handles heading role with level', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain('level');
+  it('prefixes refs inside same-origin iframes with f<index>', () => {
+    const iframeContent = new MockDocument(
+      new MockElement('body', { children: [new MockElement('button', { text: 'InFrame' })] }),
+    );
+    const iframe = new MockElement('iframe', { attrs: { src: '/inner.html' } });
+    iframe.iframeDoc = iframeContent;
+    const doc = build(
+      new MockElement('body', {
+        children: [
+          new MockElement('button', { text: 'Parent' }),
+          iframe,
+        ],
+      }),
+    );
+    const out = runSnapshot(doc);
+    expect(out).toContain('[ref=e1]'); // parent
+    expect(out).toContain('[ref=f0e1]'); // inside frame
   });
 
-  it('script truncates text to 80 chars', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain('slice(0, 80)');
+  it('honors an explicit depth of 0 (root-level only)', () => {
+    const doc = build(
+      new MockElement('body', {
+        children: [
+          new MockElement('button', {
+            text: 'Top',
+            children: [new MockElement('button', { text: 'Nested' })],
+          }),
+        ],
+      }),
+    );
+    const out = runSnapshot(doc, { depth: 0 });
+    // walk starts at level 1 for body children; level > depth skips everything
+    expect(out).not.toContain('"Top"');
+    expect(out).not.toContain('"Nested"');
   });
 
-  // --- v0.3: iframe recursive snapshot ---
-
-  it('script contains walkIframe function', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain('function walkIframe');
+  it('resolves input type=checkbox to the checkbox role', () => {
+    const doc = build(
+      new MockElement('body', {
+        children: [new MockElement('input', { attrs: { type: 'checkbox' } })],
+      }),
+    );
+    const out = runSnapshot(doc);
+    expect(out).toContain('- checkbox');
   });
 
-  it('script uses frameCounter for cross-frame refs', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain('frameCounter');
+  it('surfaces aria-expanded / aria-checked state attributes', () => {
+    const doc = build(
+      new MockElement('body', {
+        children: [
+          new MockElement('button', { attrs: { 'aria-expanded': 'true' }, text: 'Menu' }),
+          new MockElement('input', { attrs: { type: 'checkbox', 'aria-checked': 'true' } }),
+        ],
+      }),
+    );
+    const out = runSnapshot(doc);
+    expect(out).toContain('[aria-expanded=true]');
+    expect(out).toContain('[aria-checked=true]');
   });
 
-  it('script resets frameCounter on each snapshot', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain('frameCounter = 0');
-  });
-
-  it('script generates cross-frame ref prefix f<index>', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain("'f' + fIdx");
-  });
-
-  it('script passes framePrefix to walk function', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain('framePrefix');
-  });
-
-  it('script saves and restores refCounter across frames', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain('savedRefCounter');
-    expect(script).toContain('refCounter = 0');
-    expect(script).toContain('refCounter = savedRefCounter');
-  });
-
-  it('script detects IFRAME tags in walk function', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain("child.tagName === 'IFRAME'");
-  });
-
-  it('script accesses contentDocument for same-origin iframes', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain('contentDocument');
-    expect(script).toContain('contentWindow');
-  });
-
-  it('script outputs placeholder for cross-origin iframes', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain('cross-origin');
-  });
-
-  it('script uses ownerDocument for label resolution', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain('el.ownerDocument');
-  });
-
-  // --- v0.3: Shadow DOM recursion ---
-
-  it('script traverses open shadow roots', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain('el.shadowRoot');
-  });
-
-  it('script walks shadowRoot children', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain('el.shadowRoot.children');
-  });
-
-  it('script resolves input roles from type (checkbox/radio/button/search/number/range)', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain("if (type === 'checkbox') return 'checkbox'");
-    expect(script).toContain("if (type === 'radio') return 'radio'");
-    expect(script).toContain("if (type === 'button' || type === 'submit' || type === 'reset' || type === 'image') return 'button'");
-    expect(script).toContain("if (type === 'search') return 'searchbox'");
-    expect(script).toContain("if (type === 'number') return 'spinbutton'");
-    expect(script).toContain("if (type === 'range') return 'slider'");
-    expect(script).toContain("return 'textbox'");
-  });
-
-  // --- ARIA state attributes (v0.9+ hardening) ---
-
-  it('script surfaces aria-checked / aria-expanded / aria-selected / aria-disabled', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain("el.getAttribute('aria-checked')");
-    expect(script).toContain("el.getAttribute('aria-expanded')");
-    expect(script).toContain("el.getAttribute('aria-selected')");
-    expect(script).toContain("el.getAttribute('aria-disabled')");
-    expect(script).toContain("attrs.push('aria-checked=' + ariaChecked)");
-    expect(script).toContain("attrs.push('aria-expanded=' + ariaExpanded)");
-    expect(script).toContain("attrs.push('aria-selected=' + ariaSelected)");
-    expect(script).toContain("attrs.push('aria-disabled=' + ariaDisabled)");
-  });
-
-  it('script honors an explicit depth of 0', () => {
-    const script = generateAriaSnapshotScript();
-    expect(script).toContain('options.depth === undefined ? 50 : options.depth');
+  it('truncates long text labels to 80 characters', () => {
+    const long = 'x'.repeat(120);
+    const doc = build(
+      new MockElement('body', { children: [new MockElement('button', { text: long })] }),
+    );
+    const out = runSnapshot(doc);
+    expect(out).toContain('"'.repeat(1) + 'x'.repeat(80));
+    expect(out).not.toContain('x'.repeat(81));
   });
 });
