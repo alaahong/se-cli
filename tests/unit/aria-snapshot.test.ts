@@ -106,4 +106,23 @@ describe('aria snapshot script', () => {
     expect(script).toContain("if (type === 'range') return 'slider'");
     expect(script).toContain("return 'textbox'");
   });
+
+  // --- ARIA state attributes (v0.9+ hardening) ---
+
+  it('script surfaces aria-checked / aria-expanded / aria-selected / aria-disabled', () => {
+    const script = generateAriaSnapshotScript();
+    expect(script).toContain("el.getAttribute('aria-checked')");
+    expect(script).toContain("el.getAttribute('aria-expanded')");
+    expect(script).toContain("el.getAttribute('aria-selected')");
+    expect(script).toContain("el.getAttribute('aria-disabled')");
+    expect(script).toContain("attrs.push('aria-checked=' + ariaChecked)");
+    expect(script).toContain("attrs.push('aria-expanded=' + ariaExpanded)");
+    expect(script).toContain("attrs.push('aria-selected=' + ariaSelected)");
+    expect(script).toContain("attrs.push('aria-disabled=' + ariaDisabled)");
+  });
+
+  it('script honors an explicit depth of 0', () => {
+    const script = generateAriaSnapshotScript();
+    expect(script).toContain('options.depth === undefined ? 50 : options.depth');
+  });
 });

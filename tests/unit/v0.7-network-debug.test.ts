@@ -589,6 +589,16 @@ describe('v0.7 Network & Debugging', () => {
         browser_route(driver, { pattern: '**/api/**', headers: 'not-json' }, resp),
       ).rejects.toThrow('Invalid --headers JSON');
     });
+
+    it('accepts --status=0 (falsy but valid HTTP status)', async () => {
+      // Regression: `params.status ? parseInt(...) : null` treated --status=0
+      // as "not provided" and threw the "requires --status" error.
+      const driver = makeBiDiMockDriver();
+      const resp = makeResponse();
+      await browser_route(driver, { pattern: '**/api/**', status: '0' }, resp);
+      expect(resp.serialize()).toContain('Route');
+      expect(resp.serialize()).toContain('0');
+    });
   });
 
   describe('browser_route_list tool', () => {

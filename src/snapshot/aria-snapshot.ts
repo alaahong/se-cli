@@ -137,6 +137,16 @@ export function generateAriaSnapshotScript(): string {
       if (type === 'radio' && el.checked) attrs.push('checked');
       if (el.disabled) attrs.push('disabled');
     }
+    // ARIA state attributes — agents need these to know whether a combobox
+    // is expanded, a tab is selected, or a custom widget is checked/disabled.
+    var ariaChecked = el.getAttribute('aria-checked');
+    if (ariaChecked !== null && ariaChecked !== undefined && ariaChecked !== '') attrs.push('aria-checked=' + ariaChecked);
+    var ariaExpanded = el.getAttribute('aria-expanded');
+    if (ariaExpanded !== null && ariaExpanded !== undefined && ariaExpanded !== '') attrs.push('aria-expanded=' + ariaExpanded);
+    var ariaSelected = el.getAttribute('aria-selected');
+    if (ariaSelected !== null && ariaSelected !== undefined && ariaSelected !== '') attrs.push('aria-selected=' + ariaSelected);
+    var ariaDisabled = el.getAttribute('aria-disabled');
+    if (ariaDisabled !== null && ariaDisabled !== undefined && ariaDisabled !== '') attrs.push('aria-disabled=' + ariaDisabled);
     return attrs.length ? ' [' + attrs.join(' ') + ']' : '';
   }
 
@@ -225,7 +235,9 @@ export function generateAriaSnapshotScript(): string {
 
   return function generateAriaSnapshot(options) {
     options = options || {};
-    var depth = options.depth || 50;
+    // options.depth === undefined (not truthy) so an explicit --depth=0
+    // is honored instead of falling back to the default of 50.
+    var depth = options.depth === undefined ? 50 : options.depth;
     refCounter = 0;
     frameCounter = 0;
     lines.length = 0;

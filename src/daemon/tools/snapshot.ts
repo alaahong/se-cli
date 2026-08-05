@@ -38,7 +38,7 @@ export async function browser_snapshot(
       const result = await driver.executeScript(
         `const options = { target: arguments[0], depth: arguments[1] }; return (${script})(options);`,
         params.target || null,
-        params.depth || 50,
+        params.depth !== undefined ? params.depth : 50,
       );
       yaml = typeof result === 'string' ? result : '';
       if (yaml) break;

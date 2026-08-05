@@ -267,6 +267,46 @@ describe('v0.6 Web-First Assertions', () => {
       expect(response.serialize()).toContain('not visible');
     });
 
+    it('passes hidden when the element has been removed from the DOM', async () => {
+      // Playwright semantics: an element that no longer exists IS hidden.
+      // A StaleElementReferenceError from isDisplayed() must satisfy `hidden`.
+      const { driver, mockEl } = makeMockDriver();
+      const { Response } = await import('../../src/response');
+      const { browser_expect } = await import('../../src/daemon/tools/expect');
+      const response = new Response({ raw: false, json: false });
+      mockEl.isDisplayed.mockRejectedValue(new Error('stale element reference'));
+
+      await browser_expect(driver, {
+        target: '#gone',
+        assertion: 'hidden',
+        not: false,
+        exact: false,
+        _wait: { state: 'attached', timeout: 500 },
+      }, response);
+
+      expect(response.serialize()).toContain('hidden');
+    });
+
+    it('fails hidden --not when the element has been removed', async () => {
+      // `hidden --not` asserts the element IS visible — a removed element is
+      // hidden, so the assertion must fail.
+      const { driver, mockEl } = makeMockDriver();
+      const { Response } = await import('../../src/response');
+      const { browser_expect } = await import('../../src/daemon/tools/expect');
+      const response = new Response({ raw: false, json: false });
+      mockEl.isDisplayed.mockRejectedValue(new Error('stale element reference'));
+
+      await expect(
+        browser_expect(driver, {
+          target: '#gone',
+          assertion: 'hidden',
+          not: true,
+          exact: false,
+          _wait: { state: 'attached', timeout: 200 },
+        }, response)
+      ).rejects.toThrow('be hidden');
+    });
+
     it('passes when text contains expected value', async () => {
       const { driver, mockEl } = makeMockDriver();
       const { Response } = await import('../../src/response');

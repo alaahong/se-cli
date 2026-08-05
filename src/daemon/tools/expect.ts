@@ -200,8 +200,18 @@ export async function browser_expect(
       return;
     }
     case 'hidden': {
-      // hidden is the inverse of visible
-      const passed = await pollUntil(() => el.isDisplayed(), not, timeout);
+      // hidden is the inverse of visible. Playwright semantics: an element
+      // that no longer exists in the DOM IS hidden, so a detached element
+      // (StaleElementReferenceError from isDisplayed) satisfies `hidden`
+      // (and fails `hidden --not`).
+      const check = async (): Promise<boolean> => {
+        try {
+          return !(await el.isDisplayed());
+        } catch {
+          return true; // element removed/detached → hidden
+        }
+      };
+      const passed = await pollUntil(check, !not, timeout);
       if (!passed) {
         throw new AssertionError(`Expected element to ${not ? 'not ' : ''}be hidden`, 'hidden', undefined, undefined, not);
       }

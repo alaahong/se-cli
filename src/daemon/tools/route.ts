@@ -58,8 +58,9 @@ export async function browser_route(
 ): Promise<void> {
   await ensureBidiInitialized(driver);
 
-  // Parse parameters
-  const status = params.status ? parseInt(params.status) : null;
+  // Parse parameters. Use explicit undefined/empty check so --status=0
+  // (a falsy but valid HTTP status) is not treated as "not provided".
+  const status = params.status !== undefined && params.status !== '' ? parseInt(params.status) : null;
   const body = params.body || null;
   let headers: Record<string, string> | null = null;
   if (params.headers) {
