@@ -3,9 +3,18 @@ name: Create Release
 # This workflow creates a GitHub Release (draft by default), which then
 # triggers publish.yml → npm publish automatically once published.
 #
+# The release is published FROM the release/v<x.y.z> branch (never from main):
+#   1. Create release/v<x.y.z> from upstream/main, bump the version, open a
+#      PR, wait for CI to pass
+#   2. Run this workflow (workflow_dispatch) — it checks out the release
+#      branch, verifies the tag version, and creates a draft release
+#   3. Publish the draft → npm publish (publish.yml)
+#   4. Squash-merge the release PR back into main — one clean merge
+#
 # Two trigger modes:
 #   1. Push a version tag:  git tag v0.2.0 && git push origin v0.2.0
-#   2. Manual dispatch from the Actions tab (enters a version number)
+#   2. Manual dispatch from the Actions tab (enters a version number,
+#      optionally the release branch)
 #
 # The release is created as a DRAFT by default. Review the draft on the
 # Releases page, then click "Publish" to trigger npm publish.
@@ -20,6 +29,11 @@ on:
         description: 'Version to release (e.g. 0.2.0)'
         required: true
         type: string
+      release_branch:
+        description: 'Release branch to publish from (e.g. release/v0.10.0). Defaults to release/v<version> — only override when the branch name differs.'
+        required: false
+        type: string
+        default: ''
       prerelease:
         description: 'Mark as pre-release'
         required: false
@@ -52,11 +66,17 @@ jobs:
           # Strip leading 'v' if present
           VERSION="${VERSION#v}"
           TAG="v${VERSION}"
+          BRANCH="${{ inputs.release_branch }}"
+          if [ -z "$BRANCH" ]; then
+            BRANCH="release/v${VERSION}"
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
           echo "─── Release Summary ───"
           echo "  Tag:     $TAG"
           echo "  Version: $VERSION"
+          echo "  Branch:  $BRANCH"
           echo "  Source:  ${{ github.event_name }}"
 
       # ── Checkout code ───────────────────────────────────────────────
@@ -66,12 +86,12 @@ jobs:
         with:
           fetch-depth: 0  # full history for changelog
 
-      - name: Checkout (manual dispatch — from main)
+      - name: Checkout (manual dispatch — from release branch)
         if: github.event_name == 'workflow_dispatch'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: main
+          ref: ${{ steps.ver.outputs.branch }}
 
       # ── Quality gate ────────────────────────────────────────────────
       - uses: actions/setup-node@v4
@@ -102,15 +122,6 @@ jobs:
           fi
           echo "✓ Version verified: $PKG_VERSION"
 
-      # ── Create tag (manual dispatch only) ──────────────────────────
-      - name: Create and push tag (manual dispatch)
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag '${{ steps.ver.outputs.tag }}' -m "Release ${{ steps.ver.outputs.tag }}"
-          git push origin '${{ steps.ver.outputs.tag }}'
-
       # ── Build npm tarball for release assets ────────────────────────
       - name: Set package version and pack
         id: pack
@@ -122,6 +133,10 @@ jobs:
           echo "✓ Packaged: $TARBALL"
 
       # ── Create GitHub Release ───────────────────────────────────────
+      # gh release create creates the tag automatically from --target
+      # (the release branch), so manual dispatch needs no separate
+      # git-push-tag step — that would only trigger a duplicate
+      # tag-push run of this workflow.
       - name: Create release
         id: release
         env:
@@ -143,7 +158,7 @@ jobs:
           gh release create '${{ steps.ver.outputs.tag }}' \
             --title "${{ steps.ver.outputs.tag }}" \
             --generate-notes \
-            --target main \
+            --target '${{ steps.ver.outputs.branch }}' \
             '${{ steps.pack.outputs.tarball }}' \
             $ARGS
 

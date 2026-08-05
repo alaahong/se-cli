@@ -124,13 +124,12 @@ src/
    # Create PR titled: "chore: release v<x.y.z>"
    ```
 4. **Wait for CI** — all checks (lint, type check, unit tests, integration tests across Chrome/Edge/Firefox) must pass
-5. **Merge the PR** (squash merge) into `main`
-6. **Trigger `create-release.yml`** via `workflow_dispatch` with `version: "<x.y.z>"`, or push tag `v<x.y.z>`
-7. `create-release.yml` verifies `package.json` version matches, runs quality gates, creates a draft GitHub Release
-8. **Publish the Release** on GitHub — this triggers `publish.yml` which publishes to npm as `@browsers-cli/se-cli` with provenance
-9. **Register the release** in the [Release Log](#release-log) table below
+5. **Trigger `create-release.yml`** via `workflow_dispatch` with `version: "<x.y.z>"` — it checks out the **release branch** (not `main`), verifies `package.json` version matches, runs quality gates, creates tag `v<x.y.z>`, and creates a draft GitHub Release targeting the release branch
+6. **Publish the Release** on GitHub — this triggers `publish.yml` which publishes to npm as `@browsers-cli/se-cli` with provenance
+7. **Merge the PR** (squash merge) into `main` — done **after** the release so no post-release merge/PR is needed; the release branch becomes the baseline for the next release
+8. **Register the release** in the [Release Log](#release-log) table below (commit the row to the release branch **before** merging, so it lands with the release merge — no separate follow-up PR)
 
-**CRITICAL**: The `package.json` version on `main` branch must match the release version before triggering `create-release.yml`.
+**CRITICAL**: The `package.json` version on the `release/v<x.y.z>` **branch** (not `main`) must match the release version before triggering `create-release.yml`. The release PR is merged into `main` **after** the release is published, avoiding extra merge commits/PRs after publish.
 
 ### Release Log
 
