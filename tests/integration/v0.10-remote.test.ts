@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
+import * as fs from 'fs';
 import * as http from 'http';
 import * as path from 'path';
 import { shouldRunE2E } from './detect-browsers';
@@ -118,6 +119,44 @@ describe('v0.10: grid commands', () => {
     const out = await run(['grid', 'distribute', '--shard=2/3']);
     expect(out).toContain('Shard 2/3:');
     expect(out).toContain('edge');
+  });
+});
+
+describe('v0.10: pdf command', () => {
+  (E2E_ENABLED ? it : it.skip)('saves the current page as a PDF in .se-cli', async () => {
+    const sess = S();
+    const pdfName = `v010-${Date.now()}.pdf`;
+    await run(['open', EXAMPLE_URL(), '--browser=edge'], { SE_CLI_SESSION: sess });
+
+    const out = await run(['pdf', `--filename=${pdfName}`], { SE_CLI_SESSION: sess });
+    expect(out).toContain('[PDF]');
+    expect(out).toContain(pdfName);
+
+    const file = path.join(process.cwd(), '.se-cli', pdfName);
+    expect(fs.existsSync(file)).toBe(true);
+    // PDF magic bytes
+    const head = fs.readFileSync(file).subarray(0, 5).toString('ascii');
+    expect(head).toBe('%PDF-');
+
+    await run(['close'], { SE_CLI_SESSION: sess });
+    fs.rmSync(file, { force: true });
+  });
+});
+
+describe('v0.10: safari / electron', () => {
+  (E2E_ENABLED ? it : it.skip)('rejects --browser=electron without --app-binary at the CLI', async () => {
+    const sess = S();
+    const err = await runExpectFail(['open', '--browser=electron'], { SE_CLI_SESSION: sess });
+    expect(err).toMatch(/--app-binary/i);
+  });
+
+  (E2E_ENABLED ? it : it.skip)('fails clearly when --browser=safari is unavailable on this platform', async () => {
+    const sess = S();
+    await run(['open', '--browser=safari'], { SE_CLI_SESSION: sess });
+    const err = await runExpectFail(['title'], { SE_CLI_SESSION: sess });
+    // safaridriver does not exist on Linux/Windows — expect a build error, not a hang.
+    expect(err.length).toBeGreaterThan(0);
+    await run(['close'], { SE_CLI_SESSION: sess }).catch(() => {});
   });
 });
 
