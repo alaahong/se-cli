@@ -195,6 +195,23 @@ async function doInit(driver: any): Promise<void> {
       return; // Don't track intercepted requests
     }
 
+    // A non-matching request may still be paused by the browser: intercept
+    // pattern semantics vary per implementation (some match more broadly
+    // than our matchesGlob), so a paused request that no route matched must
+    // be continued explicitly or it hangs forever. continueRequest is a
+    // no-op for requests the browser never paused.
+    if (bidi && getRoutes().some(r => r.active)) {
+      const requestId = req.request || req.id;
+      try {
+        await bidi.send({
+          method: 'network.continueRequest',
+          params: { request: requestId },
+        });
+      } catch {
+        // Ignore — the request was not intercepted
+      }
+    }
+
     // ── Request tracking ────────────────────────────────
     // Normalize headers: Selenium wraps them as Header[] instances,
     // but raw BiDi events may provide plain objects. Handle both.

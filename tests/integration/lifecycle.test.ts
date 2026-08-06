@@ -517,8 +517,13 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
     const rawOut = (await run(['--raw', 'generate-locator', ref], { SE_CLI_SESSION: S() })).trim();
     expect(rawOut).toContain("new By('role', { role: 'button'");
     // The recommended expression is valid Selenium: clicking via it succeeds.
+    // Role locators are not a standard strategy — on drivers without the
+    // accessibility extension codegen falls back to CSS with a note, so
+    // accept either the role output or the documented fallback.
     const clickResult = await run(['click', ref], { SE_CLI_SESSION: S() });
-    expect(clickResult).toContain("new By('role', { role: 'button', name: 'Increment +1' })");
+    const roleEmitted = clickResult.includes("new By('role', { role: 'button', name: 'Increment +1' })");
+    const cssFallback = clickResult.includes('driver does not support the role locator strategy');
+    expect(roleEmitted || cssFallback).toBe(true);
     // --locator-style=ref keeps the MVP data-se-ref codegen.
     const refClick = await run(['click', ref, '--locator-style=ref'], { SE_CLI_SESSION: S() });
     expect(refClick).toContain(`By.css('[data-se-ref="${ref}"]')`);
@@ -666,7 +671,9 @@ describe.each(BROWSERS)('lifecycle with %s', (browser) => {
     // the "click link → new window → tab-list detects it" chain untested.
     await run(['open', TABS_URL(), `--browser=${browser}`], { SE_CLI_SESSION: S() });
     const snapshot = await run(['--raw', 'snapshot'], { SE_CLI_SESSION: S() });
-    const refMatch = snapshot.match(/Open Example Page[^\n]*ref=(e\d+)/);
+    // The link's accessible name comes from its aria-label, not the visible
+    // text: <a aria-label="Open Example in new tab">Open Example Page</a>.
+    const refMatch = snapshot.match(/Open Example in new tab[^\n]*ref=(e\d+)/);
     expect(refMatch).not.toBeNull();
     const ref = refMatch![1];
     await run(['click', ref], { SE_CLI_SESSION: S() });
