@@ -695,7 +695,6 @@ never match — emphasized as a differentiated stronghold rather than a passing 
 - [x] **--browser=safari**: real Safari via `safaridriver` (macOS only, no headless/BiDi/CDP)
 - [x] **--endpoint=<url>**: connect to Selenium Grid 4 or remote WebDriver
 - [x] **--browser-binary=<path>**: custom browser binary (360, UC, QQ, Brave, Electron-embedded, QtWebEngine, domestic browsers)
-- [x] **--browser=electron --app-binary=<path>**: Electron app testing via ChromeDriver with Electron binary (issue #73)
 - [x] **--driver-binary=<path>**: custom driver binary (bypass selenium-manager)
 - [x] **--browser-args="<args>"**: pass-through browser launch arguments
 - [ ] **--browser-prefs=<json>**: Chromium prefs injection
@@ -721,12 +720,61 @@ never match — emphasized as a differentiated stronghold rather than a passing 
   - codegen: disable `By.role()`, keep `By.css()` / `By.xpath()`
   - Startup detects IE mode availability; if unconfigured, returns clear setup guidance (registry / group policy steps)
 
+#### 远期目标 (Backlog — 未排期)
+
+- [ ] **--browser=electron --app-binary=<path>**: Electron app testing via ChromeDriver with Electron binary (issue #73)
+  - Electron executable replaces the Chrome binary; the app path travels via `--browser-args=--app=<dir>`; requires an Electron-matched chromedriver (`electron-chromedriver` package) via `--driver-binary`
+  - Removed from the v0.10 plan: needs an Electron test target + version-matched driver in CI to verify reliably — recorded here as a long-term goal instead
+
 > **Safari limitations**: safaridriver has no headless mode, no BiDi/CDP support, macOS only.
 > Basic navigation/interaction/screenshot/storage commands work; network interception,
 > console logs, and BiDi features are unavailable.
 >
+> **Safari verified surface (integration-tested on macOS CI)**: open/goto/title/url,
+> snapshot + click by ref, link navigation, eval (executeScript), cookie set/get,
+> localStorage via eval, screenshot. Coverage: `tests/integration/v0.10-safari.test.ts`.
+>
 > **Edge IE mode limitations**: Windows Edge Enterprise only; IE mode must be enabled via
 > policy. Network interception, Shadow DOM, emulation, and recording unavailable.
+
+#### 浏览器支持矩阵 (Browser Support Matrix)
+
+每个 CLI 功能按底层 WebDriver 机制标注支持的浏览器。基准：
+
+- **W3C WebDriver Classic**（规范命令 + `executeScript` + Actions + Cookie）—— 全部浏览器原生支持：Chrome / Edge / Firefox / Safari
+- **BiDi**（WebSocket 双向，`webSocketUrl` capability）—— Chrome / Edge / Firefox；Safari 不支持
+- **CDP**（Chrome DevTools Protocol）—— Chrome / Edge；Firefox 上游已移除，Safari 不支持
+
+| 功能 | 底层机制 | Chrome | Edge | Firefox | Safari | 备注 |
+|------|---------|--------|------|---------|--------|------|
+| `open` / `goto` / `go-back` / `go-forward` / `reload` | W3C Classic | ✅ | ✅ | ✅ | ✅ | Safari headed-only |
+| `title` / `url` | W3C Classic | ✅ | ✅ | ✅ | ✅ | |
+| `snapshot` / `find` / `generate-locator` | `executeScript` 注入 + W3C 定位 | ✅ | ✅ | ✅ | ✅ | role 定位在 safaridriver 上回退 CSS（见 SKILL.md） |
+| `click` / `fill` / `type` / `press` / `select` / `check` / `uncheck` | W3C Classic | ✅ | ✅ | ✅ | ✅ | 集成测试覆盖 Safari |
+| `hover` / `dblclick` / `drag` / `keydown` / `keyup` / `mousemove` / `mousedown` / `mouseup` / `mousewheel` / `actions-chain` | W3C Actions API | ✅ | ✅ | ✅ | ⚠️ 部分 | Actions 链在 safaridriver 上可能降级为单步执行（与 IE-mode 同源限制） |
+| `screenshot` | W3C Classic | ✅ | ✅ | ✅ | ✅ | PNG 魔数已测试 |
+| `pdf` | W3C print 端点 (`driver.printPage()`) | ✅ | ✅ | ✅ | ❌ | safaridriver 未实现 print 端点；CLI 报明确错误 |
+| `eval` / `run-code` | `executeScript` | ✅ | ✅ | ✅ | ✅ | |
+| `cookie-*` | W3C Cookie API | ✅ | ✅ | ✅ | ✅ | 集成测试覆盖 Safari |
+| `localstorage-*` / `sessionstorage-*` | `executeScript` | ✅ | ✅ | ✅ | ✅ | |
+| `state-save` / `state-load` | Cookie + Storage + URL | ✅ | ✅ | ✅ | ✅ | Safari cookie `secure` 规则按 W3C |
+| `tab-*` | W3C Window/Handle API | ✅ | ✅ | ✅ | ✅ | |
+| `dialog-*` | W3C Alert API | ✅ | ✅ | ✅ | ✅ | |
+| `upload` | `sendKeys` + file detector | ✅ | ✅ | ✅ | ✅ | |
+| `resize` | W3C `setRect` | ✅ | ✅ | ✅ | ✅ | |
+| `highlight` | `executeScript` | ✅ | ✅ | ✅ | ✅ | |
+| `expect` / 断言 | 组合命令 | ✅ | ✅ | ✅ | ✅ | 依赖底层命令各自支持 |
+| `console` / `requests` / `request-detail` | **BiDi** | ✅ | ✅ | ✅ | ❌ | Safari 无 BiDi → 报错 |
+| `route` / `route-list` / `unroute` | **BiDi** network 拦截 | ✅ | ✅ | ✅ | ❌ | Safari 无 BiDi → 报错 |
+| `device` / `device-list` | CDP 优先，W3C `setRect` 兜底 | ✅ | ✅ | ⚠️ 部分 | ❌ | Firefox 仅 viewport 生效，UA/触摸/缩放跳过 |
+| `emulate` (offline / throttle / cpu / locale / timezone / geolocation / permissions / color-scheme) | **CDP** | ✅ | ✅ | ❌ | ❌ | Firefox 报明确错误；Safari 无 CDP |
+| `--cdp=<url>` attach | CDP | ✅ | ✅ | ❌ | ❌ | |
+
+> 判定依据：W3C WebDriver 规范命令集为各浏览器原生实现；BiDi/CDP 支持以
+> Selenium 官方浏览器文档与上游 driver 行为为准（Safari 官方明确无 BiDi/CDP）。
+> 「⚠️ 部分」表示依赖浏览器对 W3C Actions/标准命令的差异实现，未在 CI 全量验证
+> 的条目标注为部分支持；验证覆盖见 `tests/integration/v0.10-safari.test.ts`
+> （Safari）与 `tests/integration/lifecycle.test.ts`（其余浏览器）。
 
 ### v0.11: Recording & Visualization (Marginal)
 

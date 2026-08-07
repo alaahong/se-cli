@@ -4,12 +4,31 @@ import { promisify } from 'util';
 import * as fs from 'fs';
 import * as http from 'http';
 import * as path from 'path';
-import { shouldRunE2E } from './detect-browsers';
+import {
+  shouldRunE2E,
+  resolveTestBrowsers,
+  type BrowserName,
+} from './detect-browsers';
 import { startTestServer, type TestServer } from './test-server';
 
 const execFileAsync = promisify(execFile);
 const CLI = path.join(__dirname, '..', '..', 'dist', 'cli.js');
 const E2E_ENABLED = shouldRunE2E();
+const RESOLVED_BROWSERS = resolveTestBrowsers();
+
+/**
+ * Pick the first available browser from `prefs`, based on what the current
+ * CI job selected (SE_CLI_TEST_* env) or what is installed locally.
+ * Returns undefined when none of the preferred browsers is available —
+ * callers skip in that case (e.g. the safari job skips the pdf and
+ * browser-args tests, which safaridriver does not support).
+ */
+function pickBrowser(prefs: BrowserName[]): BrowserName | undefined {
+  for (const p of prefs) {
+    if (RESOLVED_BROWSERS.includes(p)) return p;
+  }
+  return undefined;
+}
 
 let server: TestServer;
 let gridMock: http.Server;
@@ -123,10 +142,13 @@ describe('v0.10: grid commands', () => {
 });
 
 describe('v0.10: pdf command', () => {
-  (E2E_ENABLED ? it : it.skip)('saves the current page as a PDF in .se-cli', async () => {
+  // W3C print endpoint: Chrome/Edge/Firefox support it; Safari's
+  // safaridriver does not (yet). Skipped on the safari job.
+  const pdfBrowser = pickBrowser(['edge', 'chrome', 'firefox']);
+  (E2E_ENABLED && pdfBrowser ? it : it.skip)(`saves the current page as a PDF in .se-cli (${pdfBrowser ?? 'skipped'})`, async () => {
     const sess = S();
     const pdfName = `v010-${Date.now()}.pdf`;
-    await run(['open', EXAMPLE_URL(), '--browser=edge'], { SE_CLI_SESSION: sess });
+    await run(['open', EXAMPLE_URL(), `--browser=${pdfBrowser}`], { SE_CLI_SESSION: sess });
 
     const out = await run(['pdf', `--filename=${pdfName}`], { SE_CLI_SESSION: sess });
     expect(out).toContain('[PDF]');
@@ -143,14 +165,16 @@ describe('v0.10: pdf command', () => {
   });
 });
 
-describe('v0.10: safari / electron', () => {
-  (E2E_ENABLED ? it : it.skip)('rejects --browser=electron without --app-binary at the CLI', async () => {
-    const sess = S();
-    const err = await runExpectFail(['open', '--browser=electron'], { SE_CLI_SESSION: sess });
-    expect(err).toMatch(/--app-binary/i);
-  });
+describe('v0.10: safari', () => {
+  // Real Safari session coverage moved to tests/integration/v0.10-safari.test.ts
+  // (8 tests covering the full safaridriver capability baseline). Running a
+  // real session here too would race safaridriver's single-session pairing
+  // with that suite, so the real-session test is skipped here.
 
-  (E2E_ENABLED ? it : it.skip)('fails clearly when --browser=safari is unavailable on this platform', async () => {
+  // On non-macOS platforms (CI: ubuntu/windows), safaridriver does not
+  // exist — the session must fail cleanly instead of hanging.
+  const SAFARI_UNAVAILABLE = E2E_ENABLED && process.platform !== 'darwin';
+  (SAFARI_UNAVAILABLE ? it : it.skip)('fails clearly when --browser=safari is unavailable on this platform', async () => {
     const sess = S();
     await run(['open', '--browser=safari'], { SE_CLI_SESSION: sess });
     const err = await runExpectFail(['title'], { SE_CLI_SESSION: sess });
@@ -161,12 +185,15 @@ describe('v0.10: safari / electron', () => {
 });
 
 describe('v0.10: --browser-args / --capabilities pass-through', () => {
-  (E2E_ENABLED ? it : it.skip)('opens a real Edge session with custom args and capabilities', async () => {
+  // Chromium/Firefox accept browser args + W3C capabilities; the safari
+  // job skips (safaridriver ignores browser args).
+  const argsBrowser = pickBrowser(['edge', 'chrome', 'firefox']);
+  (E2E_ENABLED && argsBrowser ? it : it.skip)(`opens a real session with custom args and capabilities (${argsBrowser ?? 'skipped'})`, async () => {
     const sess = S();
     await run([
       'open',
       EXAMPLE_URL(),
-      '--browser=edge',
+      `--browser=${argsBrowser}`,
       '--browser-args=--disable-gpu --lang=zh-CN',
       '--capabilities={"acceptInsecureCerts":true}',
     ], { SE_CLI_SESSION: sess });

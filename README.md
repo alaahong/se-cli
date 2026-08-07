@@ -327,7 +327,7 @@ Network interception, console capture, and visual debugging tools powered by Sel
 | `--raw` | Output only the result value (for scripting) |
 | `--json` | Structured JSON output |
 | `-s=<name>` | Use named session |
-| `--browser=chrome\|edge\|firefox\|safari\|electron` | Browser selection (default: auto-detect Edge → Chrome → Firefox; safari macOS-only; electron needs --app-binary) |
+| `--browser=chrome\|edge\|firefox\|safari` | Browser selection (default: auto-detect Edge → Chrome → Firefox; safari macOS-only) |
 | `--headed` | Show browser window (default: headless) |
 | `--cdp=<url>` | Attach to running Chrome via CDP |
 | `--endpoint=<url>` | Connect to Selenium Grid 4 / remote WebDriver (v0.10) |
@@ -335,7 +335,6 @@ Network interception, console capture, and visual debugging tools powered by Sel
 | `--capabilities=<json>` | Pass-through W3C capabilities, e.g. `--capabilities='{"acceptInsecureCerts":true}'` (v0.10) |
 | `--browser-binary=<path>` | Custom browser executable (360, UC, Brave, Electron-embedded…) (v0.10) |
 | `--driver-binary=<path>` | Custom driver executable, bypasses selenium-manager (v0.10) |
-| `--app-binary=<path>` | Electron executable for `--browser=electron` (v0.10) |
 | `--profile=<path>` | Use a persistent browser profile directory |
 | `--persistent` | Keep browser profile across sessions (auto-assigns path) |
 | `--idle-timeout=<min>` | Auto-close idle daemon after N minutes (default 30; 0 = never) |
@@ -425,6 +424,21 @@ google-chrome --remote-debugging-port=9222
 
 # Attach
 se-cli open --cdp=http://localhost:9222
+```
+
+### Connect to a Grid / Remote WebDriver (v0.10)
+
+```bash
+# Attach to a Selenium Grid 4 hub or any remote WebDriver endpoint
+se-cli open --browser=chrome --endpoint=http://localhost:4444/wd/hub
+# ...or via the grid alias
+se-cli grid attach --endpoint=http://localhost:4444/wd/hub
+
+# Check a Grid's health (nodes, slots, browsers)
+se-cli grid status http://localhost:4444/wd/hub
+
+# Split a browser list round-robin across CI shards
+se-cli grid distribute --shard=1/4 --browsers=chrome,edge,firefox,safari
 ```
 
 ### Scripting with --raw
@@ -810,6 +824,21 @@ src/
 | Chrome  | ✅       | ✅     | ✅         |
 | Edge    | ✅       | ✅     | ✅         |
 | Firefox | ✅       | ✅     | ❌         |
+| Safari  | ❌       | ✅     | ❌         |
+| Grid/Remote (`--endpoint`) | — | — | — |
+
+**Feature-level support** (which commands work on which browser) is defined
+in the [browser support matrix](docs/spec.md) in `docs/spec.md`. Summary:
+
+- **All browsers (Chrome / Edge / Firefox / Safari)**: navigation, title/url,
+  snapshot/find, click/fill/type/press/select/check, screenshot, eval,
+  cookies, localStorage/sessionStorage, tabs, dialogs, upload, resize.
+- **W3C Actions** (hover/dblclick/drag/keyboard/mousewheel): Chrome / Edge /
+  Firefox fully; **Safari partial** (chains may degrade to single steps).
+- **`pdf`**: Chrome / Edge / Firefox only (safaridriver has no print endpoint).
+- **`console` / `requests` / `route`** (BiDi): Chrome / Edge / Firefox only.
+- **`device` / `emulate` / `--cdp`** (CDP): Chrome / Edge fully; Firefox
+  viewport-only for `device`; Safari none.
 
 ## Comparison with playwright-cli
 
@@ -821,8 +850,9 @@ src/
 | Shadow DOM | Full | Open shadow roots |
 | Test runner attach | Yes (Playwright test) | No (long-term goal) |
 | Tracing | Full | Not planned |
-| Multi-browser | Chromium only | Chrome + Edge + Firefox |
-| Real Safari | No | Possible via Safari driver |
+| Multi-browser | Chromium only | Chrome + Edge + Firefox + Safari (macOS) |
+| Real Safari | No | Yes — `--browser=safari` via safaridriver (macOS only) |
+| Selenium Grid / remote | No | Yes — `grid status\|attach\|distribute`, `--endpoint` |
 
 ## Roadmap
 
