@@ -117,6 +117,24 @@ describe('v0.10: --endpoint (remote WebDriver / Grid)', () => {
     );
     expect(err).toMatch(/Invalid --capabilities JSON/);
   });
+
+  (E2E_ENABLED ? it : it.skip)('rejects --capabilities overriding internal keys', async () => {
+    const sess = S();
+    // open does not block on driver build; the config validation failure
+    // surfaces on the first command (same as the endpoint ECONNREFUSED case).
+    await run(['open', '--browser=chrome', '--capabilities={"webSocketUrl":false}'], { SE_CLI_SESSION: sess });
+    const err = await runExpectFail(['title'], { SE_CLI_SESSION: sess });
+    expect(err).toMatch(/cannot override internal keys/i);
+    await run(['close'], { SE_CLI_SESSION: sess }).catch(() => {});
+  });
+
+  (E2E_ENABLED ? it : it.skip)('rejects --endpoint combined with --driver-binary', async () => {
+    const sess = S();
+    await run(['open', '--browser=chrome', '--endpoint=http://grid:4444/wd/hub', '--driver-binary=/opt/chromedriver'], { SE_CLI_SESSION: sess });
+    const err = await runExpectFail(['title'], { SE_CLI_SESSION: sess });
+    expect(err).toMatch(/mutually exclusive/i);
+    await run(['close'], { SE_CLI_SESSION: sess }).catch(() => {});
+  });
 });
 
 describe('v0.10: grid commands', () => {

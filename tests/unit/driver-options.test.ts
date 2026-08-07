@@ -113,6 +113,50 @@ describe('buildDriverSpec', () => {
     expect(spec.extraCapabilities.platformName).toBe('linux');
   });
 
+  // v0.10 hardening: reserved capability keys, endpoint+driver-binary
+  // conflict, duplicate user args.
+
+  it('rejects --capabilities that override internal keys (webSocketUrl)', () => {
+    expect(() => buildDriverSpec({ ...base, capabilities: { webSocketUrl: false } }))
+      .toThrow(/cannot override internal keys: webSocketUrl/);
+  });
+
+  it('rejects --capabilities that override internal keys (browserName / options)', () => {
+    for (const bad of [{ browserName: 'edge' }, { 'goog:chromeOptions': { args: ['--x'] } }]) {
+      expect(() => buildDriverSpec({ ...base, capabilities: bad })).toThrow(/cannot override internal keys/);
+    }
+  });
+
+  it('allows non-reserved capabilities through unchanged', () => {
+    const spec = buildDriverSpec({ ...base, capabilities: { acceptInsecureCerts: true, platformName: 'linux' } });
+    expect(spec.extraCapabilities.acceptInsecureCerts).toBe(true);
+    expect(spec.extraCapabilities.platformName).toBe('linux');
+  });
+
+  it('rejects --endpoint + --driver-binary combination', () => {
+    expect(() => buildDriverSpec({
+      browserName: 'chrome',
+      headed: true,
+      endpoint: 'http://grid:4444/wd/hub',
+      driverBinary: '/opt/chromedriver',
+    })).toThrow(/mutually exclusive/);
+  });
+
+  it('dedupes user args that collide with chromium defaults', () => {
+    const spec = buildDriverSpec({ ...base, browserArgs: ['--headless=new', '--disable-gpu', '--lang=zh-CN'] });
+    const args = spec.chromeOptions!.args;
+    expect(args.filter((a) => a === '--headless=new')).toHaveLength(1);
+    expect(args.filter((a) => a === '--disable-gpu')).toHaveLength(1);
+    expect(args.filter((a) => a === '--lang=zh-CN')).toHaveLength(1);
+  });
+
+  it('dedupes firefox -headless when user passes it again', () => {
+    const spec = buildDriverSpec({ browserName: 'firefox', headed: false, browserArgs: ['-headless', '--width=100'] });
+    const args = spec.firefoxOptions!.args!;
+    expect(args.filter((a) => a === '-headless')).toHaveLength(1);
+    expect(args).toContain('--width=100');
+  });
+
   // v0.10 batch 2: custom browser & driver binaries.
 
   it('uses --browser-binary over env binary for chrome', () => {

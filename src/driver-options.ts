@@ -111,6 +111,39 @@ export function parseCapabilities(input: string): Record<string, unknown> {
 }
 
 /**
+ * Capability keys that se-cli manages internally and must NOT be
+ * overridable via `--capabilities`. Overriding these would silently break
+ * core features: `webSocketUrl` gates the BiDi (Network/Debugging)
+ * commands, `unhandledPromptBehavior` keeps dialog commands working,
+ * `browserName` drives the Builder browser selection, and the
+ * `*:Options` keys would clobber --browser-args/--browser-binary.
+ */
+export const RESERVED_CAPABILITY_KEYS = new Set<string>([
+  'webSocketUrl',
+  'unhandledPromptBehavior',
+  'browserName',
+  'goog:chromeOptions',
+  'ms:edgeOptions',
+  'moz:firefoxOptions',
+  'safari:options',
+]);
+
+/**
+ * Reject user-supplied capabilities that would override internally managed
+ * keys. Throws with the offending key names so the failure is actionable.
+ */
+export function validateCapabilities(capabilities: Record<string, unknown>): void {
+  const conflicts = Object.keys(capabilities).filter((k) => RESERVED_CAPABILITY_KEYS.has(k));
+  if (conflicts.length > 0) {
+    throw new Error(
+      `--capabilities cannot override internal keys: ${conflicts.join(', ')}. ` +
+      'These are managed by se-cli (BiDi/dialog/browser/options); use --browser-args, ' +
+      '--browser-binary or --driver-binary instead.'
+    );
+  }
+}
+
+/**
  * Compose the Builder spec from daemon flags. Chromium throttling flags
  * are only added in headless mode without a CDP attach (same policy as
  * before, now centralized here).
@@ -119,6 +152,8 @@ export function buildDriverSpec(input: DriverSpecInput): DriverSpec {
   const { browserName, headed, cdpEndpoint, profilePath } = input;
   const seleniumBrowserName = browserName === 'edge' ? 'MicrosoftEdge' : browserName;
   const userArgs = input.browserArgs ?? [];
+  // D1: user --capabilities must not override keys se-cli manages internally.
+  validateCapabilities(input.capabilities ?? {});
   const extraCapabilities: Record<string, unknown> = { ...(input.capabilities ?? {}) };
 
   const chromiumDefaults = [
@@ -130,6 +165,13 @@ export function buildDriverSpec(input: DriverSpecInput): DriverSpec {
     '--disable-backgrounding-occluded-windows',
   ];
 
+  // D2: a remote/Grid endpoint means the driver is hosted remotely, so a
+  // local --driver-binary would be silently ignored by selenium-webdriver.
+  // Fail fast instead of letting the user believe it takes effect.
+  if (input.endpoint && input.driverBinary) {
+    throw new Error('--endpoint and --driver-binary are mutually exclusive: with a remote WebDriver/Grid the driver runs on the server, so a local driver binary is not used. Omit --driver-binary when attaching to --endpoint.');
+  }
+
   const spec: DriverSpec = { seleniumBrowserName, extraCapabilities };
   if (input.endpoint) spec.usingServer = input.endpoint;
   if (input.driverBinary) spec.driverBinary = input.driverBinary;
@@ -139,7 +181,15 @@ export function buildDriverSpec(input: DriverSpecInput): DriverSpec {
     const args = [...chromiumDefaults];
     if (!headed && !cdpEndpoint) args.push(...headlessThrottling);
     if (profilePath) args.push(`--user-data-dir=${profilePath}`);
-    args.push(...userArgs);
+    // D3: drop duplicate flags so a user-arg like --headless never
+    // overrides se-cli's own defaults in an unpredictable order.
+    const seen = new Set(args);
+    for (const a of userArgs) {
+      if (!seen.has(a)) {
+        args.push(a);
+        seen.add(a);
+      }
+    }
     const opts: DriverSpec['chromeOptions'] = {
       args,
       excludeSwitches: ['enable-logging', 'disable-extensions'],
@@ -153,7 +203,15 @@ export function buildDriverSpec(input: DriverSpecInput): DriverSpec {
     const opts: DriverSpec['firefoxOptions'] = {};
     const args: string[] = [];
     if (!headed) args.push('-headless');
-    if (userArgs.length > 0) args.push(...userArgs);
+    if (userArgs.length > 0) {
+      const seen = new Set(args);
+      for (const a of userArgs) {
+        if (!seen.has(a)) {
+          args.push(a);
+          seen.add(a);
+        }
+      }
+    }
     if (args.length > 0) opts.args = args;
     if (profilePath) opts.profile = profilePath;
     const binary = input.browserBinary || input.envBinaries?.firefox;
