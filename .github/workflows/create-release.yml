@@ -111,6 +111,16 @@ jobs:
       - name: Unit tests
         run: npx vitest run tests/unit
 
+      # Release gate: run the integration suite against a real browser
+      # before cutting the tag. PR CI already runs the full matrix; this
+      # step re-verifies the critical user path on the exact commit being
+      # released (chrome headless — fast, hermetic, no external services).
+      - name: Integration tests (chrome, release gate)
+        env:
+          SE_CLI_E2E: '1'
+          SE_CLI_TEST_CHROME: '1'
+        run: npx vitest run tests/integration/lifecycle.test.ts tests/integration/v0.10-remote.test.ts tests/integration/v0.10-grid.test.ts
+
       # ── Version verification ────────────────────────────────────────
       - name: Verify package version matches release tag
         run: |
