@@ -45,6 +45,11 @@ se-cli pdf [--filename=f]        # save the current page as a PDF (W3C print end
 se-cli grid status <url>         # query a Selenium Grid 4 hub
 se-cli grid attach --endpoint=<url>   # attach to a Grid / remote WebDriver
 se-cli grid distribute --shard=1/4    # round-robin shard plan for parallel CI
+se-cli record start              # start recording commands for test export
+se-cli record stop               # stop recording
+se-cli record status             # recording state + step count
+se-cli record export --format=pytest|junit5|mocha   # export as a test file
+se-cli record report --format=junit|html            # render a test report
 se-cli eval "<js>" [ref]
 se-cli run-code "<snippet>"   # arbitrary Selenium code; receives `driver`
 se-cli generate-locator <ref>  # recommended locator for a ref (role-based by default)

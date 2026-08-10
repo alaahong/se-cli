@@ -205,6 +205,8 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
       'throttle-network', 'throttle-cpu',
       // v0.9 locator flags
       'locator-style',
+      // v0.11 record/export flags
+      'format', 'name', 'out',
     ],
     alias: {},
   });
@@ -383,6 +385,35 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
         reset: parsed.reset || false,
       },
     }),
+    // v0.11: Recording & export
+    'record': () => {
+      const subCmd = positional[0];
+      if (subCmd === 'start') return { toolName: 'browser_record_start', toolParams: {} };
+      if (subCmd === 'stop') return { toolName: 'browser_record_stop', toolParams: {} };
+      if (subCmd === 'status') return { toolName: 'browser_record_status', toolParams: {} };
+      if (subCmd === 'export') {
+        return {
+          toolName: 'browser_record_export',
+          toolParams: {
+            format: parsed.format,
+            name: parsed.name,
+            browser: parsed.browser,
+            out: parsed.out,
+          },
+        };
+      }
+      if (subCmd === 'report') {
+        return {
+          toolName: 'browser_record_report',
+          toolParams: {
+            format: parsed.format,
+            name: parsed.name,
+            out: parsed.out,
+          },
+        };
+      }
+      throw new Error(`Unknown record subcommand: ${subCmd}. Supported: start, stop, status, export, report`);
+    },
   };
   const factory = commands[cmd];
   if (!factory) throw new Error(`Unknown command: ${cmd}`);

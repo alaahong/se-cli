@@ -135,6 +135,9 @@ se-cli close
 | `grid attach --endpoint=<url>` | Attach to a Grid / remote WebDriver (alias for `open --endpoint`) |
 | `grid distribute --shard=x/y` | Compute a round-robin shard plan for parallel CI runs |
 | `pdf [--filename=f]` | Save the current page as a PDF (W3C print endpoint) |
+| `record start\|stop\|status` | Record executed commands for test export (v0.11) |
+| `record export --format=pytest\|junit5\|mocha [--name=] [--browser=] [--out=]` | Export recorded steps as a test file (v0.11) |
+| `record report --format=junit\|html [--name=] [--out=]` | Render a test report from recorded steps (v0.11) |
 
 ### Navigation
 

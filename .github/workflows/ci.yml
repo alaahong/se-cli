@@ -114,24 +114,24 @@ jobs:
       - name: Run integration tests (Safari)
         if: matrix.browser == 'safari'
         id: integration-test-safari
-        run: npx vitest run --no-file-parallelism tests/integration/v0.10-remote.test.ts tests/integration/v0.10-safari.test.ts tests/integration/v0.10-grid.test.ts
+        run: npx vitest run --no-file-parallelism tests/integration/v0.10-remote.test.ts tests/integration/v0.10-safari.test.ts tests/integration/v0.10-grid.test.ts tests/integration/v0.11-record.test.ts
       - name: Run integration tests
         if: matrix.browser != 'safari'
         id: integration-test
         env:
           SE_FIREFOX_BINARY: ${{ matrix.browser == 'firefox' && (runner.os == 'Linux' && steps.firefox-linux.outputs.firefox-path || steps.firefox-win.outputs.firefox-path) || '' }}
-        run: npx vitest run tests/integration/lifecycle.test.ts tests/integration/v0.10-remote.test.ts tests/integration/v0.10-grid.test.ts
+        run: npx vitest run tests/integration/lifecycle.test.ts tests/integration/v0.10-remote.test.ts tests/integration/v0.10-grid.test.ts tests/integration/v0.11-record.test.ts
 
       # Retry integration tests once on failure — browser driver crashes
       # (e.g. Windows chromedriver 0xC0000142) are often transient.
       - name: Retry integration tests on failure (Safari)
         if: failure() && steps.integration-test-safari.outcome == 'failure'
-        run: npx vitest run --no-file-parallelism tests/integration/v0.10-remote.test.ts tests/integration/v0.10-safari.test.ts tests/integration/v0.10-grid.test.ts
+        run: npx vitest run --no-file-parallelism tests/integration/v0.10-remote.test.ts tests/integration/v0.10-safari.test.ts tests/integration/v0.10-grid.test.ts tests/integration/v0.11-record.test.ts
       - name: Retry integration tests on failure
         if: failure() && steps.integration-test.outcome == 'failure'
         env:
           SE_FIREFOX_BINARY: ${{ matrix.browser == 'firefox' && (runner.os == 'Linux' && steps.firefox-linux.outputs.firefox-path || steps.firefox-win.outputs.firefox-path) || '' }}
-        run: npx vitest run tests/integration/lifecycle.test.ts tests/integration/v0.10-remote.test.ts tests/integration/v0.10-grid.test.ts
+        run: npx vitest run tests/integration/lifecycle.test.ts tests/integration/v0.10-remote.test.ts tests/integration/v0.10-grid.test.ts tests/integration/v0.11-record.test.ts
       - name: Upload screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v4

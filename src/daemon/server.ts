@@ -5,6 +5,7 @@ import { Registry, SessionConfig } from '../registry';
 import { baseDaemonDir } from '../config';
 import { runCleanup } from '../cleanup';
 import { buildDriverSpec, parseBrowserArgs, parseCapabilities } from '../driver-options';
+import { recordStep } from './tools/record';
 import type { ClientMessage, ServerMessage } from '../protocol';
 import { resetAll as resetNetworkDebugState } from './tools/network-state';
 import { parseViewport, parseGeolocation, applyEmulation, setEmulationState, resetEmulationState } from './tools/emulation-state';
@@ -298,7 +299,10 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
     const { toolParams, flags } = parsed;
     const isConfigCmd = toolName === 'config_get' || toolName === 'config_set' ||
       toolName === 'config_list' || toolName === 'config_init';
-    if (!isConfigCmd && !driver) {
+    // v0.11: record control commands manage the recording buffer only —
+    // they must work without a live driver (e.g. export after a crash).
+    const isRecordCmd = toolName.startsWith('browser_record_');
+    if (!isConfigCmd && !isRecordCmd && !driver) {
       // Clear any previous init error and attempt a fresh build.
       // The initial build might have failed due to a transient issue
       // (e.g. chromedriver DLL init failure 0xC0000142 on Windows CI),
@@ -315,6 +319,16 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
     }
     const response = await callTool(driver, toolName, toolParams, { raw: !!msg.params.raw, json: !!msg.params.json }, flags, msg.params.cwd);
     logger.info('cmd', `${toolName} ${Date.now() - start}ms ok`);
+    // v0.11: capture the executed command into the recorder (no-op when idle;
+    // record-control commands themselves are never recorded).
+    if (!toolName.startsWith('browser_record_')) {
+      recordStep({
+        command: msg.params.args.join(' '),
+        code: response.getCode(),
+        ok: true,
+        timeMs: Date.now() - start,
+      });
+    }
     return { ok: true, text: response.serialize() };
   } catch (e: any) {
     const name = e.name || '';
@@ -353,6 +367,16 @@ async function handleMessage(msg: ClientMessage): Promise<ServerMessage> {
       resetEmulationState();
     }
     logger.warn('cmd', `${toolName} ${Date.now() - start}ms ${code}: ${errMsg}`);
+    // v0.11: capture failed commands too, so reports show the failure.
+    if (!toolName.startsWith('browser_record_')) {
+      recordStep({
+        command: msg.params.args.join(' '),
+        code: [],
+        ok: false,
+        error: errMsg,
+        timeMs: Date.now() - start,
+      });
+    }
     return { ok: false, error: errMsg, code };
   }
 }

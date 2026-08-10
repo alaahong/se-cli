@@ -898,6 +898,63 @@ export const toolDefinitions: ToolDef[] = [
       },
     },
   },
+  {
+    name: 'browser_record_start',
+    description: 'Start recording commands for test export.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        session: { type: 'string', description: 'Session name' },
+      },
+    },
+  },
+  {
+    name: 'browser_record_stop',
+    description: 'Stop recording commands.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        session: { type: 'string', description: 'Session name' },
+      },
+    },
+  },
+  {
+    name: 'browser_record_status',
+    description: 'Show recording state and captured step count.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        session: { type: 'string', description: 'Session name' },
+      },
+    },
+  },
+  {
+    name: 'browser_record_export',
+    description: 'Export recorded steps as a test file (pytest | junit5 | mocha).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        format: { type: 'string', enum: ['pytest', 'junit5', 'mocha'], description: 'Target framework' },
+        name: { type: 'string', description: 'Suite/test name' },
+        browser: { type: 'string', description: 'Browser used in the exported test' },
+        out: { type: 'string', description: 'Output file path' },
+        session: { type: 'string', description: 'Session name' },
+      },
+    },
+  },
+  {
+    name: 'browser_record_report',
+    description: 'Render a report of recorded steps (junit | html).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        format: { type: 'string', enum: ['junit', 'html'], description: 'Report format' },
+        name: { type: 'string', description: 'Suite name' },
+        out: { type: 'string', description: 'Output file path' },
+        session: { type: 'string', description: 'Session name' },
+      },
+    },
+  },
 ];
 
 // ─── Tool-to-CLI Arg Mapping ─────────────────────────────────────────────────
@@ -1139,6 +1196,30 @@ export function mapToolToCliArgs(toolName: string, args: any): string[] | null {
       if (args.throttleNetwork) cliArgs.push(`--throttle-network=${args.throttleNetwork}`);
       if (args.throttleCpu !== undefined) cliArgs.push(`--throttle-cpu=${args.throttleCpu}`);
       if (args.reset) cliArgs.push('--reset');
+      cliArgs.push(...sessionFlag);
+      return cliArgs;
+    }
+    // v0.11: Recording & export
+    case 'browser_record_start':
+      return ['record', 'start', ...sessionFlag];
+    case 'browser_record_stop':
+      return ['record', 'stop', ...sessionFlag];
+    case 'browser_record_status':
+      return ['record', 'status', ...sessionFlag];
+    case 'browser_record_export': {
+      const cliArgs: string[] = ['record', 'export'];
+      if (args.format) cliArgs.push(`--format=${args.format}`);
+      if (args.name) cliArgs.push(`--name=${args.name}`);
+      if (args.browser) cliArgs.push(`--browser=${args.browser}`);
+      if (args.out) cliArgs.push(`--out=${args.out}`);
+      cliArgs.push(...sessionFlag);
+      return cliArgs;
+    }
+    case 'browser_record_report': {
+      const cliArgs: string[] = ['record', 'report'];
+      if (args.format) cliArgs.push(`--format=${args.format}`);
+      if (args.name) cliArgs.push(`--name=${args.name}`);
+      if (args.out) cliArgs.push(`--out=${args.out}`);
       cliArgs.push(...sessionFlag);
       return cliArgs;
     }

@@ -1,0 +1,196 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import {
+  createRecorder,
+  startRecording,
+  stopRecording,
+  addStep,
+  renderExport,
+  renderMochaTest,
+  renderPytestTest,
+  renderJunit5Test,
+  type RecordedStep,
+} from '../../src/recorder';
+
+function makeSteps(): RecordedStep[] {
+  return [
+    {
+      command: 'goto https://example.com',
+      code: ["await driver.get('https://example.com');"],
+      ok: true,
+      timeMs: 120,
+      ts: 1,
+    },
+    {
+      command: 'fill e1 "hello"',
+      code: ["await driver.findElement(new By('role', { role: 'textbox', name: 'Search' })).sendKeys('hello');"],
+      ok: true,
+      timeMs: 40,
+      ts: 2,
+    },
+    {
+      command: 'click e2',
+      code: ["await driver.findElement(By.css('[data-se-ref=\"e2\"]')).click();"],
+      ok: false,
+      error: 'element not interactable',
+      timeMs: 30,
+      ts: 3,
+    },
+  ];
+}
+
+describe('recorder state machine', () => {
+  let state: ReturnType<typeof createRecorder>;
+
+  beforeEach(() => {
+    state = createRecorder();
+  });
+
+  it('starts idle with no steps', () => {
+    expect(state.recording).toBe(false);
+    expect(state.steps).toHaveLength(0);
+  });
+
+  it('drops steps while idle', () => {
+    addStep(state, { command: 'title', code: [], ok: true, timeMs: 1 });
+    expect(state.steps).toHaveLength(0);
+  });
+
+  it('captures steps while recording and clears on start', () => {
+    startRecording(state);
+    addStep(state, { command: 'goto x', code: [], ok: true, timeMs: 1 });
+    addStep(state, { command: 'title', code: [], ok: false, error: 'boom', timeMs: 2 });
+    expect(state.steps).toHaveLength(2);
+    expect(state.steps[1].error).toBe('boom');
+    // restart clears the buffer
+    startRecording(state);
+    expect(state.steps).toHaveLength(0);
+  });
+
+  it('stopRecording flips the flag and keeps captured steps', () => {
+    startRecording(state);
+    addStep(state, { command: 'title', code: [], ok: true, timeMs: 1 });
+    stopRecording(state);
+    expect(state.recording).toBe(false);
+    expect(state.steps).toHaveLength(1);
+    // no longer capturing
+    addStep(state, { command: 'url', code: [], ok: true, timeMs: 1 });
+    expect(state.steps).toHaveLength(1);
+  });
+});
+
+describe('renderMochaTest', () => {
+  it('emits a runnable mocha skeleton with codegen body', () => {
+    const out = renderMochaTest(makeSteps());
+    expect(out).toContain("const { Builder } = require('selenium-webdriver');");
+    expect(out).toContain("describe('se-cli session', function ()");
+    expect(out).toContain("forBrowser('chrome')");
+    expect(out).toContain("await driver.get('https://example.com');");
+    // failed step becomes a comment, body still present
+    expect(out).toContain('// FAILED: element not interactable');
+  });
+
+  it('honors includeFailures=false by dropping failed steps', () => {
+    const out = renderMochaTest(makeSteps(), { includeFailures: false });
+    expect(out).not.toContain('element not interactable');
+  });
+
+  it('uses custom name and browser', () => {
+    const out = renderMochaTest(makeSteps(), { name: 'My Suite', browser: 'firefox' });
+    expect(out).toContain("describe('My Suite', function ()");
+    expect(out).toContain("forBrowser('firefox')");
+  });
+});
+
+describe('renderPytestTest', () => {
+  it('translates codegen to python bindings', () => {
+    const out = renderPytestTest(makeSteps());
+    expect(out).toContain('from selenium import webdriver');
+    expect(out).toContain('driver.get("https://example.com")');
+    expect(out).toContain("driver.find_element(By.XPATH, \".//*[@role='textbox' and normalize-space(.)='Search']\").send_keys('hello')");
+    expect(out).toContain('driver.quit()');
+  });
+
+  it('translates css/xpath locators and marks untranslatable lines as comments', () => {
+    const steps: RecordedStep[] = [
+      { command: 'click x', code: ["await driver.findElement(By.css('[data-se-ref=\"e2\"]')).click();"], ok: true, timeMs: 1, ts: 1 },
+      { command: 'click y', code: ["await driver.findElement(By.xpath('//div[@id=\"a\"]')).click();"], ok: true, timeMs: 1, ts: 2 },
+      { command: 'weird', code: ['await driver.executeScript("return 1");'], ok: true, timeMs: 1, ts: 3 },
+      { command: 'clear', code: ["await driver.findElement(By.css('#a')).clear();"], ok: true, timeMs: 1, ts: 4 },
+    ];
+    const out = renderPytestTest(steps);
+    expect(out).toContain("By.CSS_SELECTOR, '[data-se-ref=\"e2\"]'");
+    expect(out).toContain("By.XPATH, '//div[@id=\"a\"]'");
+    expect(out).toContain('(untranslated)');
+    expect(out).toContain('By.CSS_SELECTOR, \'#a\').clear()');
+  });
+
+  it('sanitizes the function name', () => {
+    const out = renderPytestTest([], { name: 'My Suite!', browser: 'firefox' });
+    expect(out).toContain('driver = webdriver.firefox()');
+  });
+});
+
+describe('renderJunit5Test', () => {
+  it('emits a JUnit 5 class with translated locators', () => {
+    const out = renderJunit5Test(makeSteps());
+    expect(out).toContain('import org.junit.jupiter.api.Test;');
+    expect(out).toContain('public class SeCliSessionTest {');
+    expect(out).toContain('driver.get("https://example.com");');
+    expect(out).toContain('driver.findElement(By.xpath(".//*[@role=\'textbox\' and normalize-space(.)=\'Search\']")).sendKeys(\'hello\');');
+  });
+
+  it('translates css/xpath locators and skips untranslatable lines', () => {
+    const steps: RecordedStep[] = [
+      { command: 'click x', code: ["await driver.findElement(By.css('[data-se-ref=\"e2\"]')).click();"], ok: true, timeMs: 1, ts: 1 },
+      { command: 'click y', code: ["await driver.findElement(By.xpath('//div[@id=\"a\"]')).click();"], ok: true, timeMs: 1, ts: 2 },
+      { command: 'weird', code: ['await driver.executeScript("return 1");'], ok: true, timeMs: 1, ts: 3 },
+      { command: 'clear', code: ["await driver.findElement(By.css('#a')).clear();"], ok: true, timeMs: 1, ts: 4 },
+    ];
+    const out = renderJunit5Test(steps);
+    expect(out).toContain(`By.cssSelector("[data-se-ref="e2"]")`);
+    expect(out).toContain('By.xpath("//div[@id="a"]")');
+    // untranslatable executeScript line is dropped entirely (no comment in java path)
+    expect(out).not.toContain('executeScript');
+    expect(out).toContain('driver.findElement(By.cssSelector("#a")).clear();');
+  });
+
+  it('drops java lines whose locator cannot be translated', () => {
+    // role-with-name locator translates; a By.id locator is untranslatable.
+    const steps: RecordedStep[] = [
+      { command: 'click role', code: ["await driver.findElement(new By('role', { role: 'button', name: 'Save' })).click();"], ok: true, timeMs: 1, ts: 1 },
+      { command: 'click id', code: ["await driver.findElement(By.id('x')).click();"], ok: true, timeMs: 1, ts: 2 },
+      { command: 'clear bad', code: ["await driver.findElement(By.id('y')).clear();"], ok: true, timeMs: 1, ts: 3 },
+    ];
+    const out = renderJunit5Test(steps);
+    expect(out).toContain('By.xpath(".//*[@role=\'button\' and normalize-space(.)=\'Save\']")');
+    expect(out).not.toContain('By.id');
+    expect(out).not.toContain('.clear();');
+  });
+
+  it('annotates junit5 steps without codegen as comments', () => {
+    const steps: RecordedStep[] = [
+      { command: 'title', code: [], ok: true, timeMs: 1, ts: 1 },
+      { command: 'bad-step', code: [], ok: false, error: 'boom', timeMs: 1, ts: 2 },
+    ];
+    const out = renderJunit5Test(steps);
+    expect(out).toContain('// title (no codegen)');
+    expect(out).toContain('// FAILED: boom');
+  });
+
+  it('marks untranslatable python clear() as a comment', () => {
+    const steps: RecordedStep[] = [
+      { command: 'clear id', code: ["await driver.findElement(By.id('x')).clear();"], ok: true, timeMs: 1, ts: 1 },
+    ];
+    const out = renderPytestTest(steps);
+    expect(out).toContain('(untranslated)');
+  });
+});
+
+describe('renderExport dispatch', () => {
+  it('routes to the requested framework', () => {
+    const steps = makeSteps();
+    expect(renderExport('mocha', steps)).toContain("const { Builder }");
+    expect(renderExport('pytest', steps)).toContain('import pytest');
+    expect(renderExport('junit5', steps)).toContain('import org.junit.jupiter.api.Test;');
+  });
+});

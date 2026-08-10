@@ -459,7 +459,10 @@ export async function main(argv: string[]): Promise<void> {
   // Strip CLI-level flags (--raw, --json, --headed, --browser, --cdp, -s, --session,
   // --persistent, --help) so the daemon only sees the command and its tool-specific
   // flags (e.g. --filename, --depth, --regex, --submit).
-  const forwardArgs = filterCliFlags(argv);
+  // Exception: `record export --browser=...` passes --browser through as the
+  // target-browser hint for the exported test, not a session-level flag.
+  const isRecordExport = argv[0] === 'record' && argv[1] === 'export';
+  const forwardArgs = filterCliFlags(argv, { keepBrowser: isRecordExport });
   let resp: ServerMessage;
   try {
     resp = await session.run(forwardArgs, cwd, { raw: args.raw, json: args.json });
@@ -481,8 +484,9 @@ export async function main(argv: string[]): Promise<void> {
  * leak through as a positional arg (e.g. `-s dev click e1` would forward
  * 'dev' as an extra argument).
  */
-export function filterCliFlags(argv: string[]): string[] {
+export function filterCliFlags(argv: string[], opts?: { keepBrowser?: boolean }): string[] {
   const cliFlags = new Set(['raw', 'json', 'headed', 'persistent', 'help', 'browser', 'cdp', 's', 'session', 'profile', 'idle-timeout', 'endpoint', 'browser-args', 'capabilities', 'browser-binary', 'driver-binary', 'shard', 'browsers']);
+  if (opts?.keepBrowser) cliFlags.delete('browser');
   const valueFlags = new Set(['browser', 'cdp', 'profile', 's', 'session', 'endpoint', 'browser-args', 'capabilities', 'browser-binary', 'driver-binary', 'shard', 'browsers']);
   const forwardArgs: string[] = [];
   for (let i = 0; i < argv.length; i++) {

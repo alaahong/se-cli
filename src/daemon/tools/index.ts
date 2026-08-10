@@ -71,6 +71,14 @@ import { browser_device, browser_device_list } from './device';
 import { browser_emulate } from './emulate';
 // v0.9: Locator inspection
 import { browser_generate_locator } from './generate-locator';
+// v0.11: Recording & export
+import {
+  browser_record_start,
+  browser_record_stop,
+  browser_record_status,
+  browser_record_export,
+  browser_record_report,
+} from './record';
 
 export const tools: Record<string, (driver: any, params: any, response: any) => Promise<void>> = {
   browser_goto,
@@ -141,4 +149,10 @@ export const tools: Record<string, (driver: any, params: any, response: any) => 
   browser_emulate,
   // v0.9: Locator inspection
   browser_generate_locator,
+  // v0.11: Recording & export
+  browser_record_start,
+  browser_record_stop,
+  browser_record_status,
+  browser_record_export,
+  browser_record_report,
 };

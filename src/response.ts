@@ -22,6 +22,11 @@ export class Response {
   addResult(text: string): void { this.results.push(text); }
   addError(text: string): void { this.errors.push(text); }
 
+  /** Codegen lines emitted for this command (read by the recorder). */
+  getCode(): string[] { return this.code; }
+  /** Human-readable error text, or undefined when the command succeeded. */
+  getError(): string | undefined { return this.errors.length > 0 ? this.errors.join('\n') : undefined; }
+
   serialize(): string {
     if (this.opts.json) return this.serializeJson();
     if (this.opts.raw) return this.serializeRaw();
