@@ -77,7 +77,7 @@ describe('v0.11: record → export → report', () => {
 
     // export as mocha — codegen lines are embedded verbatim
     const mochaOut = await run(['record', 'export', '--format=mocha', '--browser=chrome'], env);
-    expect(mochaOut).toContain("const { Builder } = require('selenium-webdriver');");
+    expect(mochaOut).toContain("const { Builder, By } = require('selenium-webdriver');");
     expect(mochaOut).toContain("forBrowser('chrome')");
 
     // export to a file
