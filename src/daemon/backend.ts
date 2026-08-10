@@ -206,7 +206,7 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
       // v0.9 locator flags
       'locator-style',
       // v0.11 record/export flags
-      'format', 'name', 'out',
+      'format', 'name', 'out', 'browser',
     ],
     alias: {},
   });

@@ -83,7 +83,11 @@ export async function browser_record_export(
     browser: params.browser,
   });
   if (params.out) {
-    fs.writeFileSync(params.out, body, 'utf8');
+    try {
+      fs.writeFileSync(params.out, body, 'utf8');
+    } catch (e: any) {
+      throw new Error(`Cannot write export file ${params.out}: ${e.message}`);
+    }
     response.addResult(`Exported ${format} test to ${params.out} (${recorder.steps.length} steps).`);
     response.addCode(`// se-cli record export --format=${format} --out=${params.out}`);
   } else {
@@ -106,7 +110,11 @@ export async function browser_record_report(
   }
   const body = renderReport(format, recorder.steps, { name: params.name });
   if (params.out) {
-    fs.writeFileSync(params.out, body, 'utf8');
+    try {
+      fs.writeFileSync(params.out, body, 'utf8');
+    } catch (e: any) {
+      throw new Error(`Cannot write report file ${params.out}: ${e.message}`);
+    }
     response.addResult(`Report written to ${params.out} (${recorder.steps.length} steps, ${recorder.steps.filter((s) => !s.ok).length} failed).`);
     response.addCode(`// se-cli record report --format=${format} --out=${params.out}`);
   } else {

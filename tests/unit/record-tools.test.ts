@@ -108,4 +108,25 @@ describe('record daemon tools', () => {
     await browser_record_report(null as any, { format: 'html' }, r4);
     expect(r4.serialize()).toContain('<!DOCTYPE html>');
   });
+
+  it('fails gracefully when the output path is not writable', async () => {
+    recorder.recording = true;
+    recorder.steps.push({
+      command: 'goto https://example.com',
+      code: ["await driver.get('https://example.com');"],
+      ok: true,
+      timeMs: 10,
+      ts: 1,
+    });
+    recorder.recording = false;
+
+    const badPath = path.join(os.tmpdir(), 'no-such-dir-xyz', 'out.js');
+    const r1 = freshResponse();
+    await expect(browser_record_export(null as any, { format: 'mocha', out: badPath }, r1))
+      .rejects.toThrow(/Cannot write export file/);
+
+    const r2 = freshResponse();
+    await expect(browser_record_report(null as any, { format: 'junit', out: badPath }, r2))
+      .rejects.toThrow(/Cannot write report file/);
+  });
 });

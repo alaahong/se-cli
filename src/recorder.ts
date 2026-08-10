@@ -28,6 +28,10 @@ export interface RecorderState {
   startedAt?: number;
 }
 
+/** Hard cap on buffered steps — prevents unbounded memory growth on very
+ * long recordings. On overflow the oldest steps are dropped. */
+export const MAX_RECORDED_STEPS = 10000;
+
 export function createRecorder(): RecorderState {
   return { recording: false, steps: [] };
 }
@@ -45,6 +49,9 @@ export function stopRecording(state: RecorderState): void {
 export function addStep(state: RecorderState, step: Omit<RecordedStep, 'ts'>): void {
   if (!state.recording) return;
   state.steps.push({ ...step, ts: Date.now() });
+  if (state.steps.length > MAX_RECORDED_STEPS) {
+    state.steps.splice(0, state.steps.length - MAX_RECORDED_STEPS);
+  }
 }
 
 // ── Framework renderers ──────────────────────────────────────────────────
@@ -67,6 +74,48 @@ function escapeComment(text: string): string {
   return text.replace(/\r?\n/g, ' ');
 }
 
+/** Escape a string for embedding inside a single-quoted JS/Python string. */
+function escapeSingleQuote(text: string): string {
+  return text.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+/** Escape a string for embedding inside a double-quoted Java string. */
+function escapeDoubleQuote(text: string): string {
+  return text.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+/**
+ * Map a se-cli browser name to the selenium-webdriver class/name.
+ * JS Builder.forBrowser uses lowercase; the Python binding uses the
+ * capitalized class name (webdriver.Chrome()).
+ */
+function pythonBrowserClass(browser: string): string {
+  const map: Record<string, string> = {
+    chrome: 'Chrome',
+    edge: 'Edge',
+    firefox: 'Firefox',
+    safari: 'Safari',
+  };
+  return map[browser] ?? 'Chrome';
+}
+
+/**
+ * Escape a value for use inside an XPath 1.0 string literal delimited by
+ * single quotes. XPath has no backslash escapes, so embedded single quotes
+ * are split via concat() — e.g. `O'Brien` becomes concat('O', "'", 'Brien').
+ */
+function xpathLiteral(value: string): string {
+  if (!value.includes("'")) return `'${value}'`;
+  const parts = value.split("'");
+  const quoted = parts.map((p) => `'${p}'`);
+  const pieces: string[] = [];
+  for (let i = 0; i < quoted.length; i++) {
+    if (i > 0) pieces.push('"\'"');
+    pieces.push(quoted[i]);
+  }
+  return `concat(${pieces.join(', ')})`;
+}
+
 /**
  * Render recorded steps as a Node.js Mocha/JS test file.
  * The codegen lines are already plain `await driver.…` JavaScript, so the
@@ -76,22 +125,22 @@ export function renderMochaTest(steps: RecordedStep[], opts: ExportOptions = {})
   const name = opts.name ?? 'se-cli session';
   const browser = opts.browser ?? 'chrome';
   const body = runnableSteps(steps, opts);
+  // codegen uses `new By('role', …)` and `By.css(…)` — By must be imported.
   const lines: string[] = [
-    "const { Builder } = require('selenium-webdriver');",
-    "const assert = require('assert');",
+    "const { Builder, By } = require('selenium-webdriver');",
     '',
-    `describe('${name}', function () {`,
+    `describe('${escapeSingleQuote(name)}', function () {`,
     '  let driver;',
     '',
     '  before(async function () {',
-    `    driver = await new Builder().forBrowser('${browser}').build();`,
+    `    driver = await new Builder().forBrowser('${escapeSingleQuote(browser)}').build();`,
     '  });',
     '',
     '  after(async function () {',
     '    await driver.quit();',
     '  });',
     '',
-    `  it('replays ${name}', async function () {`,
+    `  it('replays ${escapeSingleQuote(name)}', async function () {`,
   ];
   for (const step of body) {
     if (step.code.length > 0) {
@@ -117,14 +166,18 @@ export function renderPytestTest(steps: RecordedStep[], opts: ExportOptions = {}
   const name = opts.name ?? 'test_se_cli_session';
   const browser = opts.browser ?? 'chrome';
   const body = runnableSteps(steps, opts);
+  const fnName = `test_${name.replace(/[^A-Za-z0-9_]/g, '_')}`;
+  // By.XPATH / By.CSS_SELECTOR need the By import; webdriver.<Class>() uses
+  // the capitalized class name (Chrome/Edge/Firefox/Safari).
   const lines: string[] = [
     '"""Auto-exported from a se-cli recording."""',
     'import pytest',
     'from selenium import webdriver',
+    'from selenium.webdriver.common.by import By',
     '',
     '',
-    `def test_${name.replace(/[^A-Za-z0-9_]/g, '_')}():`,
-    `    driver = webdriver.${browser}()`,
+    `def ${fnName}():`,
+    `    driver = webdriver.${pythonBrowserClass(browser)}()`,
     '    try:',
   ];
   for (const step of body) {
@@ -150,6 +203,18 @@ export function renderPytestTest(steps: RecordedStep[], opts: ExportOptions = {}
  * lines are emitted as comments so the exported file stays honest about
  * what it replays.
  */
+
+/** Convert a JS single-quoted string literal to a Python single-quoted one. */
+function toPythonStringArg(jsLiteral: string): string {
+  const inner = jsLiteral.replace(/^'|'$/g, '');
+  return `'${escapeSingleQuote(inner)}'`;
+}
+
+/** Unescape JS single-quoted literal escapes (e.g. `\'` → `'`, `\\` → `\`). */
+function unescapeJs(literal: string): string {
+  return literal.replace(/\\(['\\])/g, '$1');
+}
+
 function toPython(jsLine: string): string | null {
   // await driver.getTitle(); / await driver.getCurrentUrl();
   let m = jsLine.match(/^await driver\.getTitle\(\);\s*$/);
@@ -158,7 +223,7 @@ function toPython(jsLine: string): string | null {
   if (m) return 'url = driver.current_url';
   // await driver.get('...');
   m = jsLine.match(/^await driver\.get\((.+)\);\s*$/);
-  if (m) return `driver.get(${m[1].replace(/^'|'$/g, '"')})`;
+  if (m) return `driver.get(${toPythonStringArg(m[1])})`;
   // await driver.findElement(...).click();
   m = jsLine.match(/^await driver\.findElement\((.+)\)\.click\(\);\s*$/);
   if (m) {
@@ -170,7 +235,7 @@ function toPython(jsLine: string): string | null {
   m = jsLine.match(/^await driver\.findElement\((.+)\)\.sendKeys\((.+)\);\s*$/);
   if (m) {
     const loc = toPythonLocator(m[1]);
-    if (loc) return `driver.find_element(${loc}).send_keys(${m[2]})`;
+    if (loc) return `driver.find_element(${loc}).send_keys(${toPythonStringArg(m[2])})`;
     return `# (untranslated) ${escapeComment(jsLine)}`;
   }
   // await driver.findElement(...).clear();
@@ -185,17 +250,18 @@ function toPython(jsLine: string): string | null {
 }
 
 function toPythonLocator(jsExpr: string): string | null {
-  // new By('role', { role: 'button', name: 'Save' })
-  let m = jsExpr.match(/new By\('role', \{ role: '([^']+)', name: '([^']+)' \}\)/);
-  if (m) return `By.XPATH, ".//*[@role='${m[1]}' and normalize-space(.)='${m[2]}']"`;
-  m = jsExpr.match(/new By\('role', \{ role: '([^']+)' \}\)/);
-  if (m) return `By.XPATH, ".//*[@role='${m[1]}']"`;
+  // new By('role', { role: 'button', name: 'Save' }) — name/role may carry
+  // JS-escaped quotes (O\'Brien), so match an escaped-char-aware literal.
+  let m = jsExpr.match(/new By\('role', \{ role: '((?:[^'\\]|\\.)*)', name: '((?:[^'\\]|\\.)*)' \}\)/);
+  if (m) return `By.XPATH, ".//*[@role=${xpathLiteral(unescapeJs(m[1]))} and normalize-space(.)=${xpathLiteral(unescapeJs(m[2]))}]"`;
+  m = jsExpr.match(/new By\('role', \{ role: '((?:[^'\\]|\\.)*)' \}\)/);
+  if (m) return `By.XPATH, ".//*[@role=${xpathLiteral(unescapeJs(m[1]))}]"`;
   // By.css('[data-se-ref="e1"]')
-  m = jsExpr.match(/By\.css\('([^']+)'\)/);
-  if (m) return `By.CSS_SELECTOR, '${m[1]}'`;
+  m = jsExpr.match(/By\.css\('((?:[^'\\]|\\.)*)'\)/);
+  if (m) return `By.CSS_SELECTOR, '${unescapeJs(m[1])}'`;
   // By.xpath('...')
-  m = jsExpr.match(/By\.xpath\('([^']+)'\)/);
-  if (m) return `By.XPATH, '${m[1]}'`;
+  m = jsExpr.match(/By\.xpath\('((?:[^'\\]|\\.)*)'\)/);
+  if (m) return `By.XPATH, '${unescapeJs(m[1])}'`;
   return null;
 }
 
@@ -205,7 +271,8 @@ function toPythonLocator(jsExpr: string): string | null {
  * mapping mirrors the pytest renderer (role → XPath, css → CSS).
  */
 export function renderJunit5Test(steps: RecordedStep[], opts: ExportOptions = {}): string {
-  const name = opts.name ?? 'SeCliSessionTest';
+  // Java class names allow [A-Za-z0-9_$]; sanitize anything else.
+  const name = (opts.name ?? 'SeCliSessionTest').replace(/[^A-Za-z0-9_$]/g, '_');
   const browser = opts.browser ?? 'chrome';
   const body = runnableSteps(steps, opts);
   const lines: string[] = [
@@ -267,7 +334,7 @@ function toJava(jsLine: string): string | null {
   m = jsLine.match(/^await driver\.getCurrentUrl\(\);\s*$/);
   if (m) return 'String url = driver.getCurrentUrl();';
   m = jsLine.match(/^await driver\.get\((.+)\);\s*$/);
-  if (m) return `driver.get(${m[1].replace(/^'|'$/g, '"')});`;
+  if (m) return `driver.get(${toJavaStringArg(m[1])});`;
   m = jsLine.match(/^await driver\.findElement\((.+)\)\.click\(\);\s*$/);
   if (m) {
     const loc = toJavaLocator(m[1]);
@@ -277,7 +344,7 @@ function toJava(jsLine: string): string | null {
   m = jsLine.match(/^await driver\.findElement\((.+)\)\.sendKeys\((.+)\);\s*$/);
   if (m) {
     const loc = toJavaLocator(m[1]);
-    if (loc) return `driver.findElement(${loc}).sendKeys(${m[2]});`;
+    if (loc) return `driver.findElement(${loc}).sendKeys(${toJavaStringArg(m[2])});`;
     return null;
   }
   m = jsLine.match(/^await driver\.findElement\((.+)\)\.clear\(\);\s*$/);
@@ -289,15 +356,21 @@ function toJava(jsLine: string): string | null {
   return null;
 }
 
+/** Convert a JS single-quoted string literal to a Java double-quoted one. */
+function toJavaStringArg(jsLiteral: string): string {
+  const inner = jsLiteral.replace(/^'|'$/g, '');
+  return `"${escapeDoubleQuote(inner)}"`;
+}
+
 function toJavaLocator(jsExpr: string): string | null {
-  let m = jsExpr.match(/new By\('role', \{ role: '([^']+)', name: '([^']+)' \}\)/);
-  if (m) return `By.xpath(".//*[@role='${m[1]}' and normalize-space(.)='${m[2]}']")`;
-  m = jsExpr.match(/new By\('role', \{ role: '([^']+)' \}\)/);
-  if (m) return `By.xpath(".//*[@role='${m[1]}']")`;
-  m = jsExpr.match(/By\.css\('([^']+)'\)/);
-  if (m) return `By.cssSelector("${m[1]}")`;
-  m = jsExpr.match(/By\.xpath\('([^']+)'\)/);
-  if (m) return `By.xpath("${m[1]}")`;
+  let m = jsExpr.match(/new By\('role', \{ role: '((?:[^'\\]|\\.)*)', name: '((?:[^'\\]|\\.)*)' \}\)/);
+  if (m) return `By.xpath(".//*[@role=${xpathLiteral(unescapeJs(m[1]))} and normalize-space(.)=${xpathLiteral(unescapeJs(m[2]))}]")`;
+  m = jsExpr.match(/new By\('role', \{ role: '((?:[^'\\]|\\.)*)' \}\)/);
+  if (m) return `By.xpath(".//*[@role=${xpathLiteral(unescapeJs(m[1]))}]")`;
+  m = jsExpr.match(/By\.css\('((?:[^'\\]|\\.)*)'\)/);
+  if (m) return `By.cssSelector("${escapeDoubleQuote(unescapeJs(m[1]))}")`;
+  m = jsExpr.match(/By\.xpath\('((?:[^'\\]|\\.)*)'\)/);
+  if (m) return `By.xpath("${escapeDoubleQuote(unescapeJs(m[1]))}")`;
   return null;
 }
 

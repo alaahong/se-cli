@@ -8,6 +8,7 @@ import {
   renderMochaTest,
   renderPytestTest,
   renderJunit5Test,
+  MAX_RECORDED_STEPS,
   type RecordedStep,
 } from '../../src/recorder';
 
@@ -76,12 +77,23 @@ describe('recorder state machine', () => {
     addStep(state, { command: 'url', code: [], ok: true, timeMs: 1 });
     expect(state.steps).toHaveLength(1);
   });
+
+  it('caps buffered steps at MAX_RECORDED_STEPS (drops oldest)', () => {
+    startRecording(state);
+    for (let i = 0; i < MAX_RECORDED_STEPS + 5; i++) {
+      addStep(state, { command: `step-${i}`, code: [], ok: true, timeMs: 1 });
+    }
+    expect(state.steps).toHaveLength(MAX_RECORDED_STEPS);
+    // oldest steps dropped, newest retained
+    expect(state.steps[0].command).toBe(`step-${5}`);
+    expect(state.steps[MAX_RECORDED_STEPS - 1].command).toBe(`step-${MAX_RECORDED_STEPS + 4}`);
+  });
 });
 
 describe('renderMochaTest', () => {
   it('emits a runnable mocha skeleton with codegen body', () => {
     const out = renderMochaTest(makeSteps());
-    expect(out).toContain("const { Builder } = require('selenium-webdriver');");
+    expect(out).toContain("const { Builder, By } = require('selenium-webdriver');");
     expect(out).toContain("describe('se-cli session', function ()");
     expect(out).toContain("forBrowser('chrome')");
     expect(out).toContain("await driver.get('https://example.com');");
@@ -99,13 +111,19 @@ describe('renderMochaTest', () => {
     expect(out).toContain("describe('My Suite', function ()");
     expect(out).toContain("forBrowser('firefox')");
   });
+
+  it('escapes single quotes in name and browser', () => {
+    const out = renderMochaTest(makeSteps(), { name: "O'Brien's suite", browser: "edge's" });
+    expect(out).toContain("describe('O\\'Brien\\'s suite', function ()");
+  });
 });
 
 describe('renderPytestTest', () => {
   it('translates codegen to python bindings', () => {
     const out = renderPytestTest(makeSteps());
     expect(out).toContain('from selenium import webdriver');
-    expect(out).toContain('driver.get("https://example.com")');
+    expect(out).toContain('from selenium.webdriver.common.by import By');
+    expect(out).toContain('driver.get(\'https://example.com\')');
     expect(out).toContain("driver.find_element(By.XPATH, \".//*[@role='textbox' and normalize-space(.)='Search']\").send_keys('hello')");
     expect(out).toContain('driver.quit()');
   });
@@ -124,9 +142,18 @@ describe('renderPytestTest', () => {
     expect(out).toContain('By.CSS_SELECTOR, \'#a\').clear()');
   });
 
-  it('sanitizes the function name', () => {
+  it('sanitizes the function name and capitalizes the browser class', () => {
     const out = renderPytestTest([], { name: 'My Suite!', browser: 'firefox' });
-    expect(out).toContain('driver = webdriver.firefox()');
+    expect(out).toContain('def test_My_Suite_():');
+    expect(out).toContain('driver = webdriver.Firefox()');
+  });
+
+  it('escapes quotes in role names via xpath concat', () => {
+    const steps: RecordedStep[] = [
+      { command: 'click o', code: ["await driver.findElement(new By('role', { role: 'button', name: 'O\\'Brien' })).click();"], ok: true, timeMs: 1, ts: 1 },
+    ];
+    const out = renderPytestTest(steps);
+    expect(out).toContain('By.XPATH, ".//*[@role=\'button\' and normalize-space(.)=concat(\'O\', "\'", \'Brien\')]"');
   });
 });
 
@@ -136,7 +163,7 @@ describe('renderJunit5Test', () => {
     expect(out).toContain('import org.junit.jupiter.api.Test;');
     expect(out).toContain('public class SeCliSessionTest {');
     expect(out).toContain('driver.get("https://example.com");');
-    expect(out).toContain('driver.findElement(By.xpath(".//*[@role=\'textbox\' and normalize-space(.)=\'Search\']")).sendKeys(\'hello\');');
+    expect(out).toContain('driver.findElement(By.xpath(".//*[@role=\'textbox\' and normalize-space(.)=\'Search\']")).sendKeys("hello");');
   });
 
   it('translates css/xpath locators and skips untranslatable lines', () => {
@@ -147,8 +174,8 @@ describe('renderJunit5Test', () => {
       { command: 'clear', code: ["await driver.findElement(By.css('#a')).clear();"], ok: true, timeMs: 1, ts: 4 },
     ];
     const out = renderJunit5Test(steps);
-    expect(out).toContain(`By.cssSelector("[data-se-ref="e2"]")`);
-    expect(out).toContain('By.xpath("//div[@id="a"]")');
+    expect(out).toContain('By.cssSelector("[data-se-ref=\\"e2\\"]")');
+    expect(out).toContain('By.xpath("//div[@id=\\"a\\"]")');
     // untranslatable executeScript line is dropped entirely (no comment in java path)
     expect(out).not.toContain('executeScript');
     expect(out).toContain('driver.findElement(By.cssSelector("#a")).clear();');
@@ -184,12 +211,17 @@ describe('renderJunit5Test', () => {
     const out = renderPytestTest(steps);
     expect(out).toContain('(untranslated)');
   });
+
+  it('sanitizes the java class name', () => {
+    const out = renderJunit5Test([], { name: 'My-Suite!Name' });
+    expect(out).toContain('public class My_Suite_Name {');
+  });
 });
 
 describe('renderExport dispatch', () => {
   it('routes to the requested framework', () => {
     const steps = makeSteps();
-    expect(renderExport('mocha', steps)).toContain("const { Builder }");
+    expect(renderExport('mocha', steps)).toContain("const { Builder, By }");
     expect(renderExport('pytest', steps)).toContain('import pytest');
     expect(renderExport('junit5', steps)).toContain('import org.junit.jupiter.api.Test;');
   });

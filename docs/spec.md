@@ -781,14 +781,35 @@ never match — emphasized as a differentiated stronghold rather than a passing 
 Recording and visualization capabilities for development and debugging workflows.
 High implementation complexity but significant differentiation potential.
 
-- [ ] **se-cli record**: recording mode — user actions generate a complete test file
-- [ ] **export --format=pytest|junit5|mocha**: multi-framework test code export from recorded sessions (issue #75)
-- [ ] **--report=junit|allure|html**: built-in test report generation for CI integration (issue #74)
+**P0 delivered** (commit `6682acf`):
+
+- [x] **se-cli record**: recording mode — captures every executed command in the
+  daemon (command text + emitted Selenium codegen + pass/fail + timing) so the
+  session can be replayed as a test file. Commands: `record start|stop|status`,
+  `record export --format=pytest|junit5|mocha`, `record report --format=junit|html`.
+- [x] **export --format=pytest|junit5|mocha**: multi-framework test code export from
+  recorded sessions (issue #75). Mocha reuses the codegen verbatim; pytest/junit5
+  translate locators (role→XPath, css→CSS, xpath→XPath) and mark untranslatable
+  lines as comments. Verification: `tests/integration/v0.11-record.test.ts`.
+- [x] **--report=junit|html**: built-in test report generation for CI integration
+  (issue #74, allure deferred — requires external CLI). JUnit XML (CI-standard
+  schema) and a standalone HTML report with pass/fail summary.
+
+**Remaining (not yet delivered)**:
+
+- [ ] **--report=allure**: deferred — needs the external allure CLI.
 - [ ] **tracing-start / tracing-stop**: operation tracing and storage (simplified; see "Will Never Implement")
 - [ ] **video-start / video-stop**: video recording via CDP or ffmpeg frame capture
 - [ ] **video-chapter <title>**: mark chapters in recordings
 - [ ] **show**: visualization dashboard for multi-session monitoring
 - [ ] **show --annotate**: page annotation for design feedback
+
+**Design notes**:
+
+- The recorder is in-memory per daemon process; it is not persisted across daemon
+  restarts, and steps are capped at 10,000 entries (oldest dropped) to bound memory.
+- Failed commands are captured (as failures) so reports reflect reality, but they
+  never carry codegen — a failed interaction is exported as a comment only.
 
 ### v0.12: VSCode Extension (Marginal)
 
