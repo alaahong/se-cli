@@ -125,9 +125,10 @@ export function renderMochaTest(steps: RecordedStep[], opts: ExportOptions = {})
   const name = opts.name ?? 'se-cli session';
   const browser = opts.browser ?? 'chrome';
   const body = runnableSteps(steps, opts);
-  // codegen uses `new By('role', …)` and `By.css(…)` — By must be imported.
+  // codegen uses `new By('role', …)`, `By.css(…)` and `until.elementIs…`
+  // (expect assertions) — By and until must both be imported.
   const lines: string[] = [
-    "const { Builder, By } = require('selenium-webdriver');",
+    "const { Builder, By, until } = require('selenium-webdriver');",
     '',
     `describe('${escapeSingleQuote(name)}', function () {`,
     '  let driver;',
@@ -174,6 +175,8 @@ export function renderPytestTest(steps: RecordedStep[], opts: ExportOptions = {}
     'import pytest',
     'from selenium import webdriver',
     'from selenium.webdriver.common.by import By',
+    'from selenium.webdriver.support.ui import WebDriverWait',
+    'from selenium.webdriver.support import expected_conditions as EC',
     '',
     '',
     `def ${fnName}():`,
@@ -204,9 +207,9 @@ export function renderPytestTest(steps: RecordedStep[], opts: ExportOptions = {}
  * what it replays.
  */
 
-/** Convert a JS single-quoted string literal to a Python single-quoted one. */
+/** Convert a JS string literal (single- or double-quoted) to a Python one. */
 function toPythonStringArg(jsLiteral: string): string {
-  const inner = unescapeJs(jsLiteral.replace(/^'|'$/g, ''));
+  const inner = unescapeJs(jsLiteral.replace(/^'|^"|'$|"$/g, ''));
   // Re-encode for Python: escape the quote, backslash, and control chars
   // so the emitted literal reproduces the original value exactly.
   return `'${escapeSingleQuote(inner)
@@ -216,12 +219,13 @@ function toPythonStringArg(jsLiteral: string): string {
 }
 
 /**
- * Convert a JS single-quoted string literal to a Java double-quoted one.
- * The JS literal may carry JS escapes; unescape first, then re-encode for
- * Java (including control chars) so the value round-trips correctly.
+ * Convert a JS string literal (single- or double-quoted) to a Java
+ * double-quoted one. The JS literal may carry JS escapes; unescape first,
+ * then re-encode for Java (including control chars) so the value
+ * round-trips correctly.
  */
 function toJavaStringArg(jsLiteral: string): string {
-  const inner = unescapeJs(jsLiteral.replace(/^'|'$/g, ''));
+  const inner = unescapeJs(jsLiteral.replace(/^'|^"|'$|"$/g, ''));
   return `"${escapeDoubleQuote(inner)
     .replace(/\n/g, '\\n')
     .replace(/\r/g, '\\r')
@@ -251,6 +255,30 @@ function toPython(jsLine: string): string | null {
   // await driver.get('...');
   m = jsLine.match(/^await driver\.get\((.+)\);\s*$/);
   if (m) return `driver.get(${toPythonStringArg(m[1])})`;
+  // await driver.switchTo().alert().sendKeys('text');
+  m = jsLine.match(/^await driver\.switchTo\(\)\.alert\(\)\.sendKeys\((.+)\);\s*$/);
+  if (m) return `driver.switch_to.alert.send_keys(${toPythonStringArg(m[1])})`;
+  // await driver.wait(until.elementIsVisible(By.css('...')), 5000); — expect
+  m = jsLine.match(/^await driver\.wait\(until\.elementIs(Not)?(Visible|Enabled|Selected)\((.+)\), (\d+)\);\s*$/);
+  if (m) {
+    const loc = toPythonLocator(m[3]);
+    if (!loc) return null;
+    const neg = !!m[1];
+    const kind = m[2];
+    const waitSec = Math.max(1, Math.round(Number(m[4]) / 1000));
+    if (kind === 'Visible') {
+      const cond = neg ? `EC.invisibility_of_element_located((${loc}))` : `EC.visibility_of_element_located((${loc}))`;
+      return `WebDriverWait(driver, ${waitSec}).until(${cond})`;
+    }
+    if (kind === 'Enabled') {
+      // element_to_be_clickable also implies enabled.
+      const cond = neg ? `EC.not_to_be_clickable((${loc}))` : `EC.element_to_be_clickable((${loc}))`;
+      return `WebDriverWait(driver, ${waitSec}).until(${cond})`;
+    }
+    // Selected
+    const cond = neg ? `EC.not_to_be_selected((${loc}))` : `EC.element_to_be_selected((${loc}))`;
+    return `WebDriverWait(driver, ${waitSec}).until(${cond})`;
+  }
   // await driver.findElement(...).click();
   m = jsLine.match(/^await driver\.findElement\((.+)\)\.click\(\);\s*$/);
   if (m) {
@@ -311,6 +339,10 @@ export function renderJunit5Test(steps: RecordedStep[], opts: ExportOptions = {}
     'import org.openqa.selenium.chrome.ChromeDriver;',
     'import org.openqa.selenium.edge.EdgeDriver;',
     'import org.openqa.selenium.firefox.FirefoxDriver;',
+    'import org.openqa.selenium.safari.SafariDriver;',
+    'import org.openqa.selenium.support.ui.WebDriverWait;',
+    'import org.openqa.selenium.support.ui.ExpectedConditions;',
+    'import java.time.Duration;',
     '',
     `public class ${name} {`,
     '    private WebDriver driver;',
@@ -330,6 +362,7 @@ export function renderJunit5Test(steps: RecordedStep[], opts: ExportOptions = {}
     '            case "chrome": return new ChromeDriver();',
     '            case "edge": return new EdgeDriver();',
     '            case "firefox": return new FirefoxDriver();',
+    '            case "safari": return new SafariDriver();',
     '            default: throw new IllegalArgumentException("Unsupported browser: " + name);',
     '        }',
     '    }',
@@ -362,6 +395,27 @@ function toJava(jsLine: string): string | null {
   if (m) return 'String url = driver.getCurrentUrl();';
   m = jsLine.match(/^await driver\.get\((.+)\);\s*$/);
   if (m) return `driver.get(${toJavaStringArg(m[1])});`;
+  m = jsLine.match(/^await driver\.switchTo\(\)\.alert\(\)\.sendKeys\((.+)\);\s*$/);
+  if (m) return `driver.switchTo().alert().sendKeys(${toJavaStringArg(m[1])});`;
+  // await driver.wait(until.elementIsVisible(By.css('...')), 5000); — expect
+  m = jsLine.match(/^await driver\.wait\(until\.elementIs(Not)?(Visible|Enabled|Selected)\((.+)\), (\d+)\);\s*$/);
+  if (m) {
+    const loc = toJavaLocator(m[3]);
+    if (!loc) return null;
+    const neg = !!m[1];
+    const kind = m[2];
+    const waitSec = Math.max(1, Math.round(Number(m[4]) / 1000));
+    if (kind === 'Visible') {
+      const cond = neg ? `ExpectedConditions.invisibilityOfElementLocated(${loc})` : `ExpectedConditions.visibilityOfElementLocated(${loc})`;
+      return `new WebDriverWait(driver, Duration.ofSeconds(${waitSec})).until(${cond});`;
+    }
+    if (kind === 'Enabled') {
+      const cond = neg ? `ExpectedConditions.not(ExpectedConditions.elementToBeClickable(${loc}))` : `ExpectedConditions.elementToBeClickable(${loc})`;
+      return `new WebDriverWait(driver, Duration.ofSeconds(${waitSec})).until(${cond});`;
+    }
+    const cond = neg ? `ExpectedConditions.not(ExpectedConditions.elementToBeSelected(${loc}))` : `ExpectedConditions.elementToBeSelected(${loc})`;
+    return `new WebDriverWait(driver, Duration.ofSeconds(${waitSec})).until(${cond});`;
+  }
   m = jsLine.match(/^await driver\.findElement\((.+)\)\.click\(\);\s*$/);
   if (m) {
     const loc = toJavaLocator(m[1]);

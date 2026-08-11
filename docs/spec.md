@@ -810,6 +810,16 @@ High implementation complexity but significant differentiation potential.
   restarts, and steps are capped at 10,000 entries (oldest dropped) to bound memory.
 - Failed commands are captured (as failures) so reports reflect reality, but they
   never carry codegen — a failed interaction is exported as a comment only.
+- Recorded command text may contain argument values (e.g. `fill` passwords) and is
+  embedded verbatim in exported tests/reports — treat recordings of sensitive
+  sessions accordingly (export only what you intend to share).
+- pytest/junit5 exporters translate navigation (`get`), interaction (click / sendKeys /
+  clear / alert sendKeys), and element-state assertions (`expect visible|hidden|enabled|
+  checked` → WebDriverWait/ExpectedConditions); other codegen (actions chains,
+  executeScript, uploads) is preserved as comments so nothing is silently lost.
+- Codegen string literals are re-encoded per target language (JS `\'`/`\"`/`\n` escapes
+  round-trip through unescape + re-escape), so values containing quotes or newlines
+  survive export correctly.
 
 ### v0.12: VSCode Extension (Marginal)
 

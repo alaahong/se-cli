@@ -27,10 +27,10 @@ function S(): string {
   return `v011-${Date.now().toString(36)}-${counter}`;
 }
 
-async function run(args: string[], env: Record<string, string> = {}): Promise<string> {
+async function run(args: string[], env: Record<string, string> = {}, timeout = 90000): Promise<string> {
   const { stdout } = await execFileAsync('node', [CLI, ...args], {
     encoding: 'utf8',
-    timeout: 90000,
+    timeout,
     env: { ...process.env, ...env },
     shell: false,
     maxBuffer: 10 * 1024 * 1024,
@@ -77,7 +77,7 @@ describe('v0.11: record → export → report', () => {
 
     // export as mocha — codegen lines are embedded verbatim
     const mochaOut = await run(['record', 'export', '--format=mocha', '--browser=chrome'], env);
-    expect(mochaOut).toContain("const { Builder, By } = require('selenium-webdriver');");
+    expect(mochaOut).toContain("const { Builder, By, until } = require('selenium-webdriver');");
     expect(mochaOut).toContain("forBrowser('chrome')");
 
     // export to a file
@@ -103,9 +103,15 @@ describe('v0.11: record → export → report', () => {
   (E2E_ENABLED ? it : it.skip)('record control commands work without a live driver (recovery path)', async () => {
     const sess = S();
     const env = { SE_CLI_SESSION: sess };
-    // open may fail to build the driver in restricted environments, but the
-    // daemon stays up; record commands must still work (export after crash).
-    await run(['open', '--browser=chrome', EXAMPLE_URL()], env).catch(() => {});
+    // open may time out building the driver in restricted environments —
+    // but the daemon itself starts and stays alive. Record commands must
+    // still work (export after a crash). Bound the open call so the test
+    // does not consume the whole vitest timeout waiting on the driver.
+    try {
+      await run(['open', '--browser=chrome', EXAMPLE_URL()], env, 60000);
+    } catch {
+      // driver build failed or timed out — daemon is up, continue
+    }
 
     await run(['record', 'start'], env);
     await run(['record', 'status'], env);

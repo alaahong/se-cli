@@ -93,7 +93,7 @@ describe('recorder state machine', () => {
 describe('renderMochaTest', () => {
   it('emits a runnable mocha skeleton with codegen body', () => {
     const out = renderMochaTest(makeSteps());
-    expect(out).toContain("const { Builder, By } = require('selenium-webdriver');");
+    expect(out).toContain("const { Builder, By, until } = require('selenium-webdriver');");
     expect(out).toContain("describe('se-cli session', function ()");
     expect(out).toContain("forBrowser('chrome')");
     expect(out).toContain("await driver.get('https://example.com');");
@@ -249,12 +249,51 @@ describe('renderJunit5Test', () => {
     expect(out).toContain('# (untranslated) await driver.findElement(By.id(\'x\')).click();');
     expect(out).not.toContain('driver.find_element(By');
   });
+
+  it('translates expect assertions into waits in mocha/pytest/junit5', () => {
+    const steps: RecordedStep[] = [
+      { command: 'expect visible', code: ["await driver.wait(until.elementIsVisible(By.css('[data-se-ref=\"e1\"]')), 5000);"], ok: true, timeMs: 100, ts: 1 },
+      { command: 'expect hidden', code: ["await driver.wait(until.elementIsNotVisible(By.css('#x')), 3000);"], ok: true, timeMs: 100, ts: 2 },
+      { command: 'expect enabled', code: ["await driver.wait(until.elementIsEnabled(By.css('#btn')), 2000);"], ok: true, timeMs: 100, ts: 3 },
+      { command: 'expect checked', code: ["await driver.wait(until.elementIsNotSelected(By.css('#chk')), 1500);"], ok: true, timeMs: 100, ts: 4 },
+    ];
+    // mocha needs `until` imported for the verbatim codegen lines
+    const mocha = renderMochaTest(steps);
+    expect(mocha).toContain("const { Builder, By, until } = require('selenium-webdriver');");
+
+    const py = renderPytestTest(steps);
+    expect(py).toContain('from selenium.webdriver.support.ui import WebDriverWait');
+    expect(py).toContain('WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.CSS_SELECTOR, \'[data-se-ref="e1"]\')))');
+    expect(py).toContain('WebDriverWait(driver, 3).until(EC.invisibility_of_element_located((By.CSS_SELECTOR, \'#x\')))');
+    expect(py).toContain('WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.CSS_SELECTOR, \'#btn\')))');
+    expect(py).toContain('WebDriverWait(driver, 2).until(EC.not_to_be_selected((By.CSS_SELECTOR, \'#chk\')))');
+
+    const java = renderJunit5Test(steps);
+    expect(java).toContain('import org.openqa.selenium.support.ui.ExpectedConditions;');
+    expect(java).toContain('new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[data-se-ref=\\"e1\\"]")));');
+    expect(java).toContain('ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("#x"))');
+    expect(java).toContain('ExpectedConditions.elementToBeClickable(By.cssSelector("#btn"))');
+    expect(java).toContain('ExpectedConditions.not(ExpectedConditions.elementToBeSelected(By.cssSelector("#chk")))');
+  });
+
+  it('translates dialog alert sendKeys into pytest/junit5', () => {
+    const steps: RecordedStep[] = [
+      { command: 'dialog text', code: ["await driver.switchTo().alert().sendKeys(\"hello\");"], ok: true, timeMs: 1, ts: 1 },
+      { command: 'goto', code: ["await driver.get(\"https://example.com\");"], ok: true, timeMs: 1, ts: 1 },
+    ];
+    const py = renderPytestTest(steps);
+    expect(py).toContain("driver.switch_to.alert.send_keys('hello')");
+    expect(py).toContain("driver.get('https://example.com')");
+    const java = renderJunit5Test(steps);
+    expect(java).toContain('driver.switchTo().alert().sendKeys("hello");');
+    expect(java).toContain('driver.get("https://example.com");');
+  });
 });
 
 describe('renderExport dispatch', () => {
   it('routes to the requested framework', () => {
     const steps = makeSteps();
-    expect(renderExport('mocha', steps)).toContain("const { Builder, By }");
+    expect(renderExport('mocha', steps)).toContain("const { Builder, By, until }");
     expect(renderExport('pytest', steps)).toContain('import pytest');
     expect(renderExport('junit5', steps)).toContain('import org.junit.jupiter.api.Test;');
   });
