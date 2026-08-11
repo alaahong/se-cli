@@ -206,13 +206,40 @@ export function renderPytestTest(steps: RecordedStep[], opts: ExportOptions = {}
 
 /** Convert a JS single-quoted string literal to a Python single-quoted one. */
 function toPythonStringArg(jsLiteral: string): string {
-  const inner = jsLiteral.replace(/^'|'$/g, '');
-  return `'${escapeSingleQuote(inner)}'`;
+  const inner = unescapeJs(jsLiteral.replace(/^'|'$/g, ''));
+  // Re-encode for Python: escape the quote, backslash, and control chars
+  // so the emitted literal reproduces the original value exactly.
+  return `'${escapeSingleQuote(inner)
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t')}'`;
 }
 
-/** Unescape JS single-quoted literal escapes (e.g. `\'` → `'`, `\\` → `\`). */
+/**
+ * Convert a JS single-quoted string literal to a Java double-quoted one.
+ * The JS literal may carry JS escapes; unescape first, then re-encode for
+ * Java (including control chars) so the value round-trips correctly.
+ */
+function toJavaStringArg(jsLiteral: string): string {
+  const inner = unescapeJs(jsLiteral.replace(/^'|'$/g, ''));
+  return `"${escapeDoubleQuote(inner)
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t')}"`;
+}
+
+/**
+ * Unescape a JS single-quoted string literal (as produced by jsString):
+ * `\'` → `'`, `\\` → `\`, `\n` → newline, `\r` → CR, `\t` → tab.
+ * Single-pass scan so a literal `\\n` (backslash+n) stays intact.
+ */
 function unescapeJs(literal: string): string {
-  return literal.replace(/\\(['\\])/g, '$1');
+  return literal.replace(/\\(.)/g, (_m, c: string) => {
+    if (c === 'n') return '\n';
+    if (c === 'r') return '\r';
+    if (c === 't') return '\t';
+    return c; // \' → ', \\ → \
+  });
 }
 
 function toPython(jsLine: string): string | null {
@@ -229,7 +256,7 @@ function toPython(jsLine: string): string | null {
   if (m) {
     const loc = toPythonLocator(m[1]);
     if (loc) return `driver.find_element(${loc}).click()`;
-    return null;
+    return `# (untranslated) ${escapeComment(jsLine)}`;
   }
   // await driver.findElement(...).sendKeys(...);
   m = jsLine.match(/^await driver\.findElement\((.+)\)\.sendKeys\((.+)\);\s*$/);
@@ -339,27 +366,21 @@ function toJava(jsLine: string): string | null {
   if (m) {
     const loc = toJavaLocator(m[1]);
     if (loc) return `driver.findElement(${loc}).click();`;
-    return null;
+    return `// (untranslated) ${escapeComment(jsLine)}`;
   }
   m = jsLine.match(/^await driver\.findElement\((.+)\)\.sendKeys\((.+)\);\s*$/);
   if (m) {
     const loc = toJavaLocator(m[1]);
     if (loc) return `driver.findElement(${loc}).sendKeys(${toJavaStringArg(m[2])});`;
-    return null;
+    return `// (untranslated) ${escapeComment(jsLine)}`;
   }
   m = jsLine.match(/^await driver\.findElement\((.+)\)\.clear\(\);\s*$/);
   if (m) {
     const loc = toJavaLocator(m[1]);
     if (loc) return `driver.findElement(${loc}).clear();`;
-    return null;
+    return `// (untranslated) ${escapeComment(jsLine)}`;
   }
   return null;
-}
-
-/** Convert a JS single-quoted string literal to a Java double-quoted one. */
-function toJavaStringArg(jsLiteral: string): string {
-  const inner = jsLiteral.replace(/^'|'$/g, '');
-  return `"${escapeDoubleQuote(inner)}"`;
 }
 
 function toJavaLocator(jsExpr: string): string | null {

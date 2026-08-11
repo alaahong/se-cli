@@ -190,8 +190,12 @@ describe('renderJunit5Test', () => {
     ];
     const out = renderJunit5Test(steps);
     expect(out).toContain('By.xpath(".//*[@role=\'button\' and normalize-space(.)=\'Save\']")');
-    expect(out).not.toContain('By.id');
-    expect(out).not.toContain('.clear();');
+    // untranslatable locators stay as comments, never as executable code:
+    // the only By.id mention must be inside a `//` comment line.
+    const execLines = out.split('\n').filter((l) => l.includes('By.id') && !l.trimStart().startsWith('//'));
+    expect(execLines).toHaveLength(0);
+    expect(out).toContain('// (untranslated) await driver.findElement(By.id(\'x\')).click();');
+    expect(out).toContain('// (untranslated) await driver.findElement(By.id(\'y\')).clear();');
   });
 
   it('annotates junit5 steps without codegen as comments', () => {
@@ -215,6 +219,35 @@ describe('renderJunit5Test', () => {
   it('sanitizes the java class name', () => {
     const out = renderJunit5Test([], { name: 'My-Suite!Name' });
     expect(out).toContain('public class My_Suite_Name {');
+  });
+
+  it('round-trips escaped string args (quotes, backslashes, newlines)', () => {
+    // jsString escapes: O\'Brien, a\\b, and a newline become \n.
+    const steps: RecordedStep[] = [
+      { command: 'fill q', code: ["await driver.findElement(By.css('#a')).sendKeys('O\\'Brien');"], ok: true, timeMs: 1, ts: 1 },
+      { command: 'goto bs', code: ["await driver.get('https://x.com/a\\\\b');"], ok: true, timeMs: 1, ts: 1 },
+      { command: 'fill nl', code: ["await driver.findElement(By.css('#b')).sendKeys('line1\\nline2');"], ok: true, timeMs: 1, ts: 1 },
+    ];
+    const py = renderPytestTest(steps);
+    // single backslash before the quote — value is O'Brien
+    expect(py).toContain("send_keys('O\\'Brien')");
+    // double backslash survives as literal backslash
+    expect(py).toContain("driver.get('https://x.com/a\\\\b')");
+    expect(py).toContain("send_keys('line1\\nline2')");
+    const java = renderJunit5Test(steps);
+    // double-quoted Java: inner single quote needs no escape
+    expect(java).toContain('sendKeys("O\'Brien")');
+    expect(java).toContain('driver.get("https://x.com/a\\\\b");');
+    expect(java).toContain('sendKeys("line1\\nline2");');
+  });
+
+  it('keeps untranslatable pytest clicks as comments (not silent drops)', () => {
+    const steps: RecordedStep[] = [
+      { command: 'click id', code: ["await driver.findElement(By.id('x')).click();"], ok: true, timeMs: 1, ts: 1 },
+    ];
+    const out = renderPytestTest(steps);
+    expect(out).toContain('# (untranslated) await driver.findElement(By.id(\'x\')).click();');
+    expect(out).not.toContain('driver.find_element(By');
   });
 });
 
