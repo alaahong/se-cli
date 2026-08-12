@@ -271,9 +271,11 @@ function toPython(jsLine: string): string | null {
       return `WebDriverWait(driver, ${waitSec}).until(${cond})`;
     }
     if (kind === 'Enabled') {
-      // element_to_be_clickable also implies enabled.
-      const cond = neg ? `EC.not_to_be_clickable((${loc}))` : `EC.element_to_be_clickable((${loc}))`;
-      return `WebDriverWait(driver, ${waitSec}).until(${cond})`;
+      // Element-level isEnabled() semantics — NOT element_to_be_clickable,
+      // which also requires visibility (clickable ⊃ enabled).
+      const find = `d.find_element(${loc})`;
+      const body = neg ? `not ${find}.is_enabled()` : `${find}.is_enabled()`;
+      return `WebDriverWait(driver, ${waitSec}).until(lambda d: ${body})`;
     }
     // Selected
     const cond = neg ? `EC.not_to_be_selected((${loc}))` : `EC.element_to_be_selected((${loc}))`;
@@ -410,8 +412,11 @@ function toJava(jsLine: string): string | null {
       return `new WebDriverWait(driver, Duration.ofSeconds(${waitSec})).until(${cond});`;
     }
     if (kind === 'Enabled') {
-      const cond = neg ? `ExpectedConditions.not(ExpectedConditions.elementToBeClickable(${loc}))` : `ExpectedConditions.elementToBeClickable(${loc})`;
-      return `new WebDriverWait(driver, Duration.ofSeconds(${waitSec})).until(${cond});`;
+      // Element-level isEnabled() semantics — NOT elementToBeClickable,
+      // which also requires visibility (clickable ⊃ enabled).
+      const find = `d.findElement(${loc})`;
+      const body = neg ? `!${find}.isEnabled()` : `${find}.isEnabled()`;
+      return `new WebDriverWait(driver, Duration.ofSeconds(${waitSec})).until(d -> ${body});`;
     }
     const cond = neg ? `ExpectedConditions.not(ExpectedConditions.elementToBeSelected(${loc}))` : `ExpectedConditions.elementToBeSelected(${loc})`;
     return `new WebDriverWait(driver, Duration.ofSeconds(${waitSec})).until(${cond});`;

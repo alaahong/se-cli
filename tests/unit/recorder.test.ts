@@ -265,14 +265,15 @@ describe('renderJunit5Test', () => {
     expect(py).toContain('from selenium.webdriver.support.ui import WebDriverWait');
     expect(py).toContain('WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.CSS_SELECTOR, \'[data-se-ref="e1"]\')))');
     expect(py).toContain('WebDriverWait(driver, 3).until(EC.invisibility_of_element_located((By.CSS_SELECTOR, \'#x\')))');
-    expect(py).toContain('WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.CSS_SELECTOR, \'#btn\')))');
+    // enabled maps to is_enabled() (not clickable — clickable also requires visibility)
+    expect(py).toContain('WebDriverWait(driver, 2).until(lambda d: d.find_element(By.CSS_SELECTOR, \'#btn\').is_enabled())');
     expect(py).toContain('WebDriverWait(driver, 2).until(EC.not_to_be_selected((By.CSS_SELECTOR, \'#chk\')))');
 
     const java = renderJunit5Test(steps);
     expect(java).toContain('import org.openqa.selenium.support.ui.ExpectedConditions;');
     expect(java).toContain('new WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[data-se-ref=\\"e1\\"]")));');
     expect(java).toContain('ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("#x"))');
-    expect(java).toContain('ExpectedConditions.elementToBeClickable(By.cssSelector("#btn"))');
+    expect(java).toContain('new WebDriverWait(driver, Duration.ofSeconds(2)).until(d -> d.findElement(By.cssSelector("#btn")).isEnabled());');
     expect(java).toContain('ExpectedConditions.not(ExpectedConditions.elementToBeSelected(By.cssSelector("#chk")))');
   });
 

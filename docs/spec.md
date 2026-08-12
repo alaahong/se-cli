@@ -125,7 +125,9 @@ values (e.g. `fill` passwords).
 
 **Config (v0.4)**: `config get <key>` / `config set <key> <value>` / `config list` / `config init`
 
-40+ commands in total (v0.1 through v0.9).
+**Recording & Test Export (v0.11)**: `record start` / `record stop` / `record status` / `record export --format=pytest|junit5|mocha [--name=] [--browser=] [--out=]` / `record report --format=junit|html [--name=] [--out=]`
+
+40+ CLI commands and 100+ daemon tool routes in total (v0.1 through v0.11).
 
 ### 3.3 Global Flags
 

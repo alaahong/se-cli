@@ -406,6 +406,55 @@ se-cli snapshot
 se-cli close
 ```
 
+### Recording & Test Export (v0.11)
+
+Record a live session and export it as a runnable test file in your
+framework of choice. Recorded steps keep their Selenium codegen, so the
+exported test replays exactly what you did — including `expect`
+assertions (translated to `WebDriverWait`/`ExpectedConditions`).
+
+```bash
+se-cli open https://example.com
+
+se-cli record start
+se-cli fill e1 "user@example.com"
+se-cli click e3
+se-cli expect e1 value "user@example.com"
+se-cli record stop
+
+# status: recording state + captured step count
+se-cli record status
+
+# export as a test file (pytest | junit5 | mocha)
+se-cli record export --format=mocha --out=session.test.js
+se-cli record export --format=pytest --out=test_session.py --browser=chrome
+se-cli record export --format=junit5 --out=SessionTest.java --name=LoginTest
+
+# render a CI-friendly report (junit XML | standalone html)
+se-cli record report --format=junit --out=report.xml
+se-cli record report --format=html --out=report.html
+```
+
+Run the exported test with the framework's toolchain (not installed by
+se-cli):
+
+```bash
+# mocha: npm install selenium-webdriver mocha, then:
+npx mocha session.test.js
+
+# pytest: pip install selenium pytest, then:
+pytest test_session.py
+
+# junit5: add selenium-java + junit-jupiter to your build, then run the
+# generated class through your test runner.
+```
+
+Notes: `--browser` picks the browser for the exported test (default
+`chrome`); codegen that cannot be translated to the target framework
+(actions chains, `executeScript`, uploads) is kept as a comment so no
+recorded action is silently dropped; recordings are in-memory per daemon
+and are lost when the daemon exits.
+
 ### Multi-Session (Parallel Browsers)
 
 ```bash
