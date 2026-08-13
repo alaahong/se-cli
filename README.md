@@ -714,13 +714,16 @@ se-cli can be used as an MCP (Model Context Protocol) server, allowing VS Code C
 
 Install the [se-cli VS Code extension](https://github.com/se-cli/se-extension-vscode) — search `@mcp se-cli`
 in VS Code Extensions view (`Ctrl+Shift+X`). The extension auto-registers the MCP server, provides
-commands, a webview panel for snapshot/screenshot preview, and a status bar indicator.
+commands (including **Attach to Running Browser** via `open --cdp`), a webview panel for
+snapshot/screenshot preview, a status bar indicator, and a Task Provider that turns exported
+test files into runnable VS Code tasks.
 
-Once enabled, all 62 browser automation commands are available as MCP tools:
+Once enabled, all 67 browser automation commands are available as MCP tools:
 - `browser_open`, `browser_close`, `browser_navigate`
 - `browser_click`, `browser_fill`, `browser_type`, `browser_press`
 - `browser_snapshot`, `browser_find`, `browser_screenshot`, `browser_eval`
 - `browser_expect` (assertions), `browser_console`, `browser_requests`, `browser_route`
+- `browser_record_start/stop/status/export/report` (v0.11 recording & test export)
 - And more — see `se-cli mcp-server` for the full tool list
 
 ```bash
@@ -866,7 +869,7 @@ src/
 └── daemon/
     ├── server.ts           # Daemon socket server
     ├── backend.ts          # Tool dispatcher
-    └── tools/              # Tool handlers (62 tools)
+    └── tools/              # Tool handlers (67 tools)
 ```
 
 ## Browser Support
