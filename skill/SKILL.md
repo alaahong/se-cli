@@ -231,6 +231,34 @@ se-cli config list
 se-cli config init
 ```
 
+### Recording & Test Export (v0.11)
+
+Record a live session (`record start` … `record stop`) and export it as a
+runnable test in the framework of your choice. Steps keep their Selenium
+codegen, so the exported test replays the session; `expect` assertions are
+translated to `WebDriverWait`/`ExpectedConditions`.
+
+```bash
+se-cli record start
+# ... run commands to capture (fill, click, expect, …)
+se-cli record stop
+se-cli record status            # recording state + step count
+
+se-cli record export --format=mocha --out=session.test.js
+se-cli record export --format=pytest --out=test_session.py --browser=chrome
+se-cli record export --format=junit5 --out=SessionTest.java --name=LoginTest
+
+se-cli record report --format=junit --out=report.xml   # CI-friendly JUnit XML
+se-cli record report --format=html --out=report.html   # standalone HTML
+```
+
+Notes: `--browser` selects the exported test's browser (default `chrome`);
+codegen that cannot be translated (actions chains, `executeScript`, uploads)
+is preserved as a comment; recordings live in the daemon's memory and are
+lost when the daemon exits. Running the exported test needs the framework
+toolchain (`selenium-webdriver` + mocha, `selenium` + pytest, or selenium-java
++ JUnit 5) — se-cli does not install those.
+
 ### Flags
 ```bash
 se-cli --raw <cmd>              # Output only the value

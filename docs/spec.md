@@ -819,6 +819,12 @@ High implementation complexity but significant differentiation potential.
   clear / alert sendKeys), and element-state assertions (`expect visible|hidden|enabled|
   checked` → WebDriverWait/ExpectedConditions); other codegen (actions chains,
   executeScript, uploads) is preserved as comments so nothing is silently lost.
+- `expect enabled|disabled` maps to an element-level `is_enabled()` wait (not
+  `elementToBeClickable`, which also requires visibility) so recorded semantics
+  round-trip exactly.
+- `record status --json` returns `{ "result": "recording: idle · steps: N" }` — the
+  value is a text field (the daemon Response model has no per-tool structured
+  fields); scripts can parse `result` with `recording: (\w+) · steps: (\d+)`.
 - Codegen string literals are re-encoded per target language (JS `\'`/`\"`/`\n` escapes
   round-trip through unescape + re-escape), so values containing quotes or newlines
   survive export correctly.
