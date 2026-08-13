@@ -844,9 +844,19 @@ following the `playwright-vscode` pattern. Depends on se-cli CLI being globally 
 
 **Future enhancements**:
 
-- [ ] **Task Provider**: register se-cli commands as VSCode custom tasks
-- [ ] **attach --extension**: connect to real browser via extension
-- [ ] **Marketplace publishing**: package and publish to VS Code Marketplace
+- [x] **Task Provider**: register se-cli commands as VSCode custom tasks — delivered in
+  [`se-extension-vscode`](https://github.com/se-cli/se-extension-vscode) (v0.1.5+):
+  a `type: se-cli` Task Provider discovers test files exported by `record export`
+  (mocha `*.test.js`/`*.spec.js`, pytest `test_*.py`/`*_test.py`, junit5 `*Test.java`)
+  and exposes each as a runnable task via `Tasks: Run Task`; ignore directories
+  (node_modules/.git/dist/out/target/build/coverage/.se-cli) are skipped
+- [x] **attach --extension**: connect to real browser via extension — delivered: the
+  extension's `se-cli: Attach to Running Browser` command probes `http://localhost:9222`,
+  prompts for the CDP endpoint, and drives `se-cli open --cdp=<url>` (debuggerAddress)
+  so the daemon acts on an already-open browser; a terminal hint shows how to start one
+  with `--remote-debugging-port=9222`
+- [x] **Marketplace publishing**: package and publish to VS Code Marketplace — published
+  as `se-cli.se-extension-vscode` (publisher `se-cli`)
 
 ### v0.13: BiDi Expansion & Hardening (Core)
 
