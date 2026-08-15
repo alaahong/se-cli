@@ -587,7 +587,7 @@ via the `Mcp-Session-Id` header.
 
 ### Available MCP Tools
 
-All 70 CLI commands are exposed as MCP tools with `browser_` prefix:
+All 73 CLI commands are exposed as MCP tools with `browser_` prefix:
 
 - `browser_open` / `browser_close` / `browser_list_sessions`
 - `browser_navigate` / `browser_go_back` / `browser_go_forward` / `browser_reload`
