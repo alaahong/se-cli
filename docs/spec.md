@@ -869,8 +869,9 @@ BiDi integration and optimizing performance/stability.
 - [ ] **browsingContext module**: `captureScreenshot` (cross-browser), `print` (print-to-PDF
   via BiDi, not CDP), `setViewport`, `setBypassCSP`, `handleUserPrompt`, download tracking
   (`downloadWillBegin`/`downloadEnd` events)
-- [ ] **input module**: `setFiles` and `fileDialogOpened` for reliable file upload handling
-  without CDP
+- [x] **input module**: `setFiles` for reliable file upload handling
+  without CDP — delivered: `upload --bidi` uses BiDi `input.setFiles`
+  (Chromium + Firefox); `fileDialogOpened` event (pending)
 - [x] **script module**: `addPreloadScript`/`removePreloadScript` — inject scripts before
   page scripts run (delivered: `preload add|remove|list` CLI commands +
   `browser_preload_*` MCP tools), `getRealms` for sandboxed execution

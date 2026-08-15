@@ -192,7 +192,7 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
   // Parse flags from rest using minimist
   // Include wait/retry flags in the known options
   const parsed = parseArgs(rest, {
-    boolean: ['submit', 'no-wait', 'not', 'exact', 'hide', 'all', 'clear', 'offline', 'reset'],
+    boolean: ['submit', 'no-wait', 'not', 'exact', 'hide', 'all', 'clear', 'offline', 'reset', 'bidi'],
     string: [
       'filename', 'depth', 'regex',
       // v0.4 wait/retry flags
@@ -294,7 +294,7 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
     'drag': () => ({ toolName: 'browser_drag', toolParams: { start: positional[0], end: positional[1] } }),
     'dialog-accept': () => ({ toolName: 'browser_dialog_accept', toolParams: { text: positional[0] } }),
     'dialog-dismiss': () => ({ toolName: 'browser_dialog_dismiss', toolParams: {} }),
-    'upload': () => ({ toolName: 'browser_upload', toolParams: { target: positional[0], file: positional[1] } }),
+    'upload': () => ({ toolName: 'browser_upload', toolParams: { target: positional[0], file: positional[1], bidi: parsed.bidi || false } }),
     'resize': () => ({ toolName: 'browser_resize', toolParams: { width: parseInt(positional[0]), height: parseInt(positional[1]) } }),
     'keydown': () => ({ toolName: 'browser_keydown', toolParams: { key: positional[0] } }),
     'keyup': () => ({ toolName: 'browser_keyup', toolParams: { key: positional[0] } }),

@@ -170,7 +170,7 @@ se-cli close
 | `drag <start> <end>` | Drag and drop element (v0.5) |
 | `dialog-accept [text]` | Accept alert/confirm/prompt dialog (v0.5) |
 | `dialog-dismiss` | Dismiss dialog (v0.5) |
-| `upload <ref> <file>` | Upload file to input element (v0.5) |
+| `upload <ref> <file> [--bidi]` | Upload a file; `--bidi` uses BiDi `input.setFiles` (v0.13) |
 | `resize <w> <h>` | Set viewport size (v0.5) |
 | `keydown <key>` | Press and hold key (v0.5) |
 | `keyup <key>` | Release held key (v0.5) |

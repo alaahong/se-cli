@@ -364,7 +364,7 @@ describe('v0.5 Interaction Completion', () => {
     it('maps upload to browser_upload with target and file', () => {
       const r = parseCommand(['upload', 'e1', '/path/to/file.txt']);
       expect(r.toolName).toBe('browser_upload');
-      expect(r.toolParams).toEqual({ target: 'e1', file: '/path/to/file.txt' });
+      expect(r.toolParams).toEqual({ target: 'e1', file: '/path/to/file.txt', bidi: false });
     });
   });
 

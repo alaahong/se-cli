@@ -638,12 +638,13 @@ export const toolDefinitions: ToolDef[] = [
   },
   {
     name: 'browser_upload',
-    description: 'Upload a file to a file input element.',
+    description: 'Upload a file to a file input element. Uses sendKeys by default; set bidi=true to use WebDriver BiDi input.setFiles (Chromium + Firefox).',
     inputSchema: {
       type: 'object',
       properties: {
         target: { type: 'string', description: 'Element ref or CSS selector of the file input' },
         file: { type: 'string', description: 'Path to the file to upload' },
+        bidi: { type: 'boolean', description: 'Use BiDi input.setFiles instead of sendKeys (default: false)' },
         session: { type: 'string', description: 'Session name' },
       },
       required: ['target', 'file'],
@@ -1169,7 +1170,7 @@ export function mapToolToCliArgs(toolName: string, args: any): string[] | null {
     case 'browser_dialog_dismiss':
       return ['dialog-dismiss', ...sessionFlag];
     case 'browser_upload':
-      return ['upload', args.target, args.file, ...sessionFlag];
+      return ['upload', args.target, args.file, ...(args.bidi ? ['--bidi'] : []), ...sessionFlag];
     case 'browser_resize':
       return ['resize', String(args.width), String(args.height), ...sessionFlag];
     case 'browser_keydown':
