@@ -320,6 +320,16 @@ describe('MCP Server — mapToolToCliArgs', () => {
     expect(mapToolToCliArgs('browser_screenshot', {})).toEqual(['screenshot']);
   });
 
+  it('maps browser_screenshot with bidi', () => {
+    expect(mapToolToCliArgs('browser_screenshot', { filename: 's.png', bidi: true }))
+      .toEqual(['screenshot', '--filename=s.png', '--bidi']);
+  });
+
+  it('maps browser_pdf with bidi', () => {
+    expect(mapToolToCliArgs('browser_pdf', { filename: 'p.pdf', bidi: true }))
+      .toEqual(['pdf', '--filename=p.pdf', '--bidi']);
+  });
+
   it('maps browser_screenshot with filename', () => {
     expect(mapToolToCliArgs('browser_screenshot', { filename: 'shot.png' }))
       .toEqual(['screenshot', '--filename=shot.png']);

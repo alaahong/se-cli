@@ -546,7 +546,8 @@ Commands:
   check <ref> / uncheck <ref>
   snapshot [ref] [--depth=N]
   find <text> / find --regex <pattern>
-  screenshot [ref] [--filename=f]
+  screenshot [ref] [--filename=f] [--bidi]    (--bidi: BiDi captureScreenshot, v0.13)
+  pdf [--filename=f] [--bidi]                 save page as PDF (--bidi: BiDi print, v0.13)
   eval "<js>" [ref]
   run-code "<snippet>"    execute arbitrary Selenium snippet (receives driver; returned elements become refs)
   generate-locator <ref>   show recommended locator [--all] [--style=role|id|css|xpath]

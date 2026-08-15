@@ -69,4 +69,37 @@ describe('browser_pdf', () => {
     const out = response.serialize();
     expect(out).toContain('driver.printPage()');
   });
+
+  // ── v0.13: BiDi browsingContext.print path ──
+
+  it('prints via BiDi browsingContext.print when --bidi is set', async () => {
+    const send = vi.fn(async () => ({ result: { data: 'JVBERi0xLjQ=' } }));
+    const driver = {
+      printPage: vi.fn(async () => 'JVBERi0xLjQ='),
+      getWindowHandle: vi.fn(async () => 'context-1'),
+      getBidi: vi.fn(async () => ({ send })),
+    };
+    const response = new Response({ raw: false, json: false });
+
+    await browser_pdf(driver, { filename: 'bidi.pdf', bidi: true }, response);
+
+    expect(driver.printPage).not.toHaveBeenCalled();
+    expect(send).toHaveBeenCalledWith({
+      method: 'browsingContext.print',
+      params: { context: 'context-1' },
+    });
+    const file = path.join(tmpCwd, '.se-cli', 'bidi.pdf');
+    expect(fs.readFileSync(file, 'utf8')).toBe('%PDF-1.4');
+    expect(response.serialize()).toContain('[PDF](.se-cli/bidi.pdf)');
+  });
+
+  it('fails clearly when BiDi is unavailable for pdf --bidi', async () => {
+    const driver = {
+      printPage: vi.fn(async () => 'JVBERi0xLjQ='),
+      getBidi: vi.fn(async () => { throw new Error('no webSocketUrl'); }),
+    };
+    const response = new Response({ raw: false, json: false });
+
+    await expect(browser_pdf(driver, { bidi: true }, response)).rejects.toThrow(/BiDi/);
+  });
 });

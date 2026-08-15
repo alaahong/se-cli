@@ -580,6 +580,35 @@ describe('tool handlers', () => {
       const files = fs.readdirSync(dir).filter(f => f.startsWith('screenshot-') && f.endsWith('.png'));
       expect(files.length).toBe(1);
     });
+
+    // ── v0.13: BiDi browsingContext.captureScreenshot path ──
+
+    it('captures via BiDi browsingContext.captureScreenshot when --bidi is set', async () => {
+      const send = vi.fn(async () => ({ result: { data: 'BASE64PNG' } }));
+      const driver = makeMockDriver();
+      driver.getWindowHandle = vi.fn(async () => 'context-1');
+      driver.getBidi = vi.fn(async () => ({ send }));
+      const response = new Response({ raw: false, json: false });
+
+      await browser_screenshot(driver, { filename: 'bidi.png', bidi: true }, response);
+
+      expect(driver.takeScreenshot).not.toHaveBeenCalled();
+      expect(send).toHaveBeenCalledWith({
+        method: 'browsingContext.captureScreenshot',
+        params: { context: 'context-1', origin: 'viewport' },
+      });
+      const file = path.join(tmpCwd, '.se-cli', 'bidi.png');
+      expect(fs.existsSync(file)).toBe(true);
+      expect(response.serialize()).toContain('[Screenshot](.se-cli/bidi.png)');
+    });
+
+    it('fails clearly when BiDi is unavailable for screenshot --bidi', async () => {
+      const driver = makeMockDriver();
+      driver.getBidi = vi.fn(async () => { throw new Error('no webSocketUrl'); });
+      const response = new Response({ raw: false, json: false });
+
+      await expect(browser_screenshot(driver, { bidi: true }, response)).rejects.toThrow(/BiDi/);
+    });
   });
 
   describe('browser_eval', () => {

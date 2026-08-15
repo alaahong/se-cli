@@ -112,6 +112,20 @@ describe('parseCommand', () => {
     const r = parseCommand(['screenshot', '--filename=shot.png']);
     expect(r.toolName).toBe('browser_screenshot');
     expect(r.toolParams.filename).toBe('shot.png');
+    expect(r.toolParams.bidi).toBe(false);
+  });
+
+  it('maps screenshot --bidi to browser_screenshot with bidi', () => {
+    const r = parseCommand(['screenshot', '--bidi']);
+    expect(r.toolName).toBe('browser_screenshot');
+    expect(r.toolParams.bidi).toBe(true);
+  });
+
+  it('maps pdf --bidi to browser_pdf with bidi', () => {
+    const r = parseCommand(['pdf', '--bidi', '--filename=p.pdf']);
+    expect(r.toolName).toBe('browser_pdf');
+    expect(r.toolParams.bidi).toBe(true);
+    expect(r.toolParams.filename).toBe('p.pdf');
   });
 
   it('maps eval to browser_eval with script', () => {
