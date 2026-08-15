@@ -4,11 +4,44 @@ import { jsString } from './shared';
 // ---------------------------------------------------------------------------
 // Cookie management
 //
-// Uses driver.manage() API (not executeScript) because httpOnly cookies are
-// not readable via document.cookie in JavaScript.
+// Default: driver.manage() API (not executeScript) because httpOnly cookies
+// are not readable via document.cookie in JavaScript.
+// With --bidi: WebDriver BiDi storage.getCookies/setCookie, which supports
+// partition keys (user-context-scoped cookies, v0.13). Chromium + Firefox.
 // ---------------------------------------------------------------------------
 
-export async function browser_cookie_list(driver: any, _params: any, response: Response): Promise<void> {
+/** Build the BiDi storageKey partition for a user context (or default). */
+function bidiPartition(userContext?: string): Record<string, string> {
+  const partition: Record<string, string> = { type: 'storageKey' };
+  if (userContext !== undefined && userContext !== '') partition.userContext = userContext;
+  return partition;
+}
+
+async function bidiStorage(driver: any) {
+  try {
+    return await driver.getBidi();
+  } catch (e: any) {
+    throw new Error(`Error: cookie --bidi requires WebDriver BiDi — this browser/session does not support it (Safari does not): ${e.message}`);
+  }
+}
+
+export async function browser_cookie_list(
+  driver: any,
+  params: { bidi?: boolean; userContext?: string },
+  response: Response,
+): Promise<void> {
+  if (params.bidi) {
+    const bidi = await bidiStorage(driver);
+    const partition = bidiPartition(params.userContext);
+    const payload = await bidi.send({ method: 'storage.getCookies', params: { partition } });
+    if (payload && payload.error) {
+      throw new Error(`storage.getCookies: ${payload.error.message || JSON.stringify(payload.error)}`);
+    }
+    const cookies = payload?.result?.cookies ?? [];
+    response.addCode(`const { cookies } = await driver.getBidi().then(b => b.send({ method: 'storage.getCookies', params: { partition: ${JSON.stringify(partition)} } }));`);
+    response.addResult(JSON.stringify(cookies, null, 2));
+    return;
+  }
   const cookies = await driver.manage().getCookies();
   response.addCode(`const cookies = await driver.manage().getCookies();`);
   response.addResult(JSON.stringify(cookies, null, 2));
@@ -26,7 +59,7 @@ export async function browser_cookie_get(
 
 export async function browser_cookie_set(
   driver: any,
-  params: { name: string; value: string; domain?: string; path?: string; httpOnly?: boolean; secure?: boolean },
+  params: { name: string; value: string; domain?: string; path?: string; httpOnly?: boolean; secure?: boolean; bidi?: boolean; userContext?: string },
   response: Response
 ): Promise<void> {
   const cookie: Record<string, any> = { name: params.name, value: params.value };
@@ -34,6 +67,21 @@ export async function browser_cookie_set(
   if (params.path !== undefined) cookie.path = params.path;
   if (params.httpOnly !== undefined) cookie.httpOnly = params.httpOnly;
   if (params.secure !== undefined) cookie.secure = params.secure;
+
+  if (params.bidi) {
+    const bidi = await bidiStorage(driver);
+    const partition = bidiPartition(params.userContext);
+    const payload = await bidi.send({
+      method: 'storage.setCookie',
+      params: { cookie, partition },
+    });
+    if (payload && payload.error) {
+      throw new Error(`storage.setCookie: ${payload.error.message || JSON.stringify(payload.error)}`);
+    }
+    response.addCode(`await driver.getBidi().then(b => b.send({ method: 'storage.setCookie', params: { cookie: ${JSON.stringify(cookie)}, partition: ${JSON.stringify(partition)} } }));`);
+    response.addResult(`cookie set: ${params.name}=${params.value}${params.userContext ? ` (user context: ${params.userContext})` : ''}`);
+    return;
+  }
 
   await driver.manage().addCookie(cookie);
 

@@ -880,8 +880,10 @@ BiDi integration and optimizing performance/stability.
 - [x] **browser module**: `createUserContext`/`removeUserContext` for container/cookie
   isolation (like Chrome profiles) — delivered: `context-new|close|list` CLI commands +
   `browser_context_*` MCP tools; `setDownloadBehavior` (pending)
-- [ ] **storage module**: cookie management with `PartitionKey` support
-- [ ] New CLI commands: `download-list` (pending; `context-new/close/list` delivered)
+- [x] **storage module**: cookie management with `PartitionKey` support
+  — delivered: `cookie-list|cookie-set --bidi --user-context=<ctxId>` use BiDi
+  `storage.getCookies`/`setCookie` with a `storageKey` partition (Chromium + Firefox)
+- [ ] New CLI commands: `download-list` (pending; `preload add/remove/list`, `context-new/close/list`, `cookie --bidi` delivered)
 
 **Performance Optimization** (issue #77):
 

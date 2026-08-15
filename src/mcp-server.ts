@@ -455,10 +455,12 @@ export const toolDefinitions: ToolDef[] = [
   // ── Storage & State ──
   {
     name: 'browser_cookie_list',
-    description: 'List all cookies for the current page.',
+    description: 'List cookies. By default via manage().getCookies(); set bidi=true to use WebDriver BiDi storage.getCookies with optional user-context partitioning (v0.13).',
     inputSchema: {
       type: 'object',
       properties: {
+        bidi: { type: 'boolean', description: 'Use BiDi storage.getCookies (default: false)' },
+        userContext: { type: 'string', description: 'User context id to scope cookies to (requires bidi=true)' },
         session: { type: 'string', description: 'Session name' },
       },
     },
@@ -477,12 +479,18 @@ export const toolDefinitions: ToolDef[] = [
   },
   {
     name: 'browser_cookie_set',
-    description: 'Set a cookie with name and value.',
+    description: 'Set a cookie. By default via manage().addCookie(); set bidi=true to use WebDriver BiDi storage.setCookie with optional user-context partitioning (v0.13).',
     inputSchema: {
       type: 'object',
       properties: {
         name: { type: 'string', description: 'Cookie name' },
         value: { type: 'string', description: 'Cookie value' },
+        domain: { type: 'string', description: 'Cookie domain' },
+        path: { type: 'string', description: 'Cookie path' },
+        httpOnly: { type: 'boolean', description: 'HttpOnly flag' },
+        secure: { type: 'boolean', description: 'Secure flag' },
+        bidi: { type: 'boolean', description: 'Use BiDi storage.setCookie (default: false)' },
+        userContext: { type: 'string', description: 'User context id to scope the cookie to (requires bidi=true)' },
         session: { type: 'string', description: 'Session name' },
       },
       required: ['name', 'value'],
@@ -1136,11 +1144,20 @@ export function mapToolToCliArgs(toolName: string, args: any): string[] | null {
 
     // Storage & State
     case 'browser_cookie_list':
-      return ['cookie-list', ...sessionFlag];
+      return ['cookie-list', ...(args.bidi ? ['--bidi'] : []), ...(args.userContext ? [`--user-context=${args.userContext}`] : []), ...sessionFlag];
     case 'browser_cookie_get':
       return ['cookie-get', args.name, ...sessionFlag];
-    case 'browser_cookie_set':
-      return ['cookie-set', args.name, args.value, ...sessionFlag];
+    case 'browser_cookie_set': {
+      const cliArgs: string[] = ['cookie-set', args.name, args.value];
+      if (args.domain) cliArgs.push(`--domain=${args.domain}`);
+      if (args.path) cliArgs.push(`--path=${args.path}`);
+      if (args.httpOnly) cliArgs.push('--httpOnly');
+      if (args.secure) cliArgs.push('--secure');
+      if (args.bidi) cliArgs.push('--bidi');
+      if (args.userContext) cliArgs.push(`--user-context=${args.userContext}`);
+      cliArgs.push(...sessionFlag);
+      return cliArgs;
+    }
     case 'browser_cookie_delete':
       return ['cookie-delete', ...(args.name ? [args.name] : []), ...sessionFlag];
     case 'browser_localstorage_list':

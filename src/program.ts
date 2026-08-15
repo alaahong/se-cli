@@ -552,6 +552,8 @@ Commands:
   generate-locator <ref>   show recommended locator [--all] [--style=role|id|css|xpath]
   title / url
   cookie-list / cookie-get <name> / cookie-set <name> <val> / cookie-delete [name]
+  cookie-list --bidi [--user-context=<ctxId>]      BiDi storage.getCookies with partition (v0.13)
+  cookie-set <name> <val> --bidi [--user-context=<ctxId>] [--domain=] [--path=] [--httpOnly] [--secure]
   localstorage-get <key> / localstorage-set <key> <val> / localstorage-delete [key] / localstorage-list
   sessionstorage-get <key> / sessionstorage-set <key> <val> / sessionstorage-delete [key] / sessionstorage-list
   tab-list / tab-new [url] / tab-close / tab-select <index>

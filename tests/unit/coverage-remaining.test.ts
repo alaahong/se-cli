@@ -59,6 +59,7 @@ import { browser_dialog_accept, browser_dialog_dismiss } from '../../src/daemon/
 import { render, CliError } from '../../src/output';
 import { browser_highlight } from '../../src/daemon/tools/highlight';
 import {
+  browser_cookie_list,
   browser_cookie_set,
   browser_cookie_delete,
   browser_localstorage_get,
@@ -1277,6 +1278,70 @@ describe('storage.ts additional paths', () => {
 
     expect(deleteAllCookies).toHaveBeenCalled();
     expect(out.result).toBe('deleted all cookies');
+  });
+
+  // ── v0.13: BiDi cookie partition support ──
+
+  it('cookie_list with --bidi calls storage.getCookies with a user-context partition', async () => {
+    const send = vi.fn(async () => ({ result: { cookies: [{ name: 'a', value: '1' }] } }));
+    const driver = { getBidi: vi.fn(async () => ({ send })) };
+    const resp = new Response({ raw: false, json: true });
+    await browser_cookie_list(driver, { bidi: true, userContext: 'ctx-1' }, resp);
+    const out = JSON.parse(resp.serialize());
+
+    expect(send).toHaveBeenCalledWith({
+      method: 'storage.getCookies',
+      params: { partition: { type: 'storageKey', userContext: 'ctx-1' } },
+    });
+    expect(out.result).toContain('"name": "a"');
+  });
+
+  it('cookie_list with --bidi and no user context omits the partition key', async () => {
+    const send = vi.fn(async () => ({ result: { cookies: [] } }));
+    const driver = { getBidi: vi.fn(async () => ({ send })) };
+    const resp = new Response({ raw: false, json: true });
+    await browser_cookie_list(driver, { bidi: true }, resp);
+
+    expect(send).toHaveBeenCalledWith({
+      method: 'storage.getCookies',
+      params: { partition: { type: 'storageKey' } },
+    });
+  });
+
+  it('cookie_set with --bidi sends storage.setCookie with a user-context partition', async () => {
+    const send = vi.fn(async () => ({ result: {} }));
+    const driver = { getBidi: vi.fn(async () => ({ send })) };
+    const resp = new Response({ raw: false, json: true });
+    await browser_cookie_set(driver, { name: 'sid', value: 'v1', bidi: true, userContext: 'ctx-2' }, resp);
+    const out = JSON.parse(resp.serialize());
+
+    expect(send).toHaveBeenCalledWith({
+      method: 'storage.setCookie',
+      params: {
+        cookie: { name: 'sid', value: 'v1' },
+        partition: { type: 'storageKey', userContext: 'ctx-2' },
+      },
+    });
+    expect(out.result).toContain('cookie set');
+  });
+
+  it('cookie bidi paths fail clearly when BiDi is unavailable', async () => {
+    const driver = { getBidi: vi.fn(async () => { throw new Error('no webSocketUrl'); }) };
+    const resp = new Response({ raw: false, json: true });
+    await expect(browser_cookie_list(driver, { bidi: true }, resp)).rejects.toThrow(/BiDi/);
+    await expect(
+      browser_cookie_set(driver, { name: 'a', value: 'b', bidi: true }, resp),
+    ).rejects.toThrow(/BiDi/);
+  });
+
+  it('cookie bidi paths surface storage errors', async () => {
+    const send = vi.fn(async () => ({ error: { message: 'partition not found' } }));
+    const driver = { getBidi: vi.fn(async () => ({ send })) };
+    const resp = new Response({ raw: false, json: true });
+    await expect(browser_cookie_list(driver, { bidi: true }, resp)).rejects.toThrow(/storage\.getCookies/);
+    await expect(
+      browser_cookie_set(driver, { name: 'a', value: 'b', bidi: true }, resp),
+    ).rejects.toThrow(/storage\.setCookie/);
   });
 
   it('localstorage_get returns null when key does not exist', async () => {

@@ -200,6 +200,8 @@ se-cli cookie-list
 se-cli cookie-get <name>
 se-cli cookie-set <name> <value>
 se-cli cookie-delete [name]
+se-cli cookie-list --bidi --user-context=<ctxId>    # BiDi cookies in an isolated context (v0.13)
+se-cli cookie-set <name> <value> --bidi --user-context=<ctxId>   # BiDi scoped cookie (v0.13)
 se-cli localstorage-get <key>
 se-cli localstorage-set <key> <value>
 se-cli localstorage-delete [key]
