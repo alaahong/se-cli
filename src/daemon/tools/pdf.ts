@@ -17,6 +17,7 @@ export async function browser_pdf(
   response: Response
 ): Promise<void> {
   let data: string;
+  let b64Expr: string;
   if (params.bidi) {
     let bidi: any;
     try {
@@ -30,10 +31,10 @@ export async function browser_pdf(
       throw new Error(`browsingContext.print: ${payload.error.message || JSON.stringify(payload.error)}`);
     }
     data = payload?.result?.data as string;
-    response.addCode(`const pdf = await driver.getBidi().then(b => b.send({ method: 'browsingContext.print', params: { context: await driver.getWindowHandle() } })); fs.writeFileSync('${params.filename ?? 'page.pdf'}', Buffer.from(pdf.result.data, 'base64'));`);
+    b64Expr = `(await driver.getBidi().then(b => b.send({ method: 'browsingContext.print', params: { context: await driver.getWindowHandle() } }))).result.data`;
   } else {
     data = await driver.printPage();
-    response.addCode(`const pdf = await driver.printPage(); fs.writeFileSync('${params.filename ?? 'page.pdf'}', Buffer.from(pdf, 'base64'));`);
+    b64Expr = `(await driver.printPage())`;
   }
 
   const outDir = path.join(process.cwd(), '.se-cli');
@@ -42,5 +43,8 @@ export async function browser_pdf(
   const file = path.join(outDir, filename);
   fs.writeFileSync(file, Buffer.from(data, 'base64'));
 
+  // Replay code uses the actual resolved filename so re-running the emitted
+  // snippet reproduces the exact same artifact.
+  response.addCode(`const buf = Buffer.from(${b64Expr}, 'base64'); fs.writeFileSync('${filename}', buf);`);
   response.addResult(`[PDF](.se-cli/${filename})`);
 }

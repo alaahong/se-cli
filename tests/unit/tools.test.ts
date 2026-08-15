@@ -570,6 +570,9 @@ describe('tool handlers', () => {
       expect(driver.findElement).toHaveBeenCalled();
       const file = path.join(tmpCwd, '.se-cli', 'el.png');
       expect(fs.existsSync(file)).toBe(true);
+      const out = response.serialize();
+      expect(out).toContain("findElement(By.css('[data-se-ref=\"e1\"]')).takeScreenshot()");
+      expect(out).toContain("writeFileSync('el.png'");
     });
 
     it('generates default filename when not given', async () => {

@@ -1,5 +1,5 @@
 import { Response } from '../../response';
-import { findElement, safeFilename } from './shared';
+import { findElement, byToString, safeFilename } from './shared';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -9,6 +9,7 @@ export async function browser_screenshot(
   response: Response
 ): Promise<void> {
   let image: Buffer;
+  let b64Expr: string;
   if (params.bidi) {
     // v0.13: BiDi browsingContext.captureScreenshot — viewport capture via
     // the BiDi connection (Chromium + Firefox).
@@ -27,14 +28,14 @@ export async function browser_screenshot(
       throw new Error(`browsingContext.captureScreenshot: ${payload.error.message || JSON.stringify(payload.error)}`);
     }
     image = Buffer.from(payload?.result?.data as string, 'base64');
-    response.addCode(`const image = await driver.getBidi().then(b => b.send({ method: 'browsingContext.captureScreenshot', params: { context: await driver.getWindowHandle(), origin: 'viewport' } })); fs.writeFileSync('${params.filename ?? 'screenshot.png'}', Buffer.from(image.result.data, 'base64'));`);
+    b64Expr = `(await driver.getBidi().then(b => b.send({ method: 'browsingContext.captureScreenshot', params: { context: await driver.getWindowHandle(), origin: 'viewport' } }))).result.data`;
   } else if (params.target) {
     const el = await findElement(driver, params.target);
     image = Buffer.from(await el.takeScreenshot(), 'base64');
-    response.addCode(`const image = await el.takeScreenshot(); fs.writeFileSync('${params.filename ?? 'screenshot.png'}', Buffer.from(image, 'base64'));`);
+    b64Expr = `(await driver.findElement(${byToString(params.target)}).takeScreenshot())`;
   } else {
     image = Buffer.from(await driver.takeScreenshot(), 'base64');
-    response.addCode(`const image = await driver.takeScreenshot(); fs.writeFileSync('${params.filename ?? 'screenshot.png'}', Buffer.from(image, 'base64'));`);
+    b64Expr = `(await driver.takeScreenshot())`;
   }
 
   const outDir = path.join(process.cwd(), '.se-cli');
@@ -43,5 +44,8 @@ export async function browser_screenshot(
   const file = path.join(outDir, filename);
   fs.writeFileSync(file, image);
 
+  // Replay code uses the actual resolved filename so re-running the emitted
+  // snippet reproduces the exact same artifact.
+  response.addCode(`const buf = Buffer.from(${b64Expr}, 'base64'); fs.writeFileSync('${filename}', buf);`);
   response.addResult(`[Screenshot](.se-cli/${filename})`);
 }

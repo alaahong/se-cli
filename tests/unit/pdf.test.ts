@@ -70,6 +70,16 @@ describe('browser_pdf', () => {
     expect(out).toContain('driver.printPage()');
   });
 
+  it('emits replay code with the resolved filename', async () => {
+    const driver = mockDriver();
+    const response = new Response({ raw: false, json: false });
+
+    await browser_pdf(driver, { filename: 'doc.pdf' }, response);
+
+    const out = response.serialize();
+    expect(out).toContain("writeFileSync('doc.pdf'");
+  });
+
   // ── v0.13: BiDi browsingContext.print path ──
 
   it('prints via BiDi browsingContext.print when --bidi is set', async () => {
