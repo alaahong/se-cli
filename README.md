@@ -141,6 +141,9 @@ se-cli close
 | `preload add --script="<js>"` | Inject a BiDi preload script that runs before page scripts on every navigation (v0.13) |
 | `preload remove --id=<id>` | Remove a registered preload script (v0.13) |
 | `preload list` | List registered preload scripts (v0.13) |
+| `context-new` | Create an isolated BiDi user context (cookie/storage containers) (v0.13) |
+| `context-close --id=<ctxId>` | Remove a user context (v0.13) |
+| `context-list` | List user contexts (v0.13) |
 
 ### Navigation
 

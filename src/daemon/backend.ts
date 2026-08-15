@@ -207,7 +207,7 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
       'locator-style',
       // v0.11 record/export flags
       'format', 'name', 'out', 'browser',
-      // v0.13 preload flags
+      // v0.13 preload/context flags
       'script', 'context', 'id',
     ],
     alias: {},
@@ -430,6 +430,10 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
       }
       throw new Error(`Unknown preload subcommand: ${subCmd}. Supported: add, remove, list`);
     },
+    // v0.13: BiDi user contexts (browser containers)
+    'context-new': () => ({ toolName: 'browser_context_new', toolParams: {} }),
+    'context-close': () => ({ toolName: 'browser_context_close', toolParams: { id: parsed.id } }),
+    'context-list': () => ({ toolName: 'browser_context_list', toolParams: {} }),
   };
   const factory = commands[cmd];
   if (!factory) throw new Error(`Unknown command: ${cmd}`);

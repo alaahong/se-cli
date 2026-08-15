@@ -276,6 +276,18 @@ Preload scripts persist for the daemon session and apply to every page load;
 they are lost when the daemon restarts. Safari does not support BiDi, so
 `preload` reports a clear error there.
 
+### User Contexts (v0.13, BiDi — Chromium + Firefox)
+
+Isolated browsing containers (like Chrome profiles / Firefox containers):
+cookies, storage and tabs are partitioned per context. Useful for parallel
+login states or cookie isolation in one session.
+
+```bash
+se-cli context-new                    # create a user context → returns an id
+se-cli context-list                   # list user contexts
+se-cli context-close --id=<ctxId>     # remove a user context
+```
+
 ### Flags
 ```bash
 se-cli --raw <cmd>              # Output only the value
@@ -582,5 +594,6 @@ All 70 CLI commands are exposed as MCP tools with `browser_` prefix:
 - `browser_requests` / `browser_route` / `browser_unroute`
 - `browser_cookie_*` / `browser_*storage_*` / `browser_tab_*` / `browser_state_*`
 - `browser_preload_add` / `browser_preload_remove` / `browser_preload_list` (BiDi preloading, v0.13)
+- `browser_context_new` / `browser_context_close` / `browser_context_list` (BiDi user contexts, v0.13)
 
 Each tool accepts a `session` parameter for named session isolation.

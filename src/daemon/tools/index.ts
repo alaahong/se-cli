@@ -85,6 +85,12 @@ import {
   browser_preload_remove,
   browser_preload_list,
 } from './preload';
+// v0.13: BiDi user contexts
+import {
+  browser_context_new,
+  browser_context_close,
+  browser_context_list,
+} from './context';
 
 export const tools: Record<string, (driver: any, params: any, response: any) => Promise<void>> = {
   browser_goto,
@@ -165,4 +171,8 @@ export const tools: Record<string, (driver: any, params: any, response: any) => 
   browser_preload_add,
   browser_preload_remove,
   browser_preload_list,
+  // v0.13: BiDi user contexts
+  browser_context_new,
+  browser_context_close,
+  browser_context_list,
 };
