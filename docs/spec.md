@@ -876,10 +876,11 @@ BiDi integration and optimizing performance/stability.
   `browser_preload_*` MCP tools), `getRealms` for sandboxed execution
 - [ ] **emulation module**: BiDi-native geolocation/locale/timezone/network conditions
   (cross-browser alternative to CDP `Emulation.*`); migrate v0.8 from CDP-first to BiDi-first
-- [ ] **browser module**: `createUserContext`/`removeUserContext` for container/cookie
-  isolation (like Chrome profiles), `setDownloadBehavior`
+- [x] **browser module**: `createUserContext`/`removeUserContext` for container/cookie
+  isolation (like Chrome profiles) — delivered: `context-new|close|list` CLI commands +
+  `browser_context_*` MCP tools; `setDownloadBehavior` (pending)
 - [ ] **storage module**: cookie management with `PartitionKey` support
-- [ ] New CLI commands: `preload add/remove/list`, `download-list`, `context-new/close/list`
+- [ ] New CLI commands: `download-list` (pending; `context-new/close/list` delivered)
 
 **Performance Optimization** (issue #77):
 

@@ -635,6 +635,11 @@ BiDi Script Preloading (v0.13, Chromium + Firefox):
   preload remove --id=<id>      remove a registered preload script
   preload list                  list registered preload scripts
 
+BiDi User Contexts (v0.13, Chromium + Firefox):
+  context-new                    create an isolated user context (containers/cookie isolation)
+  context-close --id=<ctxId>     remove a user context
+  context-list                   list user contexts
+
 Flags:
   --raw                   output only the result value
   --json                  structured JSON output

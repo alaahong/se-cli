@@ -352,6 +352,26 @@ describe('parseCommand', () => {
     });
   });
 
+  describe('v0.13 context commands', () => {
+    it('maps context-new to browser_context_new', () => {
+      const r = parseCommand(['context-new']);
+      expect(r.toolName).toBe('browser_context_new');
+      expect(r.toolParams).toEqual({});
+    });
+
+    it('maps context-close to browser_context_close with id', () => {
+      const r = parseCommand(['context-close', '--id=ctx-1']);
+      expect(r.toolName).toBe('browser_context_close');
+      expect(r.toolParams).toEqual({ id: 'ctx-1' });
+    });
+
+    it('maps context-list to browser_context_list', () => {
+      const r = parseCommand(['context-list']);
+      expect(r.toolName).toBe('browser_context_list');
+      expect(r.toolParams).toEqual({});
+    });
+  });
+
   it('throws on unknown command', () => {
     expect(() => parseCommand(['unknown-cmd'])).toThrow(/Unknown command/);
   });

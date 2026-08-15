@@ -97,6 +97,15 @@ describe('MCP Server — Tool Definitions', () => {
     expect(names).toContain('browser_close_all');
   });
 
+  it('should include v0.13 user-context tools', () => {
+    const names = toolDefinitions.map(t => t.name);
+    expect(names).toContain('browser_context_new');
+    expect(names).toContain('browser_context_close');
+    expect(names).toContain('browser_context_list');
+    const close = toolDefinitions.find(t => t.name === 'browser_context_close')!;
+    expect(close.inputSchema.required).toContain('id');
+  });
+
   it('should include assertion tools', () => {
     const names = toolDefinitions.map(t => t.name);
     expect(names).toContain('browser_expect');
@@ -660,6 +669,20 @@ describe('MCP Server — mapToolToCliArgs', () => {
   it('maps browser_preload_list to preload list', () => {
     expect(mapToolToCliArgs('browser_preload_list', {}))
       .toEqual(['preload', 'list']);
+  });
+
+  // ── v0.13: user contexts ──
+  it('maps browser_context_new to context-new', () => {
+    expect(mapToolToCliArgs('browser_context_new', {})).toEqual(['context-new']);
+  });
+
+  it('maps browser_context_close to context-close --id', () => {
+    expect(mapToolToCliArgs('browser_context_close', { id: 'ctx-1' }))
+      .toEqual(['context-close', '--id=ctx-1']);
+  });
+
+  it('maps browser_context_list to context-list', () => {
+    expect(mapToolToCliArgs('browser_context_list', {})).toEqual(['context-list']);
   });
 
   // ── Session Management ──

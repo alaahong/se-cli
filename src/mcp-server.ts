@@ -991,6 +991,39 @@ export const toolDefinitions: ToolDef[] = [
       },
     },
   },
+  // v0.13: BiDi user contexts (browser containers)
+  {
+    name: 'browser_context_new',
+    description: 'Create a new BiDi user context (isolated cookies/storage/tabs container, like a Chrome profile or Firefox container). Chromium + Firefox.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        session: { type: 'string', description: 'Session name' },
+      },
+    },
+  },
+  {
+    name: 'browser_context_close',
+    description: 'Remove a BiDi user context by its id.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'User context id returned by browser_context_new' },
+        session: { type: 'string', description: 'Session name' },
+      },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'browser_context_list',
+    description: 'List BiDi user contexts in the current session.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        session: { type: 'string', description: 'Session name' },
+      },
+    },
+  },
 ];
 
 // ─── Tool-to-CLI Arg Mapping ─────────────────────────────────────────────────
@@ -1270,6 +1303,13 @@ export function mapToolToCliArgs(toolName: string, args: any): string[] | null {
       return ['preload', 'remove', `--id=${args.id}`, ...sessionFlag];
     case 'browser_preload_list':
       return ['preload', 'list', ...sessionFlag];
+    // v0.13: BiDi user contexts
+    case 'browser_context_new':
+      return ['context-new', ...sessionFlag];
+    case 'browser_context_close':
+      return ['context-close', `--id=${args.id}`, ...sessionFlag];
+    case 'browser_context_list':
+      return ['context-list', ...sessionFlag];
 
     // Session management handled separately in handleToolsCall
     case 'browser_open':
