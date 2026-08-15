@@ -138,6 +138,9 @@ se-cli close
 | `record start\|stop\|status` | Record executed commands for test export (v0.11) |
 | `record export --format=pytest\|junit5\|mocha [--name=] [--browser=] [--out=]` | Export recorded steps as a test file (v0.11) |
 | `record report --format=junit\|html [--name=] [--out=]` | Render a test report from recorded steps (v0.11) |
+| `preload add --script="<js>"` | Inject a BiDi preload script that runs before page scripts on every navigation (v0.13) |
+| `preload remove --id=<id>` | Remove a registered preload script (v0.13) |
+| `preload list` | List registered preload scripts (v0.13) |
 
 ### Navigation
 
@@ -718,7 +721,7 @@ commands (including **Attach to Running Browser** via `open --cdp`), a webview p
 snapshot/screenshot preview, a status bar indicator, and a Task Provider that turns exported
 test files into runnable VS Code tasks.
 
-Once enabled, all 67 browser automation commands are available as MCP tools:
+Once enabled, all 70 browser automation commands are available as MCP tools:
 - `browser_open`, `browser_close`, `browser_navigate`
 - `browser_click`, `browser_fill`, `browser_type`, `browser_press`
 - `browser_snapshot`, `browser_find`, `browser_screenshot`, `browser_eval`
@@ -869,7 +872,7 @@ src/
 └── daemon/
     ├── server.ts           # Daemon socket server
     ├── backend.ts          # Tool dispatcher
-    └── tools/              # Tool handlers (67 tools)
+    └── tools/              # Tool handlers (70 tools)
 ```
 
 ## Browser Support

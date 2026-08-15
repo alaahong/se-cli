@@ -955,6 +955,42 @@ export const toolDefinitions: ToolDef[] = [
       },
     },
   },
+  // v0.13: BiDi script preloading
+  {
+    name: 'browser_preload_add',
+    description: 'Inject a JavaScript preload script that runs before page scripts on every navigation (WebDriver BiDi, Chromium + Firefox).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        script: { type: 'string', description: 'JavaScript code or function declaration to preload' },
+        context: { type: 'string', description: 'User context id to scope the script to (optional)' },
+        session: { type: 'string', description: 'Session name' },
+      },
+      required: ['script'],
+    },
+  },
+  {
+    name: 'browser_preload_remove',
+    description: 'Remove a previously registered preload script by its id.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'Preload script id returned by browser_preload_add' },
+        session: { type: 'string', description: 'Session name' },
+      },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'browser_preload_list',
+    description: 'List preload scripts registered in the current session.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        session: { type: 'string', description: 'Session name' },
+      },
+    },
+  },
 ];
 
 // ─── Tool-to-CLI Arg Mapping ─────────────────────────────────────────────────
@@ -1223,6 +1259,17 @@ export function mapToolToCliArgs(toolName: string, args: any): string[] | null {
       cliArgs.push(...sessionFlag);
       return cliArgs;
     }
+    // v0.13: BiDi script preloading
+    case 'browser_preload_add': {
+      const cliArgs: string[] = ['preload', 'add', `--script=${args.script}`];
+      if (args.context) cliArgs.push(`--context=${args.context}`);
+      cliArgs.push(...sessionFlag);
+      return cliArgs;
+    }
+    case 'browser_preload_remove':
+      return ['preload', 'remove', `--id=${args.id}`, ...sessionFlag];
+    case 'browser_preload_list':
+      return ['preload', 'list', ...sessionFlag];
 
     // Session management handled separately in handleToolsCall
     case 'browser_open':

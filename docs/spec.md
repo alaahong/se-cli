@@ -871,8 +871,9 @@ BiDi integration and optimizing performance/stability.
   (`downloadWillBegin`/`downloadEnd` events)
 - [ ] **input module**: `setFiles` and `fileDialogOpened` for reliable file upload handling
   without CDP
-- [ ] **script module**: `addPreloadScript`/`removePreloadScript` — inject scripts before
-  page scripts run, `getRealms` for sandboxed execution
+- [x] **script module**: `addPreloadScript`/`removePreloadScript` — inject scripts before
+  page scripts run (delivered: `preload add|remove|list` CLI commands +
+  `browser_preload_*` MCP tools), `getRealms` for sandboxed execution
 - [ ] **emulation module**: BiDi-native geolocation/locale/timezone/network conditions
   (cross-browser alternative to CDP `Emulation.*`); migrate v0.8 from CDP-first to BiDi-first
 - [ ] **browser module**: `createUserContext`/`removeUserContext` for container/cookie

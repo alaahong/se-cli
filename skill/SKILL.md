@@ -259,6 +259,23 @@ lost when the daemon exits. Running the exported test needs the framework
 toolchain (`selenium-webdriver` + mocha, `selenium` + pytest, or selenium-java
 + JUnit 5) — se-cli does not install those.
 
+### Script Preloading (v0.13, BiDi — Chromium + Firefox)
+
+Inject JavaScript that runs before any page script on every navigation
+(WebDriver BiDi `script.addPreloadScript`). Useful for stubbing globals,
+patching APIs, or seeding test hooks before the app code loads.
+
+```bash
+se-cli preload add --script="window.__testMode = true"
+se-cli preload add --script="() => { Object.defineProperty(navigator, 'language', { get: () => 'zh-CN' }) }"
+se-cli preload list                    # registered preload scripts (ids + snippets)
+se-cli preload remove --id=<scriptId>  # remove a preload script
+```
+
+Preload scripts persist for the daemon session and apply to every page load;
+they are lost when the daemon restarts. Safari does not support BiDi, so
+`preload` reports a clear error there.
+
 ### Flags
 ```bash
 se-cli --raw <cmd>              # Output only the value
@@ -555,7 +572,7 @@ via the `Mcp-Session-Id` header.
 
 ### Available MCP Tools
 
-All 62 CLI commands are exposed as MCP tools with `browser_` prefix:
+All 70 CLI commands are exposed as MCP tools with `browser_` prefix:
 
 - `browser_open` / `browser_close` / `browser_list_sessions`
 - `browser_navigate` / `browser_go_back` / `browser_go_forward` / `browser_reload`
@@ -564,5 +581,6 @@ All 62 CLI commands are exposed as MCP tools with `browser_` prefix:
 - `browser_expect` (assertions) / `browser_highlight` / `browser_console`
 - `browser_requests` / `browser_route` / `browser_unroute`
 - `browser_cookie_*` / `browser_*storage_*` / `browser_tab_*` / `browser_state_*`
+- `browser_preload_add` / `browser_preload_remove` / `browser_preload_list` (BiDi preloading, v0.13)
 
 Each tool accepts a `session` parameter for named session isolation.

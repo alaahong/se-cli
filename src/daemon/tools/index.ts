@@ -79,6 +79,12 @@ import {
   browser_record_export,
   browser_record_report,
 } from './record';
+// v0.13: BiDi script preloading
+import {
+  browser_preload_add,
+  browser_preload_remove,
+  browser_preload_list,
+} from './preload';
 
 export const tools: Record<string, (driver: any, params: any, response: any) => Promise<void>> = {
   browser_goto,
@@ -155,4 +161,8 @@ export const tools: Record<string, (driver: any, params: any, response: any) => 
   browser_record_status,
   browser_record_export,
   browser_record_report,
+  // v0.13: BiDi script preloading
+  browser_preload_add,
+  browser_preload_remove,
+  browser_preload_list,
 };

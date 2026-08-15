@@ -78,6 +78,17 @@ describe('MCP Server — Tool Definitions', () => {
     expect(names).toContain('browser_eval');
   });
 
+  it('should include v0.13 preload tools', () => {
+    const names = toolDefinitions.map(t => t.name);
+    expect(names).toContain('browser_preload_add');
+    expect(names).toContain('browser_preload_remove');
+    expect(names).toContain('browser_preload_list');
+    const add = toolDefinitions.find(t => t.name === 'browser_preload_add')!;
+    expect(add.inputSchema.required).toContain('script');
+    const remove = toolDefinitions.find(t => t.name === 'browser_preload_remove')!;
+    expect(remove.inputSchema.required).toContain('id');
+  });
+
   it('should include session management tools', () => {
     const names = toolDefinitions.map(t => t.name);
     expect(names).toContain('browser_open');
@@ -628,6 +639,27 @@ describe('MCP Server — mapToolToCliArgs', () => {
   it('maps browser_emulate reset', () => {
     expect(mapToolToCliArgs('browser_emulate', { reset: true }))
       .toEqual(['emulate', '--reset']);
+  });
+
+  // ── v0.13: preload ──
+  it('maps browser_preload_add to preload add --script', () => {
+    expect(mapToolToCliArgs('browser_preload_add', { script: 'window.x = 1' }))
+      .toEqual(['preload', 'add', '--script=window.x = 1']);
+  });
+
+  it('maps browser_preload_add with context', () => {
+    expect(mapToolToCliArgs('browser_preload_add', { script: 'x', context: 'ctx-1' }))
+      .toEqual(['preload', 'add', '--script=x', '--context=ctx-1']);
+  });
+
+  it('maps browser_preload_remove to preload remove --id', () => {
+    expect(mapToolToCliArgs('browser_preload_remove', { id: 'preload-1' }))
+      .toEqual(['preload', 'remove', '--id=preload-1']);
+  });
+
+  it('maps browser_preload_list to preload list', () => {
+    expect(mapToolToCliArgs('browser_preload_list', {}))
+      .toEqual(['preload', 'list']);
   });
 
   // ── Session Management ──

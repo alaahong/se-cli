@@ -630,6 +630,11 @@ Emulation (v0.8):
   emulate --throttle-cpu=4  CPU slowdown rate (Chrome/Edge)
   emulate --reset           restore runtime emulation (keeps open-time flags)
 
+BiDi Script Preloading (v0.13, Chromium + Firefox):
+  preload add --script="<js>"   inject a script that runs before page scripts on every navigation
+  preload remove --id=<id>      remove a registered preload script
+  preload list                  list registered preload scripts
+
 Flags:
   --raw                   output only the result value
   --json                  structured JSON output

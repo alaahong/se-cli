@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Preload Fixture</title>
+</head>
+<body>
+  <h1>Preload Fixture</h1>
+  <p id="preload-value">not-set</p>
+  <script>
+    // Rendered before the page's own inline script runs, a BiDi preload
+    // script can set window.__sePreload; this inline script then surfaces it.
+    document.getElementById('preload-value').textContent =
+      typeof window.__sePreload !== 'undefined' ? String(window.__sePreload) : 'not-set';
+  </script>
+</body>
+</html>
