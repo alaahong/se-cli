@@ -866,9 +866,10 @@ BiDi integration and optimizing performance/stability.
 
 **BiDi Protocol Expansion** (issue #76):
 
-- [ ] **browsingContext module**: `captureScreenshot` (cross-browser), `print` (print-to-PDF
-  via BiDi, not CDP), `setViewport`, `setBypassCSP`, `handleUserPrompt`, download tracking
-  (`downloadWillBegin`/`downloadEnd` events)
+- [x] **browsingContext module**: `captureScreenshot` + `print` delivered as
+  `screenshot|pdf --bidi` (BiDi `browsingContext.captureScreenshot`/`print`,
+  Chromium + Firefox); `setViewport`, `setBypassCSP`, `handleUserPrompt`,
+  download tracking (`downloadWillBegin`/`downloadEnd` events) (pending)
 - [x] **input module**: `setFiles` for reliable file upload handling
   without CDP — delivered: `upload --bidi` uses BiDi `input.setFiles`
   (Chromium + Firefox); `fileDialogOpened` event (pending)

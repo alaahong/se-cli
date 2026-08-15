@@ -134,7 +134,7 @@ se-cli close
 | `grid status <url>` | Query a Selenium Grid 4 hub status (nodes, slots, browsers) |
 | `grid attach --endpoint=<url>` | Attach to a Grid / remote WebDriver (alias for `open --endpoint`) |
 | `grid distribute --shard=x/y` | Compute a round-robin shard plan for parallel CI runs |
-| `pdf [--filename=f]` | Save the current page as a PDF (W3C print endpoint) |
+| `pdf [--filename=f] [--bidi]` | Save the current page as a PDF (W3C print endpoint; `--bidi` uses BiDi `browsingContext.print`, v0.13) |
 | `record start\|stop\|status` | Record executed commands for test export (v0.11) |
 | `record export --format=pytest\|junit5\|mocha [--name=] [--browser=] [--out=]` | Export recorded steps as a test file (v0.11) |
 | `record report --format=junit\|html [--name=] [--out=]` | Render a test report from recorded steps (v0.11) |
@@ -278,7 +278,7 @@ Network interception, console capture, and visual debugging tools powered by Sel
 
 | Command | Description |
 |---------|-------------|
-| `screenshot [ref]` | Take screenshot (full page or element) |
+| `screenshot [ref] [--bidi]` | Take screenshot (`--bidi` uses BiDi `browsingContext.captureScreenshot`, v0.13) |
 | `screenshot --filename=f.png` | Save screenshot to file |
 | `eval "<js>"` | Execute JavaScript, return result |
 | `eval "<js>" <ref>` | Execute JavaScript on element |

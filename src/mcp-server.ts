@@ -344,23 +344,25 @@ export const toolDefinitions: ToolDef[] = [
   },
   {
     name: 'browser_screenshot',
-    description: 'Take a screenshot of the page or a specific element.',
+    description: 'Take a screenshot of the page or a specific element. Uses takeScreenshot by default; set bidi=true to use WebDriver BiDi browsingContext.captureScreenshot (viewport, v0.13).',
     inputSchema: {
       type: 'object',
       properties: {
         target: { type: 'string', description: 'Element ref or CSS selector (optional — omit for full page)' },
         filename: { type: 'string', description: 'Output filename (optional)' },
+        bidi: { type: 'boolean', description: 'Use BiDi browsingContext.captureScreenshot (default: false)' },
         session: { type: 'string', description: 'Session name' },
       },
     },
   },
   {
     name: 'browser_pdf',
-    description: 'Save the current page as a PDF (W3C WebDriver print endpoint).',
+    description: 'Save the current page as a PDF. Uses the W3C print endpoint by default; set bidi=true to use WebDriver BiDi browsingContext.print (v0.13).',
     inputSchema: {
       type: 'object',
       properties: {
         filename: { type: 'string', description: 'Output filename (optional, default page-<timestamp>.pdf)' },
+        bidi: { type: 'boolean', description: 'Use BiDi browsingContext.print (default: false)' },
         session: { type: 'string', description: 'Session name' },
       },
     },
@@ -1104,12 +1106,14 @@ export function mapToolToCliArgs(toolName: string, args: any): string[] | null {
       const cliArgs: string[] = ['screenshot'];
       if (args.target) cliArgs.push(args.target);
       if (args.filename) cliArgs.push(`--filename=${args.filename}`);
+      if (args.bidi) cliArgs.push('--bidi');
       cliArgs.push(...sessionFlag);
       return cliArgs;
     }
     case 'browser_pdf': {
       const cliArgs: string[] = ['pdf'];
       if (args.filename) cliArgs.push(`--filename=${args.filename}`);
+      if (args.bidi) cliArgs.push('--bidi');
       cliArgs.push(...sessionFlag);
       return cliArgs;
     }

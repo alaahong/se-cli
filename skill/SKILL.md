@@ -40,8 +40,8 @@ se-cli press <key>
 se-cli select <ref> <value>
 se-cli check <ref>
 se-cli uncheck <ref>
-se-cli screenshot [ref] [--filename=f]
-se-cli pdf [--filename=f]        # save the current page as a PDF (W3C print endpoint)
+se-cli screenshot [ref] [--filename=f] [--bidi]   # --bidi: BiDi captureScreenshot (v0.13)
+se-cli pdf [--filename=f] [--bidi]                # save PDF (--bidi: BiDi browsingContext.print, v0.13)
 se-cli grid status <url>         # query a Selenium Grid 4 hub
 se-cli grid attach --endpoint=<url>   # attach to a Grid / remote WebDriver
 se-cli grid distribute --shard=1/4    # round-robin shard plan for parallel CI
