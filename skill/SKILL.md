@@ -89,6 +89,7 @@ se-cli dialog-dismiss                # Dismiss alert/confirm/prompt
 
 # File upload
 se-cli upload <ref> <file>           # Send file path to <input type="file"> element
+se-cli upload <ref> <file> --bidi    # Use BiDi input.setFiles (Chromium + Firefox, v0.13)
 
 # Viewport control
 se-cli resize <width> <height>       # Set browser window size in pixels

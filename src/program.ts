@@ -574,7 +574,7 @@ Interaction (v0.5):
   drag <start> <end>     drag and drop element
   dialog-accept [text]    accept alert/confirm/prompt dialog
   dialog-dismiss          dismiss dialog
-  upload <ref> <file>     upload file to input element
+  upload <ref> <file> [--bidi]     upload file to input element (--bidi: BiDi input.setFiles)
   resize <w> <h>          set viewport size
   keydown <key>          press and hold key
   keyup <key>             release held key

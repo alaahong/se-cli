@@ -464,6 +464,11 @@ describe('MCP Server — mapToolToCliArgs', () => {
       .toEqual(['upload', 'e1', '/path/file.txt']);
   });
 
+  it('maps browser_upload with bidi to upload --bidi', () => {
+    expect(mapToolToCliArgs('browser_upload', { target: 'e1', file: 'a.txt', bidi: true }))
+      .toEqual(['upload', 'e1', 'a.txt', '--bidi']);
+  });
+
   it('maps browser_resize', () => {
     expect(mapToolToCliArgs('browser_resize', { width: 800, height: 600 }))
       .toEqual(['resize', '800', '600']);

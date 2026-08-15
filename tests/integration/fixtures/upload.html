@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Upload Fixture</title>
+</head>
+<body>
+  <h1>Upload Fixture</h1>
+  <input type="file" id="file-input">
+  <p id="uploaded-name">none</p>
+  <script>
+    document.getElementById('file-input').addEventListener('change', function (e) {
+      var files = e.target.files;
+      document.getElementById('uploaded-name').textContent =
+        files && files.length > 0 ? files[0].name : 'none';
+    });
+  </script>
+</body>
+</html>

@@ -372,6 +372,20 @@ describe('parseCommand', () => {
     });
   });
 
+  describe('v0.13 upload --bidi', () => {
+    it('passes bidi flag through to browser_upload', () => {
+      const r = parseCommand(['upload', 'e1', 'a.txt', '--bidi']);
+      expect(r.toolName).toBe('browser_upload');
+      expect(r.toolParams).toEqual({ target: 'e1', file: 'a.txt', bidi: true });
+    });
+
+    it('defaults bidi to false', () => {
+      const r = parseCommand(['upload', 'e1', 'a.txt']);
+      expect(r.toolName).toBe('browser_upload');
+      expect(r.toolParams.bidi).toBe(false);
+    });
+  });
+
   it('throws on unknown command', () => {
     expect(() => parseCommand(['unknown-cmd'])).toThrow(/Unknown command/);
   });

@@ -306,6 +306,58 @@ describe('upload.ts', () => {
       expect(out.code.join('\n')).toContain('elementIsEnabled');
       expect(out.result).toContain('uploaded:');
     });
+
+    it('uploads via BiDi input.setFiles when --bidi is set', async () => {
+      const send = vi.fn(async () => ({}));
+      const mockEl = {
+        getId: vi.fn(async () => 'shared-e1'),
+        sendKeys: vi.fn(async () => {}),
+      };
+      const driver = makeMockDriver();
+      driver.findElement = vi.fn(async () => mockEl);
+      driver.getWindowHandle = vi.fn(async () => 'context-1');
+      driver.getBidi = vi.fn(async () => ({ send }));
+
+      const resp = new Response({ raw: false, json: true });
+      await browser_upload(driver, { target: 'e1', file: 'test-file.txt', bidi: true } as any, resp);
+      const out = JSON.parse(resp.serialize());
+
+      expect(mockEl.sendKeys).not.toHaveBeenCalled();
+      expect(send).toHaveBeenCalledWith({
+        method: 'input.setFiles',
+        params: {
+          context: 'context-1',
+          element: { sharedId: 'shared-e1' },
+          files: [path.resolve('test-file.txt')],
+        },
+      });
+      expect(out.code.join('\n')).toContain('setFiles');
+      expect(out.result).toContain('uploaded:');
+    });
+
+    it('fails clearly when BiDi is unavailable for --bidi uploads', async () => {
+      const driver = makeMockDriver();
+      driver.getWindowHandle = vi.fn(async () => 'context-1');
+      driver.getBidi = vi.fn(async () => { throw new Error('no webSocketUrl'); });
+
+      const resp = new Response({ raw: false, json: true });
+      await expect(
+        browser_upload(driver, { target: 'e1', file: 'a.txt', bidi: true } as any, resp),
+      ).rejects.toThrow(/BiDi/);
+    });
+
+    it('surfaces input.setFiles errors', async () => {
+      const send = vi.fn(async () => ({ error: { message: 'element not found' } }));
+      const driver = makeMockDriver();
+      driver.findElement = vi.fn(async () => ({ getId: vi.fn(async () => 'shared-e1') }));
+      driver.getWindowHandle = vi.fn(async () => 'context-1');
+      driver.getBidi = vi.fn(async () => ({ send }));
+
+      const resp = new Response({ raw: false, json: true });
+      await expect(
+        browser_upload(driver, { target: 'e1', file: 'a.txt', bidi: true } as any, resp),
+      ).rejects.toThrow(/input\.setFiles/);
+    });
   });
 });
 
