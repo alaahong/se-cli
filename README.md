@@ -726,7 +726,7 @@ commands (including **Attach to Running Browser** via `open --cdp`), a webview p
 snapshot/screenshot preview, a status bar indicator, and a Task Provider that turns exported
 test files into runnable VS Code tasks.
 
-Once enabled, all 70 browser automation commands are available as MCP tools:
+Once enabled, all 73 browser automation commands are available as MCP tools:
 - `browser_open`, `browser_close`, `browser_navigate`
 - `browser_click`, `browser_fill`, `browser_type`, `browser_press`
 - `browser_snapshot`, `browser_find`, `browser_screenshot`, `browser_eval`
@@ -877,7 +877,7 @@ src/
 └── daemon/
     ├── server.ts           # Daemon socket server
     ├── backend.ts          # Tool dispatcher
-    └── tools/              # Tool handlers (70 tools)
+    └── tools/              # Tool handlers (73 tools)
 ```
 
 ## Browser Support
