@@ -207,6 +207,8 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
       'locator-style',
       // v0.11 record/export flags
       'format', 'name', 'out', 'browser',
+      // v0.13 preload flags
+      'script', 'context', 'id',
     ],
     alias: {},
   });
@@ -413,6 +415,20 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
         };
       }
       throw new Error(`Unknown record subcommand: ${subCmd}. Supported: start, stop, status, export, report`);
+    },
+    // v0.13: BiDi script preloading
+    'preload': () => {
+      const subCmd = positional[0];
+      if (subCmd === 'add') {
+        return { toolName: 'browser_preload_add', toolParams: { script: parsed.script, context: parsed.context } };
+      }
+      if (subCmd === 'remove') {
+        return { toolName: 'browser_preload_remove', toolParams: { id: parsed.id } };
+      }
+      if (subCmd === 'list') {
+        return { toolName: 'browser_preload_list', toolParams: {} };
+      }
+      throw new Error(`Unknown preload subcommand: ${subCmd}. Supported: add, remove, list`);
     },
   };
   const factory = commands[cmd];

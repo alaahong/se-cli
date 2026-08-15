@@ -322,6 +322,36 @@ describe('parseCommand', () => {
     });
   });
 
+  describe('v0.13 preload commands', () => {
+    it('maps preload add to browser_preload_add with script', () => {
+      const r = parseCommand(['preload', 'add', '--script=window.__p = 1']);
+      expect(r.toolName).toBe('browser_preload_add');
+      expect(r.toolParams).toEqual({ script: 'window.__p = 1', context: undefined });
+    });
+
+    it('maps preload add with a context', () => {
+      const r = parseCommand(['preload', 'add', '--script=x', '--context=ctx-1']);
+      expect(r.toolName).toBe('browser_preload_add');
+      expect(r.toolParams.context).toBe('ctx-1');
+    });
+
+    it('maps preload remove to browser_preload_remove with id', () => {
+      const r = parseCommand(['preload', 'remove', '--id=preload-1']);
+      expect(r.toolName).toBe('browser_preload_remove');
+      expect(r.toolParams).toEqual({ id: 'preload-1' });
+    });
+
+    it('maps preload list to browser_preload_list', () => {
+      const r = parseCommand(['preload', 'list']);
+      expect(r.toolName).toBe('browser_preload_list');
+      expect(r.toolParams).toEqual({});
+    });
+
+    it('rejects unknown preload subcommands', () => {
+      expect(() => parseCommand(['preload', 'dump'])).toThrow(/Unknown preload subcommand/);
+    });
+  });
+
   it('throws on unknown command', () => {
     expect(() => parseCommand(['unknown-cmd'])).toThrow(/Unknown command/);
   });
