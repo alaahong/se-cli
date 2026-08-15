@@ -191,7 +191,13 @@ describe('parseCommand', () => {
     it('maps cookie-list to browser_cookie_list', () => {
       const r = parseCommand(['cookie-list']);
       expect(r.toolName).toBe('browser_cookie_list');
-      expect(r.toolParams).toEqual({});
+      expect(r.toolParams).toEqual({ bidi: false, userContext: undefined });
+    });
+
+    it('maps cookie-list --bidi --user-context to browser_cookie_list with partition', () => {
+      const r = parseCommand(['cookie-list', '--bidi', '--user-context=ctx-1']);
+      expect(r.toolName).toBe('browser_cookie_list');
+      expect(r.toolParams).toEqual({ bidi: true, userContext: 'ctx-1' });
     });
 
     it('maps cookie-get to browser_cookie_get with name', () => {
@@ -205,6 +211,20 @@ describe('parseCommand', () => {
       expect(r.toolName).toBe('browser_cookie_set');
       expect(r.toolParams.name).toBe('token');
       expect(r.toolParams.value).toBe('abc123');
+      expect(r.toolParams.bidi).toBe(false);
+    });
+
+    it('maps cookie-set --bidi with flags to browser_cookie_set', () => {
+      const r = parseCommand(['cookie-set', 'token', 'abc123', '--bidi', '--user-context=ctx-2', '--domain=example.com', '--path=/', '--httpOnly', '--secure']);
+      expect(r.toolName).toBe('browser_cookie_set');
+      expect(r.toolParams).toMatchObject({
+        bidi: true,
+        userContext: 'ctx-2',
+        domain: 'example.com',
+        path: '/',
+        httpOnly: true,
+        secure: true,
+      });
     });
 
     it('maps cookie-delete to browser_cookie_delete with name', () => {

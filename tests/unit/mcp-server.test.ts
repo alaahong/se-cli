@@ -363,6 +363,11 @@ describe('MCP Server — mapToolToCliArgs', () => {
     expect(mapToolToCliArgs('browser_cookie_list', {})).toEqual(['cookie-list']);
   });
 
+  it('maps browser_cookie_list with bidi and userContext', () => {
+    expect(mapToolToCliArgs('browser_cookie_list', { bidi: true, userContext: 'ctx-1' }))
+      .toEqual(['cookie-list', '--bidi', '--user-context=ctx-1']);
+  });
+
   it('maps browser_cookie_get', () => {
     expect(mapToolToCliArgs('browser_cookie_get', { name: 'session' }))
       .toEqual(['cookie-get', 'session']);
@@ -371,6 +376,13 @@ describe('MCP Server — mapToolToCliArgs', () => {
   it('maps browser_cookie_set', () => {
     expect(mapToolToCliArgs('browser_cookie_set', { name: 'foo', value: 'bar' }))
       .toEqual(['cookie-set', 'foo', 'bar']);
+  });
+
+  it('maps browser_cookie_set with bidi and flags', () => {
+    expect(mapToolToCliArgs('browser_cookie_set', {
+      name: 'foo', value: 'bar', bidi: true, userContext: 'ctx-2',
+      domain: 'example.com', path: '/', httpOnly: true, secure: true,
+    })).toEqual(['cookie-set', 'foo', 'bar', '--domain=example.com', '--path=/', '--httpOnly', '--secure', '--bidi', '--user-context=ctx-2']);
   });
 
   it('maps browser_cookie_delete with name', () => {

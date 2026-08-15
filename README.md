@@ -295,6 +295,8 @@ Network interception, console capture, and visual debugging tools powered by Sel
 | `cookie-get <name>` | Get a specific cookie |
 | `cookie-set <name> <value>` | Set a cookie |
 | `cookie-delete [name]` | Delete a cookie (or all if name omitted) |
+| `cookie-list --bidi [--user-context=<ctxId>]` | BiDi `storage.getCookies` with partition (v0.13) |
+| `cookie-set <name> <value> --bidi [--user-context=<ctxId>] [--domain=] [--path=] [--httpOnly] [--secure]` | BiDi `storage.setCookie` with partition (v0.13) |
 | `localstorage-get <key>` | Get a localStorage item |
 | `localstorage-set <key> <value>` | Set a localStorage item |
 | `localstorage-delete [key]` | Delete a localStorage item (or clear all) |

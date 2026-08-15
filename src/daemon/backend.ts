@@ -192,7 +192,7 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
   // Parse flags from rest using minimist
   // Include wait/retry flags in the known options
   const parsed = parseArgs(rest, {
-    boolean: ['submit', 'no-wait', 'not', 'exact', 'hide', 'all', 'clear', 'offline', 'reset', 'bidi'],
+    boolean: ['submit', 'no-wait', 'not', 'exact', 'hide', 'all', 'clear', 'offline', 'reset', 'bidi', 'httpOnly', 'secure'],
     string: [
       'filename', 'depth', 'regex',
       // v0.4 wait/retry flags
@@ -209,6 +209,8 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
       'format', 'name', 'out', 'browser',
       // v0.13 preload/context flags
       'script', 'context', 'id',
+      // v0.13 cookie partition flags
+      'user-context', 'domain', 'path',
     ],
     alias: {},
   });
@@ -261,9 +263,24 @@ export function parseCommand(args: string[]): { toolName: string; toolParams: an
         style: parsed.style,
       },
     }),
-    'cookie-list': () => ({ toolName: 'browser_cookie_list', toolParams: {} }),
+    'cookie-list': () => ({
+      toolName: 'browser_cookie_list',
+      toolParams: { bidi: parsed.bidi || false, userContext: parsed['user-context'] },
+    }),
     'cookie-get': () => ({ toolName: 'browser_cookie_get', toolParams: { name: positional[0] } }),
-    'cookie-set': () => ({ toolName: 'browser_cookie_set', toolParams: { name: positional[0], value: positional[1] } }),
+    'cookie-set': () => ({
+      toolName: 'browser_cookie_set',
+      toolParams: {
+        name: positional[0],
+        value: positional[1],
+        bidi: parsed.bidi || false,
+        userContext: parsed['user-context'],
+        domain: parsed.domain,
+        path: parsed.path,
+        httpOnly: parsed.httpOnly,
+        secure: parsed.secure,
+      },
+    }),
     'cookie-delete': () => ({ toolName: 'browser_cookie_delete', toolParams: { name: positional[0] } }),
     'localstorage-get': () => ({ toolName: 'browser_localstorage_get', toolParams: { key: positional[0] } }),
     'localstorage-set': () => ({ toolName: 'browser_localstorage_set', toolParams: { key: positional[0], value: positional[1] } }),
