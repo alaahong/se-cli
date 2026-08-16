@@ -915,7 +915,6 @@ BiDi integration and optimizing performance/stability.
 - [ ] **Multi-language SDK**: Python/Java client bindings (CLI stays Node)
 - [ ] **Simplified Trace Viewer**: GUI playback for recorded traces (aligned with issue #24)
 - [ ] **DOM mutation listener**: via BiDi DOM mutation events (investigated in v0.13, issue #76)
-- [ ] **Script preload**: BiDi script pinning and preloading (investigated in v0.13, issue #76)
 - [ ] **Multi-language SKILL.md**: localized skill files
 - [ ] **pytest-selenium / JUnit5 hooks**: test framework integration (attach to test pause points, issue #22)
 - [ ] **Appium mobile testing completion**: iOS/Android bidirectional, Appium Grid (issue #79)
